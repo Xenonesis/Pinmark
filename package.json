@@ -1,0 +1,22 @@
+{
+  "name": "agentecho",
+  "version": "1.0.0",
+  "description": "Visual feedback annotation tool for developers to place markers on DOM elements and generate AI-optimized Markdown",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "generate-icons": "node scripts/generate-icons.js"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.23",
+    "@types/chrome": "^0.0.268",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "sharp": "^0.33.0"
+  }
+}
