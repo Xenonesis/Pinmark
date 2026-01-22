@@ -87,10 +87,10 @@ royalty-free, non-exclusive license to the following:
 - Using the extension in revenue-generating products
 
 **Commercial Licensing:**
-The copyright holder (Aresh) reserves the right to distribute AgentEcho commercially,
+The copyright holder (Areshk) reserves the right to distribute AgentEcho commercially,
 including sales on the Chrome Web Store and other commercial channels. For commercial
 licensing inquiries, please contact the copyright holder directly.
 
 ---
 
-**Copyright (c) 2026 Aresh. All Rights Reserved.**
+**Copyright (c) 2026 Areshk. All Rights Reserved.**
