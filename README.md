@@ -61,9 +61,9 @@
 
 ## Installation
 
-### From Chrome Web Store (Paid)
+### From Chrome Web Store
 
-[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-%241.00-brightgreen.svg)](https://chrome.google.com/webstore/detail/agentecho/[your-extension-id])
+![Chrome Web Store](https://chromewebstore.google.com/detail/fdkdjnebmcmlhnbecbfefebpdhihdjjb)
 
 > Support continued development by purchasing for $1 on the Chrome Web Store.
 
@@ -295,6 +295,6 @@ Built with modern web standards and Chrome Extension Manifest V3.
 
   **Made with care for developers who care about details**
 
-  [Report a Bug](../../issues) &bull; [Request a Feature](../../issues) &bull; [Support Development](https://chrome.google.com/webstore/detail/agentecho/[your-extension-id])
+  [Report a Bug](../../issues) &bull; [Request a Feature](../../issues) &bull; [Support Development](https://chromewebstore.google.com/detail/fdkdjnebmcmlhnbecbfefebpdhihdjjb)
 
 </div>
