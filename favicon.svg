@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Pinmark</title>
+  <!-- pin teardrop body -->
+  <path d="M16 29.5 C16 29.5 25.5 20.5 25.5 12.5 C25.5 6.5 21.5 2 16 2 C10.5 2 6.5 6.5 6.5 12.5 C6.5 20.5 16 29.5 16 29.5 Z" fill="#E11D48"/>
+  <!-- inner ring (off-white for tab legibility on any bg) -->
+  <circle cx="16" cy="12" r="5" fill="#FFFFFF"/>
+  <!-- accent dot -->
+  <circle cx="16" cy="12" r="2" fill="#4338CA"/>
+</svg>
