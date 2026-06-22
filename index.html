@@ -3172,7 +3172,6 @@ footer a:hover { color: var(--ink); }
     // Replace SVG fallback with real avatar image
     if (data.avatar_url && devAvatar) {
       const img = document.createElement('img');
-      img.src = data.avatar_url + '&s=160';
       img.alt = data.login || 'Xenonesis';
       img.loading = 'lazy';
       img.decoding = 'async';
@@ -3184,6 +3183,8 @@ footer a:hover { color: var(--ink); }
         requestAnimationFrame(() => { img.style.opacity = '1'; });
         devAvatar.appendChild(img);
       };
+      img.onerror = () => { /* keep SVG fallback */ };
+      img.src = data.avatar_url + '&s=160';
     }
     if (devStats) {
       const set = (key, val) => {
