@@ -1059,6 +1059,8 @@ h3 {
   border: 1px solid var(--line);
   background: var(--bg-elev);
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 .setting-card .label {
   font-family: 'JetBrains Mono', monospace;
@@ -1077,9 +1079,353 @@ h3 {
   font-size: 13px;
   color: var(--ink-mid);
   line-height: 1.5;
+  margin-bottom: 16px;
+}
+.setting-card .desc code,
+.setting-widget code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: var(--bg);
+  padding: 1px 5px;
+  border: 1px solid var(--line);
 }
 
+/* widget shell */
+.setting-widget {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+
+/* color swatches */
+.color-swatches { display: flex; gap: 8px; margin-bottom: 12px; }
+.swatch {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-elev);
+  background: var(--c);
+  cursor: pointer;
+  box-shadow: 0 0 0 1px var(--line);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.swatch:hover { transform: scale(1.1); }
+.swatch.is-active { box-shadow: 0 0 0 2px var(--ink); }
+.color-preview { display: flex; align-items: center; gap: 10px; }
+.marker-preview {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--c, var(--marker));
+  color: white;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.color-hex {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-mid);
+  background: var(--bg);
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+}
+
+/* chip groups */
+.chip-group {
+  display: flex;
+  gap: 4px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  padding: 3px;
+  margin-bottom: 12px;
+}
+.chip {
+  flex: 1;
+  padding: 5px 8px;
+  border: 0;
+  background: transparent;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.chip:hover { color: var(--ink); }
+.chip.is-active {
+  background: var(--accent);
+  color: white;
+}
+
+/* detail preview */
+.detail-preview {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  margin: 0;
+  line-height: 1.7;
+  color: var(--ink-mid);
+  white-space: pre-wrap;
+  min-height: 100px;
+  transition: background 200ms ease;
+}
+.detail-line { display: block; transition: opacity 200ms ease, color 200ms ease; }
+.detail-line.dim { opacity: 0.32; }
+.detail-line b { color: var(--ink); font-weight: 600; }
+.setting-detail[data-level="minimal"] .detail-line:nth-child(n+3),
+.setting-detail[data-level="minimal"] .detail-line:nth-child(n+5) { display: none; }
+.setting-detail[data-level="comprehensive"] .detail-line { opacity: 1; }
+
+/* theme preview */
+.theme-preview { display: flex; gap: 6px; height: 28px; }
+.theme-swatch {
+  flex: 1;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.theme-swatch::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: 2px; left: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.theme-swatch-light { background: #FAFAF9; }
+.theme-swatch-light::after { color: #0A0A0A; }
+.theme-swatch-dark { background: #0A0A0A; }
+.theme-swatch-dark::after { color: #FAFAF9; }
+.theme-swatch-auto {
+  background: linear-gradient(90deg, #FAFAF9 50%, #0A0A0A 50%);
+}
+.theme-swatch-auto::after { color: white; mix-blend-mode: difference; }
+.setting-theme[data-theme-prev="light"] .theme-swatch-light { border-color: var(--accent); }
+.setting-theme[data-theme-prev="dark"]  .theme-swatch-dark  { border-color: var(--accent); }
+.setting-theme[data-theme-prev="auto"]  .theme-swatch-auto  { border-color: var(--accent); }
+
+/* toggle switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  margin-bottom: 10px;
+}
+.switch-input { opacity: 0; width: 0; height: 0; }
+.switch-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--line);
+  border-radius: 20px;
+  transition: background 160ms ease;
+  cursor: pointer;
+}
+.switch-slider::before {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  left: 3px; top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 160ms ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.switch-input:checked + .switch-slider { background: var(--accent); }
+.switch-input:checked + .switch-slider::before { transform: translateX(16px); }
+
+/* toolbar preview */
+.toolbar-preview {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 4px 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+.tb-marker {
+  width: 14px; height: 14px;
+  background: var(--marker);
+  color: white;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.tb-marker:nth-child(2)::before { content: '2'; }
+.tb-marker:nth-child(3)::before { content: '3'; }
+.tb-btn {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 8px;
+  background: var(--ink);
+  color: var(--bg);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.setting-toggle[data-on="true"] .tb-marker { opacity: 0; transform: scale(0.5); }
+.setting-toggle[data-on="true"] .toolbar-preview::before {
+  content: 'cleared';
+  margin-right: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* block interactions preview */
+.block-preview {
+  position: relative;
+  height: 50px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+.block-row {
+  height: 6px;
+  background: var(--line-strong);
+  border-radius: 1px;
+}
+.block-row.short { width: 60%; }
+.block-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(225, 29, 72, 0.08);
+  border: 2px dashed var(--marker);
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+.setting-toggle[data-setting="block"][data-on="true"] .block-overlay { opacity: 1; }
+.setting-toggle[data-setting="block"][data-on="true"] .block-row { opacity: 0.4; }
+
+/* keyboard map */
+.key-map {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  cursor: default;
+  transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+.key kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  border-radius: 2px;
+  transition: transform 160ms ease;
+}
+.key em { font-style: normal; }
+.key:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+.key:hover kbd { transform: scale(1.08); background: var(--accent); }
+
 /* ---------- architecture ---------- */
+/* ---------- architecture flow ---------- */
+.arch-flow {
+  margin-top: 32px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  position: relative;
+}
+.arch-flow svg { width: 100%; height: auto; display: block; }
+.arch-flow .arch-arrows line { stroke: var(--line-strong); stroke-width: 1.5; }
+.arch-flow .arch-pulse-line {
+  stroke-width: 2.5;
+  stroke-dasharray: 14 50;
+  stroke-dashoffset: 0;
+  animation: archPulse 2.4s linear infinite;
+  opacity: 0;
+}
+.arch-flow .arch-arrows line:nth-of-type(4) { animation-delay: 0s; }
+.arch-flow .arch-arrows line:nth-of-type(5) { animation-delay: 0.4s; }
+.arch-flow .arch-arrows line:nth-of-type(6) { animation-delay: 0.8s; }
+@keyframes archPulse {
+  0%   { stroke-dashoffset: 64; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+.arch-flow .arch-node { cursor: pointer; outline: none; }
+.arch-flow .arch-node rect {
+  fill: var(--bg);
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+  transition: fill 180ms ease, stroke 180ms ease;
+}
+.arch-flow .arch-node text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.arch-flow .arch-node .arch-node-sub {
+  font-size: 9px;
+  font-weight: 400;
+  fill: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.arch-flow .arch-node:hover rect,
+.arch-flow .arch-node:focus rect,
+.arch-flow .arch-node.is-active rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.arch-flow .arch-node:hover text:first-of-type,
+.arch-flow .arch-node:focus text:first-of-type,
+.arch-flow .arch-node.is-active text:first-of-type {
+  fill: var(--accent);
+}
+.arch-flow-legend {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+@media (prefers-reduced-motion: reduce) {
+  .arch-flow .arch-pulse-line { animation: none; opacity: 0; }
+}
+
+/* ---------- architecture cards ---------- */
 .arch {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1090,6 +1436,11 @@ h3 {
   border: 1px solid var(--line);
   background: var(--bg-elev);
   padding: 24px;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+.arch-card.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 .arch-card .role {
   font-family: 'JetBrains Mono', monospace;
@@ -1099,6 +1450,7 @@ h3 {
   text-transform: uppercase;
   margin-bottom: 8px;
 }
+.arch-card.is-active .role { color: var(--accent); }
 .arch-card h4 {
   font-family: 'Inter', sans-serif;
   font-size: 16px;
@@ -1236,6 +1588,42 @@ h3 {
 
 /* ---------- comparison table ---------- */
 .cmp { margin-top: 24px; }
+.cmp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 16px;
+}
+.cmp-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+}
+.cmp-toggle-opt {
+  padding: 7px 14px;
+  color: var(--muted);
+  transition: background 160ms ease, color 160ms ease;
+}
+.cmp-toggle-opt:hover { color: var(--ink); }
+.cmp-toggle-opt.active {
+  background: var(--accent);
+  color: white;
+}
+.cmp-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
 .cmp-table {
   width: 100%;
   border-collapse: collapse;
@@ -1300,13 +1688,6 @@ h3 {
 }
 .cmp-table td.yes { color: var(--accent); }
 .cmp-table td.no { color: var(--muted); font-weight: 400; }
-.cmp-table td.live {
-  color: white;
-  background: var(--accent);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 .cmp-table tr.divider td {
   background: var(--bg);
   color: var(--muted);
@@ -1318,6 +1699,42 @@ h3 {
   text-align: center;
 }
 .cmp-table tr.divider span { color: var(--marker); }
+
+/* click-to-expand rows */
+.cmp-table tr.cmp-row { cursor: pointer; transition: background 140ms ease; }
+.cmp-table tr.cmp-row:hover td { background: var(--bg); }
+.cmp-table tr.cmp-row:hover td:first-child { color: var(--ink); }
+.cmp-table tr.cmp-row:hover td:first-child::before {
+  content: 'i';
+  display: inline-block;
+  width: 14px; height: 14px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  vertical-align: middle;
+}
+.cmp-detail-row td {
+  padding: 0 16px 0 38px;
+  background: var(--accent-soft);
+  color: var(--ink-mid);
+  font-size: 12px;
+  line-height: 1.55;
+  border-bottom: 1px solid var(--line);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 260ms ease, padding 260ms ease;
+}
+.cmp-detail-row.open td {
+  max-height: 200px;
+  padding: 14px 16px 14px 38px;
+}
+.cmp-table[data-mode="diff"] tr.cmp-row.shared { display: none; }
 .cmp-note {
   font-size: 13px;
   color: var(--muted);
@@ -1447,6 +1864,10 @@ footer a:hover { color: var(--ink); }
   .settings-grid { grid-template-columns: 1fr; }
   .arch { grid-template-columns: 1fr; }
   .compare { grid-template-columns: 1fr; }
+  .arch-flow { padding: 16px; }
+  .arch-flow .arch-node text { font-size: 10px; }
+  .arch-flow .arch-node .arch-node-sub { font-size: 7px; }
+  .cmp-toolbar { flex-direction: column; align-items: flex-start; gap: 10px; }
   .dev-card { grid-template-columns: 1fr; gap: 18px; padding: 24px; }
   .dev-avatar svg { width: 64px; height: 64px; }
   .dev-name { font-size: 20px; }
@@ -1798,26 +2219,76 @@ footer a:hover { color: var(--ink); }
     <h2>Four small pieces, one clear boundary</h2>
     <p class="lede">Standard MV3 layout. Content scripts run in the page; everything else runs in extension context.</p>
 
+    <div class="arch-flow" role="img" aria-label="Data flow from popup to page through background and content script">
+      <svg viewBox="0 0 760 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <defs>
+          <marker id="arch-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L6,3 L0,6 Z" fill="var(--accent)" />
+          </marker>
+          <linearGradient id="arch-pulse" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="var(--accent)" stop-opacity="0" />
+            <stop offset="50%" stop-color="var(--accent)" stop-opacity="1" />
+            <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+
+        <g class="arch-arrows">
+          <line x1="160" y1="50" x2="220" y2="50" marker-end="url(#arch-arrow)" />
+          <line x1="340" y1="50" x2="400" y2="50" marker-end="url(#arch-arrow)" />
+          <line x1="520" y1="50" x2="580" y2="50" marker-end="url(#arch-arrow)" />
+          <line class="arch-pulse-line" x1="160" y1="50" x2="220" y2="50" stroke="url(#arch-pulse)" stroke-width="2" />
+          <line class="arch-pulse-line" x1="340" y1="50" x2="400" y2="50" stroke="url(#arch-pulse)" stroke-width="2" />
+          <line class="arch-pulse-line" x1="520" y1="50" x2="580" y2="50" stroke="url(#arch-pulse)" stroke-width="2" />
+        </g>
+
+        <g class="arch-nodes">
+          <g class="arch-node" data-card="ui" tabindex="0" role="button" aria-label="Popup / UI">
+            <rect x="20" y="20" width="140" height="60" rx="6" />
+            <text x="90" y="46" text-anchor="middle">popup</text>
+            <text x="90" y="66" text-anchor="middle" class="arch-node-sub">activate · settings</text>
+          </g>
+          <g class="arch-node" data-card="background" tabindex="0" role="button" aria-label="Background service worker">
+            <rect x="220" y="20" width="120" height="60" rx="6" />
+            <text x="280" y="46" text-anchor="middle">background</text>
+            <text x="280" y="66" text-anchor="middle" class="arch-node-sub">service worker</text>
+          </g>
+          <g class="arch-node" data-card="content" tabindex="0" role="button" aria-label="Content script and overlay">
+            <rect x="400" y="20" width="120" height="60" rx="6" />
+            <text x="460" y="46" text-anchor="middle">content</text>
+            <text x="460" y="66" text-anchor="middle" class="arch-node-sub">overlay · shadow DOM</text>
+          </g>
+          <g class="arch-node" data-card="shared" tabindex="0" role="button" aria-label="Shared types and storage">
+            <rect x="580" y="20" width="160" height="60" rx="6" />
+            <text x="660" y="46" text-anchor="middle">page DOM</text>
+            <text x="660" y="66" text-anchor="middle" class="arch-node-sub">capture · persist</text>
+          </g>
+        </g>
+      </svg>
+      <div class="arch-flow-legend">
+        click to activate &nbsp;→&nbsp; bg brokers &nbsp;→&nbsp; content mounts &nbsp;→&nbsp; page captures
+      </div>
+    </div>
+
     <div class="arch">
-      <div class="arch-card">
+      <div class="arch-card" data-card="background">
         <div class="role">background</div>
         <h4>Service worker</h4>
         <div class="path">src/background/index.ts</div>
         <p>Message broker between popup and content scripts. Holds the canonical active/inactive state per tab.</p>
       </div>
-      <div class="arch-card">
+      <div class="arch-card" data-card="content">
         <div class="role">content</div>
         <h4>Content script</h4>
         <div class="path">src/content/index.ts</div>
         <p>Injected into every page. Runs the overlay, captures DOM context, generates Markdown. Uses a closed Shadow DOM so page styles can't leak in.</p>
       </div>
-      <div class="arch-card">
+      <div class="arch-card" data-card="ui">
         <div class="role">ui</div>
         <h4>Popup</h4>
         <div class="path">src/popup/</div>
         <p>Activate/deactivate toggle and settings panel (marker color, output detail, theme, clear-after-copy, block interactions).</p>
       </div>
-      <div class="arch-card">
+      <div class="arch-card" data-card="shared">
         <div class="role">shared</div>
         <h4>Types & storage</h4>
         <div class="path">src/shared/</div>
@@ -1855,35 +2326,108 @@ footer a:hover { color: var(--ink); }
     <p class="lede">All settings live in the popup and persist per install via <code>chrome.storage.sync</code>.</p>
 
     <div class="settings-grid">
-      <div class="setting-card">
+      <div class="setting-card setting-color" data-setting="color">
         <div class="label">appearance</div>
         <div class="name">Marker color</div>
         <div class="desc">Pick any color for the numbered badges. Default is <code>#ef4444</code>.</div>
+        <div class="setting-widget">
+          <div class="color-swatches">
+            <button type="button" class="swatch is-active" data-color="#ef4444" style="--c: #ef4444" aria-label="Red"></button>
+            <button type="button" class="swatch" data-color="#f59e0b" style="--c: #f59e0b" aria-label="Amber"></button>
+            <button type="button" class="swatch" data-color="#10b981" style="--c: #10b981" aria-label="Green"></button>
+            <button type="button" class="swatch" data-color="#3b82f6" style="--c: #3b82f6" aria-label="Blue"></button>
+            <button type="button" class="swatch" data-color="#a855f7" style="--c: #a855f7" aria-label="Purple"></button>
+          </div>
+          <div class="color-preview">
+            <span class="marker-preview" style="background: #ef4444">1</span>
+            <code class="color-hex">#ef4444</code>
+          </div>
+        </div>
       </div>
-      <div class="setting-card">
+
+      <div class="setting-card setting-detail" data-setting="detail">
         <div class="label">output</div>
         <div class="name">Detail level</div>
-        <div class="desc"><code>minimal</code> · <code>standard</code> · <code>comprehensive</code>. Controls how much DOM context ships in the Markdown.</div>
+        <div class="desc">How much DOM context ships in the Markdown. Toggle to compare.</div>
+        <div class="setting-widget">
+          <div class="chip-group" role="tablist">
+            <button type="button" class="chip" data-detail="minimal">minimal</button>
+            <button type="button" class="chip is-active" data-detail="standard">standard</button>
+            <button type="button" class="chip" data-detail="comprehensive">comprehensive</button>
+          </div>
+          <pre class="detail-preview"><span class="detail-line dim">- <b>Element:</b> &lt;button&gt;</span>
+<span class="detail-line dim">- <b>Selector:</b> main &gt; button</span>
+<span class="detail-line">- <b>Classes:</b> cta</span>
+<span class="detail-line dim">- <b>Text:</b> "Deploy"</span>
+<span class="detail-line dim">- <b>Component:</b> Button (React)</span></pre>
+        </div>
       </div>
-      <div class="setting-card">
+
+      <div class="setting-card setting-theme" data-setting="theme">
         <div class="label">appearance</div>
         <div class="name">Theme</div>
         <div class="desc"><code>auto</code> follows your OS. <code>light</code> and <code>dark</code> override.</div>
+        <div class="setting-widget">
+          <div class="chip-group">
+            <button type="button" class="chip" data-theme-prev="light">light</button>
+            <button type="button" class="chip is-active" data-theme-prev="auto">auto</button>
+            <button type="button" class="chip" data-theme-prev="dark">dark</button>
+          </div>
+          <div class="theme-preview">
+            <div class="theme-swatch theme-swatch-light"></div>
+            <div class="theme-swatch theme-swatch-dark"></div>
+            <div class="theme-swatch theme-swatch-auto"></div>
+          </div>
+        </div>
       </div>
-      <div class="setting-card">
+
+      <div class="setting-card setting-toggle" data-setting="clear">
         <div class="label">workflow</div>
         <div class="name">Clear after copy</div>
         <div class="desc">Auto-remove markers once you've copied the report.</div>
+        <div class="setting-widget">
+          <label class="switch">
+            <input type="checkbox" class="switch-input" />
+            <span class="switch-slider"></span>
+          </label>
+          <div class="toolbar-preview">
+            <span class="tb-marker"></span>
+            <span class="tb-marker"></span>
+            <span class="tb-marker"></span>
+            <span class="tb-btn">copy</span>
+          </div>
+        </div>
       </div>
-      <div class="setting-card">
+
+      <div class="setting-card setting-toggle" data-setting="block">
         <div class="label">workflow</div>
         <div class="name">Block interactions</div>
-        <div class="desc">Freeze the page beneath the markers so clicks don't fall through to the wrong element.</div>
+        <div class="desc">Freeze the page beneath the markers so clicks don't fall through.</div>
+        <div class="setting-widget">
+          <label class="switch">
+            <input type="checkbox" class="switch-input" />
+            <span class="switch-slider"></span>
+          </label>
+          <div class="block-preview">
+            <div class="block-row"></div>
+            <div class="block-row short"></div>
+            <div class="block-row"></div>
+            <div class="block-overlay"></div>
+          </div>
+        </div>
       </div>
-      <div class="setting-card">
+
+      <div class="setting-card setting-keys" data-setting="keys">
         <div class="label">shortcuts</div>
         <div class="name">Keyboard map</div>
-        <div class="desc">All actions have keys. See <a href="#shortcuts">shortcuts</a> below.</div>
+        <div class="desc">All actions have keys. Hover to preview each shortcut.</div>
+        <div class="setting-widget">
+          <div class="key-map">
+            <span class="key" data-key="C"><kbd>C</kbd><em>copy</em></span>
+            <span class="key" data-key="H"><kbd>H</kbd><em>hide</em></span>
+            <span class="key" data-key="Esc"><kbd>Esc</kbd><em>exit</em></span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2066,7 +2610,14 @@ footer a:hover { color: var(--ink); }
       Pinmark is a maintained continuation of <a href="https://github.com/Areshkew/agentecho" target="_blank" rel="noopener"><strong>Areshkew/agentecho</strong></a> — same Chrome Web Store listing, same extension ID, refreshed under a new name and active development.
     </p>
     <div class="cmp">
-      <table class="cmp-table">
+      <div class="cmp-toolbar">
+        <button class="cmp-toggle" type="button" aria-label="Filter table rows">
+          <span class="cmp-toggle-opt active" data-mode="all">All rows</span>
+          <span class="cmp-toggle-opt" data-mode="diff">Only differences</span>
+        </button>
+        <span class="cmp-hint">Click any row for details</span>
+      </div>
+      <table class="cmp-table" data-mode="all">
         <thead>
           <tr>
             <th class="feat-col">Feature</th>
@@ -2082,22 +2633,62 @@ footer a:hover { color: var(--ink); }
           </tr>
         </thead>
         <tbody>
-          <tr><td>Visual markers + hover outline</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Markdown feedback export</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Shadow DOM isolation</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Framework detection (React / Angular)</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Keyboard shortcuts (<code>C</code>, <code>H</code>, <code>Esc</code>)</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Per-page feedback persistence</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Chrome MV3 &middot; TypeScript 5.6</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr class="divider"><td colspan="3"><span>Pinmark additions</span></td></tr>
-          <tr><td>Interactive landing page (auto-play hero)</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td>Live two-pane "try it" demo</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td>Live GitHub stars badge</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td>GitHub Pages site</td><td class="yes live">live</td><td class="no">—</td></tr>
-          <tr><td>3-mode theme (light / dark / auto) on web + popup</td><td class="yes">✓</td><td class="no">popup only</td></tr>
-          <tr><td>Custom pin logo + favicon</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td>Unified <code>ThemeProvider</code> (storage-agnostic)</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td>Active maintenance &amp; releases</td><td class="yes">✓</td><td class="no">static</td></tr>
+          <tr class="cmp-row" data-detail="Numbered red dots anchored to clicked elements; visible until cleared or the page is reloaded.">
+            <td>Visual markers + hover outline</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+          <tr class="cmp-row" data-detail="Clipboard-friendly format that AI tools parse directly — one keystroke copies the whole report.">
+            <td>Markdown feedback export</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+          <tr class="cmp-row" data-detail="Page styles can't bleed in, our styles can't bleed out — overlays never fight the host site.">
+            <td>Shadow DOM isolation</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+          <tr class="cmp-row" data-detail="Detects React (via __reactFiber$) and Angular (via debug properties). Component names appear in the Markdown report.">
+            <td>Framework detection (React / Angular)</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+          <tr class="cmp-row" data-detail="C copies, H toggles marker visibility, Esc exits, Ctrl/⌘+Shift+A exits globally.">
+            <td>Keyboard shortcuts (<code>C</code>, <code>H</code>, <code>Esc</code>)</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+          <tr class="cmp-row" data-detail="Feedback is keyed by origin + path, restored on revisit. Cleared manually or via the toolbar.">
+            <td>Per-page feedback persistence</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+          <tr class="cmp-row" data-detail="Modern extension API surface, TypeScript 5.6 strict, Vite 5 build via @crxjs/vite-plugin.">
+            <td>Chrome MV3 &middot; TypeScript 5.6</td>
+            <td class="yes">✓</td>
+            <td class="yes">✓</td>
+          </tr>
+          <tr class="divider"><td colspan="3"><span>Pinmark extensions</span></td></tr>
+          <tr class="cmp-row" data-detail="Multiple commits since the rename: dark-mode contrast fixes, interactive landing page, unified theme provider. Areshkew's repo has been static since January 2026.">
+            <td>Active maintenance &amp; releases</td>
+            <td class="yes">✓</td>
+            <td class="no">static</td>
+          </tr>
+          <tr class="cmp-row" data-detail="Popup theme select is wired up — picks auto/light/dark, persists per install, applies before first paint. Areshkew's select is a stub; the popup only follows OS via @media query.">
+            <td>3-mode theme actually works in popup</td>
+            <td class="yes">✓</td>
+            <td class="no">stub</td>
+          </tr>
+          <tr class="cmp-row" data-detail="Single class used by both the landing page and the popup — storage-agnostic via a ThemeStorage adapter. Areshkew's theme logic is duplicated across contexts with no shared abstraction.">
+            <td>Unified <code>ThemeProvider</code></td>
+            <td class="yes">✓</td>
+            <td class="no">—</td>
+          </tr>
+          <tr class="cmp-row" data-detail="ExtensionSettings is a strict TypeScript interface shared between popup and background; getSettings/saveSettings guarantee shape. Areshkew types settings as any.">
+            <td>Typed <code>ExtensionSettings</code></td>
+            <td class="yes">✓</td>
+            <td class="no">—</td>
+          </tr>
         </tbody>
       </table>
       <p class="cmp-note">
@@ -2519,6 +3110,126 @@ footer a:hover { color: var(--ink); }
     });
 
     new MutationObserver(paintStatic).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  })();
+
+  // ---------- comparison table ----------
+  // Click any cmp-row to expand its data-detail inline below it.
+  // Toggle button filters shared rows when in 'diff' mode.
+  (() => {
+    const table = document.querySelector('.cmp-table');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    // Inject expandable detail rows after each cmp-row.
+    tbody.querySelectorAll('tr.cmp-row').forEach(row => {
+      const text = row.dataset.detail || '';
+      const detail = document.createElement('tr');
+      detail.className = 'cmp-detail-row';
+      detail.innerHTML = `<td colspan="3">${text}</td>`;
+      row.after(detail);
+      row.addEventListener('click', () => {
+        const isOpen = detail.classList.toggle('open');
+        row.classList.toggle('expanded', isOpen);
+      });
+    });
+
+    // Mark all current rows as shared for the diff filter.
+    tbody.querySelectorAll('tr.cmp-row').forEach(row => {
+      const both = row.querySelectorAll('td.yes').length === 2;
+      if (both) row.classList.add('shared');
+    });
+
+    // Toggle button: all / diff.
+    const toggle = document.querySelector('.cmp-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', e => {
+        const opt = e.target.closest('.cmp-toggle-opt');
+        if (!opt) return;
+        const mode = opt.dataset.mode;
+        if (!mode) return;
+        toggle.querySelectorAll('.cmp-toggle-opt').forEach(o => o.classList.toggle('active', o === opt));
+        table.dataset.mode = mode;
+      });
+    }
+  })();
+
+  // ---------- architecture flow ----------
+  // Hover or focus a node in the SVG diagram -> highlight matching card.
+  (() => {
+    const flow = document.querySelector('.arch-flow');
+    if (!flow) return;
+    const nodes = flow.querySelectorAll('.arch-node');
+    const cards = document.querySelectorAll('.arch-card[data-card]');
+
+    const setActive = name => {
+      nodes.forEach(n => n.classList.toggle('is-active', n.dataset.card === name));
+      cards.forEach(c => c.classList.toggle('is-active', c.dataset.card === name));
+    };
+    const clearActive = () => {
+      nodes.forEach(n => n.classList.remove('is-active'));
+      cards.forEach(c => c.classList.remove('is-active'));
+    };
+    nodes.forEach(node => {
+      const name = node.dataset.card;
+      node.addEventListener('mouseenter', () => setActive(name));
+      node.addEventListener('mouseleave', clearActive);
+      node.addEventListener('focus', () => setActive(name));
+      node.addEventListener('blur', clearActive);
+    });
+    cards.forEach(card => {
+      const name = card.dataset.card;
+      card.addEventListener('mouseenter', () => setActive(name));
+      card.addEventListener('mouseleave', clearActive);
+    });
+  })();
+
+  // ---------- settings widgets ----------
+  (() => {
+    // 1. Marker color: pick swatch -> updates preview marker + hex
+    document.querySelectorAll('.setting-color').forEach(card => {
+      const swatches = card.querySelectorAll('.swatch');
+      const preview = card.querySelector('.marker-preview');
+      const hex = card.querySelector('.color-hex');
+      swatches.forEach(s => {
+        s.addEventListener('click', () => {
+          swatches.forEach(x => x.classList.toggle('is-active', x === s));
+          const c = s.dataset.color;
+          preview.style.background = c;
+          hex.textContent = c;
+        });
+      });
+    });
+
+    // 2. Detail level: pick chip -> toggles data-level on the card
+    document.querySelectorAll('.setting-detail').forEach(card => {
+      const chips = card.querySelectorAll('.chip');
+      chips.forEach(c => {
+        c.addEventListener('click', () => {
+          chips.forEach(x => x.classList.toggle('is-active', x === c));
+          card.dataset.level = c.dataset.detail;
+        });
+      });
+    });
+
+    // 3. Theme preview: pick chip -> highlights the matching swatch
+    document.querySelectorAll('.setting-theme').forEach(card => {
+      const chips = card.querySelectorAll('.chip');
+      chips.forEach(c => {
+        c.addEventListener('click', () => {
+          chips.forEach(x => x.classList.toggle('is-active', x === c));
+          card.dataset.themePrev = c.dataset.themePrev;
+        });
+      });
+    });
+
+    // 4 & 5. Toggle switches: drives data-on on the card
+    document.querySelectorAll('.setting-toggle .switch-input').forEach(input => {
+      const card = input.closest('.setting-card');
+      input.addEventListener('change', () => {
+        card.dataset.on = input.checked ? 'true' : 'false';
+      });
+    });
   })();
 
   // ---------- try-it demo ----------
