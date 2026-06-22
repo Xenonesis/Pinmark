@@ -1655,7 +1655,7 @@ footer a:hover { color: var(--ink); }
         <footer class="hero-page-footer">
           <span class="hero-target" data-name="footer-link" data-tag="a" data-selector="footer &gt; a">Compare all features</span>
           <div class="hero-tooltip">&lt;a&gt; · footer &gt; a</div>
-          <span class="hero-target hero-footer-cta" data-name="footer-cta" data-tag="button" data-selector="footer &gt; button">Talk to sales</div>
+          <span class="hero-target hero-footer-cta" data-name="footer-cta" data-tag="button" data-selector="footer &gt; button">Talk to sales</span>
           <div class="hero-tooltip cta">&lt;button&gt; · footer &gt; button</div>
         </footer>
       </div>
@@ -2237,14 +2237,14 @@ footer a:hover { color: var(--ink); }
     const NOTES = {
       h1:            'Heading wraps awkwardly at 375px — needs fluid type.',
       planstarter:   'Starter plan looks identical to Growth without the badge.',
-      plangrowth:    'No "Most popular" badge above this plan card.',
+      plangrowth:    'Badge sits on the accent border — both share the same color, badge loses impact.',
       planscale:     'Price has no currency suffix for non-USD users.',
-      ctastarter:    'CTA color matches background — low contrast on white.',
-      ctagrowth:     'CTA is identical to Starter — no visual hierarchy.',
-      ctascale:      'CTA blends with the surrounding card border.',
+      ctastarter:    'All three CTAs use the same dark fill — Starter should be outlined as the entry-level option.',
+      ctagrowth:     'Recommended plan should have an accent-colored CTA to reinforce the choice.',
+      ctascale:      'Premium-tier CTA is identical to the $9 Starter — should feel elevated.',
       testimonial:   'No photo or company logo — feels anonymous.',
-      footerlink:    'Link target scrolls to a 404 on mobile.',
-      footercta:     '“Talk to sales” opens mailto: instead of the form.',
+      footerlink:    'Link has no href — clicking does nothing.',
+      footercta:     'Button has no action wired up — clicking does nothing.',
     };
     const order = ['h1', 'plangrowth', 'ctagrowth', 'testimonial', 'footercta'];
 
