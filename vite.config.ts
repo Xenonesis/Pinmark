@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [
     crx({ manifest }),
   ],
+  base: './',
   build: {
     outDir: 'dist',
   },
