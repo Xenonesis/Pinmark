@@ -519,7 +519,7 @@ h3 {
 .hero-target:hover .hero-tooltip,
 .hero-target.hovering .hero-tooltip {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate(-50%, 0);
 }
 .hero-target.hero-marked {
   outline-color: var(--marker);
@@ -528,7 +528,7 @@ h3 {
 .hero-tooltip {
   position: absolute;
   top: -28px;
-  left: 0;
+  left: 50%;
   background: var(--ink);
   color: var(--bg);
   padding: 3px 8px;
@@ -536,11 +536,11 @@ h3 {
   font-size: 10px;
   white-space: nowrap;
   opacity: 0;
-  transform: translateY(4px);
+  transform: translate(-50%, 4px);
   transition: opacity 160ms ease, transform 160ms ease;
   pointer-events: none;
   z-index: 5;
-  max-width: 360px;
+  max-width: min(280px, calc(100vw - 48px));
   overflow: hidden;
   text-overflow: ellipsis;
   border: 1px solid var(--ink);
