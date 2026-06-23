@@ -4,9 +4,28 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Pinmark — point at what's broken, hand off the Markdown</title>
-<meta name="description" content="A Chrome extension that drops numbered markers on any page element and exports an AI-ready Markdown feedback report." />
+<meta name="description" content="Pinmark is a Chrome extension that drops numbered markers on any webpage element and copies an AI-ready Markdown feedback report to your clipboard. Free, source-available, MIT-style for personal use." />
+<meta name="theme-color" content="#4338CA" />
+<meta name="color-scheme" content="light dark" />
+<link rel="canonical" href="https://xenonesis.github.io/Pinmark/" />
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="alternate icon" href="assets/icon32.png" sizes="32x32" />
+<link rel="apple-touch-icon" href="assets/icon128.png" sizes="128x128" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://xenonesis.github.io/Pinmark/" />
+<meta property="og:title" content="Pinmark — point at what's broken, hand off the Markdown" />
+<meta property="og:description" content="Chrome extension that drops numbered markers on any page element and copies an AI-ready Markdown feedback report. Built for developers talking to AI." />
+<meta property="og:image" content="https://xenonesis.github.io/Pinmark/assets/logo.png" />
+<meta property="og:image:width" content="1280" />
+<meta property="og:image:height" content="400" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Pinmark — point at what's broken, hand off the Markdown" />
+<meta name="twitter:description" content="Chrome extension for AI-ready element-level feedback. Numbered markers + Markdown export." />
+<meta name="twitter:image" content="https://xenonesis.github.io/Pinmark/assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -87,7 +106,7 @@
 
 /* ---------- base ---------- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; background: var(--bg); transition: background 240ms ease; }
+html { scroll-behavior: smooth; background: var(--bg); transition: background 240ms ease; scroll-padding-top: 80px; }
 body {
   background: transparent;
   color: var(--ink);
@@ -99,6 +118,40 @@ body {
   transition: color 240ms ease;
   position: relative;
   min-height: 100vh;
+}
+
+/* skip-to-content for keyboard users */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 200;
+  padding: 10px 16px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 4px;
+  transform: translateY(-200%);
+  transition: transform 160ms ease;
+}
+.skip-link:focus { transform: translateY(0); outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* clear :focus ring for mouse users, keep for keyboard */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:focus-visible, a:focus-visible { outline-offset: 3px; }
+
+/* respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
 }
 
 #starfield {
@@ -2440,6 +2493,45 @@ h3 {
   letter-spacing: 0.06em;
 }
 
+/* ---------- back-to-top ---------- */
+.back-to-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  color: var(--bg);
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  z-index: 50;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 200ms ease, transform 200ms ease, background 160ms ease;
+}
+.back-to-top.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.back-to-top:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.back-to-top svg { width: 18px; height: 18px; }
+@media (max-width: 760px) {
+  .back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; }
+  .back-to-top svg { width: 16px; height: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top { transition: none; }
+}
+
 /* ---------- footer ---------- */
 footer {
   padding: 48px 0;
@@ -2585,6 +2677,7 @@ footer a:hover { color: var(--ink); }
 </head>
 <body>
 
+<a class="skip-link" href="#main">Skip to main content</a>
 <canvas id="starfield" aria-hidden="true"></canvas>
 
 <div class="topbar">
@@ -2613,7 +2706,7 @@ footer a:hover { color: var(--ink); }
 </div>
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero" id="main" tabindex="-1">
   <div class="wrap">
     <span class="eyebrow">// for developers talking to AI</span>
     <h1>Point at what's broken.<br/>Hand off the <em>Markdown</em>.</h1>
@@ -3702,6 +3795,29 @@ footer a:hover { color: var(--ink); }
     }
   })();
 
+  // ---------- back-to-top ----------
+  (() => {
+    const btn = document.getElementById('backToTop');
+    if (!btn) return;
+    let ticking = false;
+    const update = () => {
+      const scrolled = window.scrollY;
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docH > 0 ? scrolled / docH : 0;
+      const show = pct > 0.18;
+      btn.hidden = false;
+      btn.classList.toggle('is-visible', show);
+      ticking = false;
+    };
+    window.addEventListener('scroll', () => {
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+    btn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    update();
+  })();
+
   // ---------- coming soon modal ----------
   (() => {
     const modal = document.getElementById('soonModal');
@@ -4390,5 +4506,11 @@ footer a:hover { color: var(--ink); }
   })();
 })();
 </script>
+
+<button type="button" class="back-to-top" id="backToTop" aria-label="Back to top" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 19V5M5 12l7-7 7 7"/>
+  </svg>
+</button>
 </body>
 </html>
