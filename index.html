@@ -928,45 +928,179 @@ h3 {
 .step p { font-size: 14px; color: var(--ink-mid); line-height: 1.55; }
 
 /* ---------- install ---------- */
-.setup {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr;
-  gap: 48px;
-  align-items: start;
+/* ---------- install steps ---------- */
+.install-mode {
+  display: inline-flex;
+  margin-top: 24px;
+  margin-bottom: 28px;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  padding: 3px;
 }
-.setup ol {
-  list-style: none;
-  counter-reset: step;
-  border-top: 1px solid var(--line);
-}
-.setup li {
-  counter-increment: step;
-  padding: 20px 0 20px 56px;
-  border-bottom: 1px solid var(--line);
-  position: relative;
-  font-size: 15px;
-  color: var(--ink-mid);
-}
-.setup li::before {
-  content: counter(step, decimal-leading-zero);
-  position: absolute;
-  left: 0;
-  top: 20px;
+.install-mode-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 6px 18px;
+  border: 0;
+  background: transparent;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  cursor: pointer;
+  transition: background 160ms ease;
+  border-radius: 3px;
+}
+.install-mode-opt:hover { background: var(--bg); }
+.install-mode-opt.is-active {
+  background: var(--accent);
+  color: white;
+}
+.install-mode-name {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.install-mode-sub {
+  font-size: 9px;
+  font-weight: 400;
+  opacity: 0.75;
+  letter-spacing: 0.04em;
+}
+
+.install-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+}
+.install-step {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  transition: background 160ms ease;
+  position: relative;
+}
+.install-step:last-child { border-bottom: 0; }
+.install-step:hover { background: color-mix(in srgb, var(--accent) 3%, var(--bg-elev)); }
+.install-step-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.install-step-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
   font-weight: 700;
   color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 7px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+  letter-spacing: 0.04em;
 }
-.setup li strong { color: var(--ink); font-weight: 600; display: block; margin-bottom: 6px; font-size: 15px; }
-.setup li code {
+.install-step-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.install-cmd {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--code-bg);
+  padding: 12px 14px 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  background: var(--bg-elev);
-  border: 1px solid var(--line);
-  padding: 2px 6px;
-  color: var(--ink);
-  cursor: text;
+  color: var(--code-ink);
+  overflow-x: auto;
+}
+.install-cmd code {
+  flex: 1;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+  padding: 0;
+  border: 0;
+  white-space: pre;
   user-select: all;
+}
+.install-cmd code em {
+  font-style: normal;
+  color: var(--code-accent);
+  font-weight: 500;
+}
+.install-cmd-prompt {
+  color: var(--accent);
+  font-weight: 700;
+  flex: 0 0 auto;
+  user-select: none;
+}
+.install-cmd-note {
+  color: var(--code-muted);
+  margin-left: 8px;
+}
+.install-cmd-copy {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--code-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+  white-space: nowrap;
+}
+.install-cmd-copy:hover {
+  color: var(--code-ink);
+  border-color: var(--accent);
+}
+.install-cmd-copy.is-copied {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.install-cmd-copy svg { width: 12px; height: 12px; }
+.install-cmd-copy-label { line-height: 1; }
+
+.install-after {
+  margin-top: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 14px 16px;
+  border: 1px dashed var(--line);
+  background: var(--bg);
+  line-height: 1.6;
+}
+.install-after code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--bg-elev);
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+}
+@media (max-width: 760px) {
+  .install-mode { display: flex; width: 100%; }
+  .install-mode-opt { flex: 1; padding: 8px 12px; align-items: center; }
+  .install-step { padding: 14px; }
+  .install-cmd { flex-wrap: wrap; }
+  .install-cmd-copy { order: 2; margin-left: auto; }
 }
 .note {
   border: 1px solid var(--line);
@@ -2738,35 +2872,83 @@ footer a:hover { color: var(--ink); }
     <h2>Build it in four commands</h2>
     <p class="lede">Free, source-available. Compile locally — no store needed, no account required.</p>
 
-    <div class="setup">
-      <div>
-        <h3>Prerequisites</h3>
-        <p style="font-size: 14px; color: var(--ink-mid); margin-top: 8px;">
-          Node.js 18+ and any Chromium-based browser: Chrome, Brave, Arc, Edge, Opera.
-        </p>
-        <div class="note">
-          <strong>Dev mode with HMR:</strong> <code>npm run dev</code> — Vite watches <code>src/</code> and reloads the extension on save.
-        </div>
-      </div>
-      <ol>
-        <li>
-          <strong>Clone the repository</strong>
-          <code>git clone https://github.com/Xenonesis/Pinmark.git</code>
-        </li>
-        <li>
-          <strong>Install dependencies</strong>
-          <code>cd pinmark &amp;&amp; npm install</code>
-        </li>
-        <li>
-          <strong>Build the extension</strong>
-          <code>npm run build</code> &nbsp;— outputs to <code>dist/</code> via <code>@crxjs/vite-plugin</code>
-        </li>
-        <li>
-          <strong>Load in Chrome</strong>
-          Open <code>chrome://extensions</code>, enable <strong>Developer mode</strong>, click <strong>Load unpacked</strong>, and select the <code>dist/</code> folder.
-        </li>
-      </ol>
+    <div class="install-mode" role="tablist" aria-label="Install mode">
+      <button type="button" class="install-mode-opt is-active" data-mode="build" role="tab" aria-selected="true">
+        <span class="install-mode-name">Build</span>
+        <span class="install-mode-sub">production</span>
+      </button>
+      <button type="button" class="install-mode-opt" data-mode="dev" role="tab" aria-selected="false">
+        <span class="install-mode-name">Dev</span>
+        <span class="install-mode-sub">hot reload</span>
+      </button>
     </div>
+
+    <ol class="install-steps" data-mode="build">
+      <li class="install-step" data-step="1">
+        <div class="install-step-head">
+          <span class="install-step-num">01</span>
+          <span class="install-step-title">Clone the repository</span>
+        </div>
+        <div class="install-cmd">
+          <span class="install-cmd-prompt">$</span>
+          <code data-cmd="build">git clone https://github.com/Xenonesis/Pinmark.git</code>
+          <code data-cmd="dev" hidden>git clone https://github.com/Xenonesis/Pinmark.git</code>
+          <button type="button" class="install-cmd-copy" aria-label="Copy command">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span class="install-cmd-copy-label">copy</span>
+          </button>
+        </div>
+      </li>
+      <li class="install-step" data-step="2">
+        <div class="install-step-head">
+          <span class="install-step-num">02</span>
+          <span class="install-step-title">Install dependencies</span>
+        </div>
+        <div class="install-cmd">
+          <span class="install-cmd-prompt">$</span>
+          <code data-cmd="build">cd pinmark &amp;&amp; npm install</code>
+          <code data-cmd="dev" hidden>cd pinmark &amp;&amp; npm install</code>
+          <button type="button" class="install-cmd-copy" aria-label="Copy command">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span class="install-cmd-copy-label">copy</span>
+          </button>
+        </div>
+      </li>
+      <li class="install-step" data-step="3">
+        <div class="install-step-head">
+          <span class="install-step-num">03</span>
+          <span class="install-step-title">Build the extension</span>
+        </div>
+        <div class="install-cmd">
+          <span class="install-cmd-prompt">$</span>
+          <code data-cmd="build">npm run build  <span class="install-cmd-note"># outputs to dist/</span></code>
+          <code data-cmd="dev" hidden>npm run dev  <span class="install-cmd-note"># HMR via Vite + @crxjs</span></code>
+          <button type="button" class="install-cmd-copy" aria-label="Copy command">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span class="install-cmd-copy-label">copy</span>
+          </button>
+        </div>
+      </li>
+      <li class="install-step" data-step="4">
+        <div class="install-step-head">
+          <span class="install-step-num">04</span>
+          <span class="install-step-title">Load in Chrome</span>
+        </div>
+        <div class="install-cmd install-cmd-multiline">
+          <span class="install-cmd-prompt">$</span>
+          <code data-cmd="build">open chrome://extensions  →  Developer mode  →  Load unpacked  →  select <em>dist/</em></code>
+          <code data-cmd="dev" hidden>open chrome://extensions  →  click the ↻ reload icon on Pinmark</code>
+          <button type="button" class="install-cmd-copy install-cmd-copy-block" aria-label="Copy URL">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span class="install-cmd-copy-label">copy</span>
+          </button>
+        </div>
+      </li>
+    </ol>
+
+    <p class="install-after">
+      Updates after a pull: <code>git pull &amp;&amp; npm install &amp;&amp; npm run build</code>, then click the reload icon on the extension card in <code>chrome://extensions</code>.
+    </p>
   </div>
 </section>
 
@@ -3620,6 +3802,57 @@ footer a:hover { color: var(--ink); }
       const only = total - shared;
       summary.innerHTML = `<strong>${total}</strong> rows &middot; <strong>${shared}</strong> shared &middot; <strong>${only}</strong> pinmark-only`;
     }
+  })();
+
+  // ---------- install: mode toggle + copy buttons ----------
+  (() => {
+    // Mode toggle (build vs dev) — shows/hides the matching <code> per step
+    const modeOpts = document.querySelectorAll('.install-mode-opt');
+    const steps = document.querySelector('.install-steps');
+    modeOpts.forEach(opt => {
+      opt.addEventListener('click', () => {
+        const mode = opt.dataset.mode;
+        if (!mode) return;
+        modeOpts.forEach(o => {
+          o.classList.toggle('is-active', o === opt);
+          o.setAttribute('aria-selected', o === opt ? 'true' : 'false');
+        });
+        if (steps) steps.dataset.mode = mode;
+        // Show/hide code variants
+        document.querySelectorAll('.install-cmd code[data-cmd]').forEach(c => {
+          c.hidden = c.dataset.cmd !== mode;
+        });
+      });
+    });
+
+    // Copy buttons
+    document.querySelectorAll('.install-cmd-copy').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const cmd = btn.parentElement.querySelector('code:not([hidden])');
+        if (!cmd) return;
+        const text = cmd.textContent.replace(/^\s*\$\s*/, '').trim();
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (_) {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); } catch (_) {}
+          ta.remove();
+        }
+        const label = btn.querySelector('.install-cmd-copy-label');
+        const prev = label.textContent;
+        btn.classList.add('is-copied');
+        label.textContent = 'copied';
+        setTimeout(() => {
+          btn.classList.remove('is-copied');
+          label.textContent = prev;
+        }, 1100);
+      });
+    });
   })();
 
   // ---------- architecture flow ----------
