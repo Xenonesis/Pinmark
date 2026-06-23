@@ -2,7 +2,7 @@ import type { FeedbackItem, ExtensionSettings } from '../../shared/types';
 
 export interface MarkerCallbacks {
   onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => void | Promise<void>;
 }
 
 const MARKER_STYLES = (color: string) => `
@@ -49,7 +49,7 @@ const MARKER_STYLES = (color: string) => `
     bottom: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%);
-    background: #1f2937;
+    background: var(--pmk-bg);
     border-radius: 8px;
     padding: 10px 12px;
     min-width: 180px;
@@ -69,7 +69,7 @@ const MARKER_STYLES = (color: string) => `
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
-    border-top-color: #1f2937;
+    border-top-color: var(--pmk-bg);
   }
 
   .pinmark-marker:hover .pinmark-marker-popup {
@@ -79,7 +79,7 @@ const MARKER_STYLES = (color: string) => `
   }
 
   .pinmark-marker-comment {
-    color: #f3f4f6;
+    color: var(--pmk-text);
     font-size: 13px;
     line-height: 1.4;
     margin-bottom: 10px;
@@ -90,7 +90,7 @@ const MARKER_STYLES = (color: string) => `
   .pinmark-marker-actions {
     display: flex;
     gap: 6px;
-    border-top: 1px solid #374151;
+    border-top: 1px solid var(--pmk-border);
     padding-top: 10px;
   }
 
@@ -108,7 +108,7 @@ const MARKER_STYLES = (color: string) => `
   }
 
   .pinmark-marker-btn.edit {
-    background: #3b82f6;
+    background: var(--pmk-accent);
   }
 
   .pinmark-marker-btn.edit:hover {
@@ -116,7 +116,7 @@ const MARKER_STYLES = (color: string) => `
   }
 
   .pinmark-marker-btn.delete {
-    background: #ef4444;
+    background: var(--pmk-danger);
   }
 
   .pinmark-marker-btn.delete:hover {

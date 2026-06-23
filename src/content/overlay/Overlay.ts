@@ -8,6 +8,18 @@ import type { FeedbackManager } from '../feedback/FeedbackManager';
 import { sendMessage } from '../../shared/messaging';
 
 const OVERLAY_STYLES = `
+  :host {
+    --pmk-bg: #1f2937;
+    --pmk-bg-2: #111827;
+    --pmk-bg-3: #374151;
+    --pmk-text: #f9fafb;
+    --pmk-text-muted: #9ca3af;
+    --pmk-border: #374151;
+    --pmk-accent: #3b82f6;
+    --pmk-danger: #ef4444;
+    --pmk-success: #22c55e;
+  }
+
   .pinmark-overlay-container {
     position: fixed;
     top: 0;
@@ -61,8 +73,10 @@ export class Overlay {
     this.shadowRoot = this.container.attachShadow({ mode: 'open' });
 
     const style = document.createElement('style');
+    style.id = 'pinmark-overlay-styles';
     style.textContent = OVERLAY_STYLES;
     this.shadowRoot.appendChild(style);
+    this.applyTheme(settings);
 
     this.hoverBox = new HoverBox(this.shadowRoot);
     this.markerManager = new MarkerManager(this.shadowRoot, settings, {
@@ -205,20 +219,24 @@ export class Overlay {
     }
   }
 
-  private handleDeleteFeedback(id: string) {
+  private async handleDeleteFeedback(id: string) {
     this.feedbackManager.remove(id);
     this.markerManager.removeMarker(id);
     // Re-index remaining markers
-    this.reindexMarkers();
+    await this.reindexMarkers();
   }
 
-  private reindexMarkers() {
+  private async reindexMarkers() {
     const allFeedback = this.feedbackManager.getAll();
     allFeedback.forEach((feedback, index) => {
       feedback.index = index + 1;
     });
     // Update storage
-    this.feedbackManager.save();
+    try {
+      await this.feedbackManager.save();
+    } catch (e) {
+      console.error('Failed to save reindexed markers:', e);
+    }
     // Refresh markers
     this.markerManager.clearAll();
     allFeedback.forEach((item) => {
@@ -334,6 +352,31 @@ export class Overlay {
       } else {
         this.disableBlockingMode();
       }
+    }
+    // Re-apply theme if the theme setting itself changed
+    this.applyTheme(this.settings);
+  }
+
+  /** Resolve light/dark from settings and set CSS vars on the host. */
+  private applyTheme(settings: ExtensionSettings) {
+    const mode = settings.theme === 'auto'
+      ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      : settings.theme;
+    const host = this.container;
+    if (mode === 'light') {
+      host.style.setProperty('--pmk-bg', '#ffffff');
+      host.style.setProperty('--pmk-bg-2', '#f9fafb');
+      host.style.setProperty('--pmk-bg-3', '#e5e7eb');
+      host.style.setProperty('--pmk-text', '#1f2937');
+      host.style.setProperty('--pmk-text-muted', '#6b7280');
+      host.style.setProperty('--pmk-border', '#e5e7eb');
+    } else {
+      host.style.setProperty('--pmk-bg', '#1f2937');
+      host.style.setProperty('--pmk-bg-2', '#111827');
+      host.style.setProperty('--pmk-bg-3', '#374151');
+      host.style.setProperty('--pmk-text', '#f9fafb');
+      host.style.setProperty('--pmk-text-muted', '#9ca3af');
+      host.style.setProperty('--pmk-border', '#374151');
     }
   }
 

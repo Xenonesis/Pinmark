@@ -14,7 +14,7 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal {
-    background: #1f2937;
+    background: var(--pmk-bg);
     border-radius: 12px;
     padding: 24px;
     width: 400px;
@@ -24,7 +24,7 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-title {
-    color: #f9fafb;
+    color: var(--pmk-text);
     font-size: 18px;
     font-weight: 600;
     margin: 0 0 16px 0;
@@ -33,10 +33,10 @@ const MODAL_STYLES = `
   .pinmark-modal-input {
     width: 100%;
     padding: 12px 14px;
-    border: 1px solid #374151;
+    border: 1px solid var(--pmk-border);
     border-radius: 8px;
-    background: #111827;
-    color: #f9fafb;
+    background: var(--pmk-bg-2);
+    color: var(--pmk-text);
     font-size: 14px;
     outline: none;
     transition: border-color 0.15s ease;
@@ -47,11 +47,11 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-input:focus {
-    border-color: #3b82f6;
+    border-color: var(--pmk-accent);
   }
 
   .pinmark-modal-input::placeholder {
-    color: #6b7280;
+    color: var(--pmk-text-muted);
   }
 
   .pinmark-modal-actions {
@@ -77,8 +77,8 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-btn.cancel {
-    background: #374151;
-    color: #f9fafb;
+    background: var(--pmk-bg-3);
+    color: var(--pmk-text);
   }
 
   .pinmark-modal-btn.cancel:hover:not(:disabled) {
@@ -86,7 +86,7 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-btn.submit {
-    background: #3b82f6;
+    background: var(--pmk-accent);
     color: white;
   }
 
@@ -95,12 +95,12 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-element-info {
-    background: #111827;
+    background: var(--pmk-bg-2);
     border-radius: 6px;
     padding: 10px 12px;
     margin-bottom: 16px;
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--pmk-text-muted);
     font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
     overflow: hidden;
     text-overflow: ellipsis;

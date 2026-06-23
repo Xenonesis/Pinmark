@@ -58,7 +58,8 @@ export type Message =
   | { type: 'COPY_FEEDBACK'; url: string }
   | { type: 'CLEAR_FEEDBACK' }
   | { type: 'TOGGLE_MARKERS' }
-  | { type: 'TOGGLE_PAUSE' };
+  | { type: 'TOGGLE_PAUSE' }
+  | { type: 'UPDATE_SETTINGS'; settings: Partial<ExtensionSettings> };
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
   markerColor: '#ef4444',

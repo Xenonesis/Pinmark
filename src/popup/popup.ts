@@ -74,6 +74,16 @@ async function saveSetting(key: keyof ExtensionSettings, value: unknown) {
     type: 'SAVE_SETTINGS',
     settings: { [key]: value },
   });
+  // Relay to the active tab's content script so overlay settings
+  // (clearAfterCopy, blockInteractions, markerColor) take effect immediately.
+  if (currentTabId) {
+    chrome.tabs.sendMessage(currentTabId, {
+      type: 'UPDATE_SETTINGS',
+      settings: { [key]: value },
+    }).catch(() => {
+      // content script may not be loaded yet — ignore
+    });
+  }
 }
 
 toggleBtn?.addEventListener('click', async () => {

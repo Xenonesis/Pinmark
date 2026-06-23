@@ -129,6 +129,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       overlay?.refreshMarkers();
       sendResponse({ success: true });
       break;
+    case 'UPDATE_SETTINGS':
+      overlay?.updateSettings(message.settings);
+      sendResponse({ success: true });
+      break;
   }
   return false;
 });
@@ -148,12 +152,10 @@ document.addEventListener('keydown', (e) => {
   }
 
   if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey) {
+    // Don't intercept if the user is trying to copy selected text
+    if (window.getSelection()?.toString().trim()) return;
     e.preventDefault();
-    const markdown = feedbackManager?.toMarkdown();
-    if (markdown) {
-      navigator.clipboard.writeText(markdown);
-      alert('Feedback copied to clipboard!');
-    }
+    overlay?.copyFeedback();
   }
 
   if (e.key.toLowerCase() === 'h') {

@@ -4,9 +4,15 @@ export class MarkdownFormatter {
   format(url: string, feedback: FeedbackItem[], settings?: ExtensionSettings): string {
     const detail = settings?.outputDetail || 'standard';
 
+    // Use the earliest captured timestamp so the report shows when
+    // feedback was actually gathered, not the current system time.
+    const ts = feedback.length > 0
+      ? feedback.reduce((earliest, item) => item.timestamp < earliest ? item.timestamp : earliest, feedback[0].timestamp)
+      : Date.now();
+
     let markdown = `# Pinmark Feedback Report\n`;
     markdown += `**URL:** ${url}\n`;
-    markdown += `**Captured:** ${new Date().toISOString().replace('T', ' ').substring(0, 19)}\n`;
+    markdown += `**Captured:** ${new Date(ts).toISOString().replace('T', ' ').substring(0, 19)}\n`;
     markdown += `**Total Items:** ${feedback.length}\n`;
     markdown += `\n---\n\n`;
 

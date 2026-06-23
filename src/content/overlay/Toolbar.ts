@@ -9,7 +9,7 @@ const TOOLBAR_STYLES = `
     align-items: center;
     gap: 8px;
     padding: 8px;
-    background: #1f2937;
+    background: var(--pmk-bg);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 2147483646;
@@ -27,8 +27,8 @@ const TOOLBAR_STYLES = `
     padding: 0;
     border: none;
     border-radius: 6px;
-    background: #374151;
-    color: #f9fafb;
+    background: var(--pmk-bg-3);
+    color: var(--pmk-text);
     cursor: pointer;
     transition: all 0.15s ease-out;
   }
@@ -47,11 +47,11 @@ const TOOLBAR_STYLES = `
   }
 
   .pinmark-toolbar-btn.active {
-    background: #3b82f6;
+    background: var(--pmk-accent);
   }
 
   .pinmark-toolbar-label {
-    color: #f9fafb;
+    color: var(--pmk-text);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 13px;
     font-weight: 500;
@@ -61,7 +61,7 @@ const TOOLBAR_STYLES = `
   .pinmark-toolbar-divider {
     width: 1px;
     height: 24px;
-    background: #4b5563;
+    background: var(--pmk-bg-3);
   }
 `;
 
