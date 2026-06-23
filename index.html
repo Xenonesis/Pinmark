@@ -2127,14 +2127,184 @@ h3 {
 }
 
 /* ---------- license ---------- */
-.license {
-  border: 1px solid var(--line);
-  padding: 32px;
-  background: var(--bg-elev);
-  margin-top: 24px;
+/* ---------- license section ---------- */
+#license .lede {
+  font-size: 16px;
+  color: var(--ink-mid);
+  max-width: 720px;
+  margin-bottom: 28px;
 }
-.license p { font-size: 14px; color: var(--ink-mid); margin-bottom: 12px; }
-.license p:last-child { margin-bottom: 0; }
+#license .lede strong { color: var(--ink); }
+
+.license-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+.license-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+.license-pill b {
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.license-pill em {
+  font-style: normal;
+  color: var(--accent);
+  opacity: 0.7;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.license-pill.is-no {
+  border-color: var(--marker);
+  background: var(--marker-soft);
+}
+.license-pill.is-no b { color: var(--marker); }
+.license-pill.is-no em { color: var(--marker); opacity: 0.7; }
+
+.license-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.license-col {
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  padding: 28px;
+}
+.license-col-yes { border-color: var(--accent); }
+.license-col-no { border-color: var(--marker); }
+.license-col-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.license-col-mark {
+  width: 28px; height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.license-col-yes .license-col-mark { background: var(--accent); color: white; }
+.license-col-no .license-col-mark { background: var(--marker); color: white; }
+.license-col-head h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 0;
+  color: var(--ink);
+}
+.license-col ul {
+  list-style: none;
+}
+.license-col li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--ink-mid);
+  line-height: 1.55;
+}
+.license-col li:last-child { border-bottom: 0; }
+.license-col li b { color: var(--ink); font-weight: 600; }
+.license-col li code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: var(--bg);
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.license-why {
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  margin-bottom: 24px;
+}
+.license-why summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+  list-style: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  user-select: none;
+}
+.license-why summary::-webkit-details-marker { display: none; }
+.license-why summary:hover { background: var(--bg); }
+.license-why-chevron {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  color: var(--accent);
+  font-weight: 400;
+  transition: transform 220ms cubic-bezier(.2,.9,.3,1);
+}
+.license-why[open] .license-why-chevron { transform: rotate(45deg); }
+.license-why-body {
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--line);
+  animation: licenseExpand 260ms cubic-bezier(.2,.9,.3,1);
+}
+@keyframes licenseExpand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.license-why-body p {
+  font-size: 13.5px;
+  color: var(--ink-mid);
+  line-height: 1.6;
+  margin-top: 14px;
+}
+.license-why-body p b { color: var(--ink); font-weight: 600; }
+
+.license-footer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 16px 20px;
+  border: 1px dashed var(--line);
+  background: var(--bg);
+  line-height: 1.6;
+}
+.license-footer a { color: var(--accent); }
+.license-footer code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--bg-elev);
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+}
+
+@media (max-width: 760px) {
+  .license-grid { grid-template-columns: 1fr; }
+  .license-col { padding: 20px; }
+  .license-badge-row { gap: 6px; }
+  .license-pill { padding: 6px 10px; font-size: 10px; }
+}
 
 /* ---------- coming soon modal + soon links ---------- */
 .soon { position: relative; }
@@ -3198,13 +3368,63 @@ footer a:hover { color: var(--ink); }
 </section>
 
 <!-- LICENSE -->
-<section>
+<section id="license">
   <div class="wrap">
     <span class="eyebrow">// license</span>
     <h2>Source-available, free for developers</h2>
-    <div class="license">
-      <p><strong style="color: var(--ink);">Polyform Noncommercial 1.0.0.</strong> Use it personally, fork it, modify it, build it from source — for free, forever.</p>
-      <p>The Chrome Web Store listing is a convenience: it supports continued development and saves you the four commands above. The source will always be free.</p>
+    <p class="lede">Pinmark is licensed under <strong>Polyform Noncommercial 1.0.0</strong> — a permissive license that lets anyone read, modify, and build the source for free, while reserving commercial redistribution to the copyright holder.</p>
+
+    <div class="license-badge-row">
+      <span class="license-pill"><b>personal use</b><em>✓ free</em></span>
+      <span class="license-pill"><b>modify & fork</b><em>✓ free</em></span>
+      <span class="license-pill"><b>build from source</b><em>✓ free</em></span>
+      <span class="license-pill is-no"><b>resell on stores</b><em>✗ no</em></span>
+      <span class="license-pill is-no"><b>bundle in paid product</b><em>✗ no</em></span>
+    </div>
+
+    <div class="license-grid">
+      <div class="license-col license-col-yes">
+        <div class="license-col-head">
+          <span class="license-col-mark">✓</span>
+          <h3>You can</h3>
+        </div>
+        <ul>
+          <li><b>Read the entire source.</b> Every file is on GitHub — audit it, learn from it.</li>
+          <li><b>Build it for yourself.</b> <code>npm install &amp;&amp; npm run build</code>, load the <code>dist/</code> folder as an unpacked extension.</li>
+          <li><b>Modify it for personal use.</b> Change colors, shortcuts, marker behavior — your fork, your rules.</li>
+          <li><b>Use it at work.</b> Internal business use inside a single company is allowed without paying.</li>
+          <li><b>Contribute back.</b> Open a PR on GitHub — bug fixes and improvements are welcome.</li>
+        </ul>
+      </div>
+      <div class="license-col license-col-no">
+        <div class="license-col-head">
+          <span class="license-col-mark">✗</span>
+          <h3>You can&rsquo;t</h3>
+        </div>
+        <ul>
+          <li><b>Resell it.</b> Don't publish Pinmark (or a rebranded fork of it) on the Chrome Web Store, Firefox Add-ons, or any marketplace.</li>
+          <li><b>Bundle it in a paid product.</b> Don't ship it inside a commercial SaaS or paid desktop app.</li>
+          <li><b>Offer it as a hosted service.</b> "Pinmark-as-a-Service" against payment is reserved to the copyright holder.</li>
+          <li><b>Strip the license notice.</b> Modified versions must keep the Polyform Noncommercial attribution intact.</li>
+        </ul>
+      </div>
+    </div>
+
+    <details class="license-why">
+      <summary>
+        <span>Why this license, not MIT or GPL?</span>
+        <span class="license-why-chevron" aria-hidden="true">+</span>
+      </summary>
+      <div class="license-why-body">
+        <p>Pinmark is built and maintained by one person. The <strong>$2 Chrome Web Store</strong> listing isn't a price tag — it's a "support the work" button. The copyright holder (Xenonesis) reserves the right to commercialize future versions, while the source stays free for everyone under the noncommercial clause.</p>
+        <p><b>vs MIT:</b> MIT would let anyone repackage and resell Pinmark on the Chrome Web Store, undercutting the maintainer. Polyform Noncommercial closes that door.</p>
+        <p><b>vs GPL:</b> GPL is viral — it would force any fork to also be GPL. That scares off companies who might otherwise contribute. Polyform Noncommercial is permissive: do whatever you want, just don't sell it.</p>
+        <p><b>vs Apache 2.0 / BSL:</b> BSL (Business Source License) is similar but converts to a fully open license after a time period. Polyform Noncommercial is permanent — there's no "expiration date" where it auto-converts to MIT.</p>
+      </div>
+    </details>
+
+    <div class="license-footer">
+      <p>The full legal text lives in <a href="LICENSE.md" target="_blank" rel="noopener"><code>LICENSE.md</code></a> on GitHub. For commercial licensing inquiries, contact <a href="mailto:contact@xenonesis.dev"><code>contact@xenonesis.dev</code></a>.</p>
     </div>
   </div>
 </section>
