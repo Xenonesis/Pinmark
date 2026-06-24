@@ -11,6 +11,7 @@ export interface ExtensionSettings {
   autoSync: boolean;
   githubToken?: string;
   githubRepo?: string;
+  webhookUrl?: string;
 }
 
 export interface ExtensionState {
@@ -50,4 +51,5 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   autoSync: true,
   githubToken: '',
   githubRepo: '',
+  webhookUrl: '',
 };

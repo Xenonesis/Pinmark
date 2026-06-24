@@ -95,6 +95,7 @@ const ICONS = {
   pause: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`,
   play: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
   areaSelect: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-dasharray="3 3"/></svg>`,
+  multiSelect: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><rect x="8" y="10" width="14" height="14" rx="2"/></svg>`,
   eye: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
   eyeOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`,
   copy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
@@ -115,12 +116,15 @@ export class Toolbar {
   private isLayoutMode = false;
   private sendBtn: HTMLButtonElement | null = null;
   private areaSelectBtn: HTMLButtonElement | null = null;
+  private multiSelectBtn: HTMLButtonElement | null = null;
   private layoutBtn: HTMLButtonElement | null = null;
   private isAreaSelectActive = false;
+  private isMultiSelectActive = false;
 
   onPauseToggle?: () => void;
   onMarkersToggle?: () => void;
   onAreaSelectToggle?: () => void;
+  onMultiSelectToggle?: () => void;
   onLayoutModeToggle?: () => void;
   onCopy?: () => void;
   onDownloadJson?: () => void;
@@ -223,6 +227,13 @@ export class Toolbar {
       this.onAreaSelectToggle?.();
     };
 
+    this.multiSelectBtn = this.createButton('multiSelect', 'Toggle Multi-Select Mode', 'multi-select');
+    this.multiSelectBtn.onclick = (e) => {
+      e.stopPropagation();
+      this.toggleMultiSelect();
+      this.onMultiSelectToggle?.();
+    };
+
     const copyBtn = this.createButton('copy', 'Copy Annotations', 'copy');
     copyBtn.onclick = (e) => {
       e.stopPropagation();
@@ -292,6 +303,7 @@ export class Toolbar {
 
     toolbar.appendChild(pauseBtn);
     toolbar.appendChild(this.areaSelectBtn);
+    toolbar.appendChild(this.multiSelectBtn);
     toolbar.appendChild(eyeBtn);
     toolbar.appendChild(this.layoutBtn!);
     toolbar.appendChild(divider1);
@@ -403,20 +415,40 @@ export class Toolbar {
 
   toggleAreaSelect(active?: boolean) {
     this.isAreaSelectActive = active !== undefined ? active : !this.isAreaSelectActive;
+    if (this.isAreaSelectActive && this.isMultiSelectActive) {
+      this.toggleMultiSelect(false); // mutually exclusive
+    }
     if (this.areaSelectBtn) {
       if (this.isAreaSelectActive) {
         this.areaSelectBtn.classList.add('active');
-        this.areaSelectBtn.style.color = 'var(--pmk-accent, #3b82f6)';
+        this.areaSelectBtn.style.color = '#fff';
       } else {
         this.areaSelectBtn.classList.remove('active');
         this.areaSelectBtn.style.color = '';
       }
     }
   }
-  setLayoutMode(isLayoutMode: boolean) {
-    this.isLayoutMode = isLayoutMode;
+
+  toggleMultiSelect(active?: boolean) {
+    this.isMultiSelectActive = active !== undefined ? active : !this.isMultiSelectActive;
+    if (this.isMultiSelectActive && this.isAreaSelectActive) {
+      this.toggleAreaSelect(false); // mutually exclusive
+    }
+    if (this.multiSelectBtn) {
+      if (this.isMultiSelectActive) {
+        this.multiSelectBtn.classList.add('active');
+        this.multiSelectBtn.style.color = 'var(--pmk-success, #22c55e)';
+      } else {
+        this.multiSelectBtn.classList.remove('active');
+        this.multiSelectBtn.style.color = '';
+      }
+    }
+  }
+
+  setLayoutMode(isActive: boolean) {
+    this.isLayoutMode = isActive;
     if (this.layoutBtn) {
-      if (isLayoutMode) {
+      if (isActive) {
         this.layoutBtn.classList.add('active');
         this.layoutBtn.style.color = 'var(--pmk-accent, #3b82f6)';
       } else {

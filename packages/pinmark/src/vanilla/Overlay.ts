@@ -75,6 +75,7 @@ export class Overlay {
   private targetElement: HTMLElement | null = null;
   private isModalOpen = false;
   private isAreaSelectActive = false;
+  private isMultiSelectActive = false;
 
   // Text selection floating button
   private selectionBtn: HTMLElement | null = null;
@@ -175,9 +176,13 @@ export class Overlay {
       e.preventDefault();
       this.toggleLayoutMode();
     } else if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey) {
-      // Only trigger if just 'c' is pressed (not Ctrl+C which is copy text)
       e.preventDefault();
-      this.copyFeedback();
+      this.clearAll();
+    } else if (e.key === 'Backspace' || e.key === 'Delete') {
+      const all = this.feedbackManager.getAll();
+      if (all.length > 0) {
+        this.handleDeleteFeedback(all[all.length - 1].id);
+      }
     }
   };
 
@@ -409,6 +414,7 @@ export class Overlay {
       consoleLogs: [...this.consoleLogs],
       networkRequests: [...this.networkRequests],
       sessionRecording: [...this.rrwebEvents],
+      markerType: this.isMultiSelectActive ? 'multi' : (overrideRect ? 'area' : 'single'),
       ...(overrideRect ? { areaRect: { x: overrideRect.x, y: overrideRect.y, width: overrideRect.width, height: overrideRect.height } } : {})
     };
 
@@ -494,6 +500,18 @@ export class Overlay {
       if (this.isAreaSelectActive) {
         this.hoverBox.hide();
         this.targetElement = null;
+        if (this.isLayoutMode) this.toggleLayoutMode(false);
+        if (this.isMultiSelectActive) {
+          this.isMultiSelectActive = false;
+        }
+      }
+    };
+    this.toolbar.onMultiSelectToggle = () => {
+      this.isMultiSelectActive = !this.isMultiSelectActive;
+      if (this.isMultiSelectActive) {
+        if (this.isAreaSelectActive) {
+          this.isAreaSelectActive = false;
+        }
         if (this.isLayoutMode) this.toggleLayoutMode(false);
       }
     };
@@ -867,6 +885,7 @@ export class Overlay {
       consoleLogs: [],
       networkRequests: [],
       sessionRecording: [],
+      markerType: 'area',
       areaRect: { x: placeholderRect.x, y: placeholderRect.y, width: placeholderRect.width, height: placeholderRect.height }
     } as any;
 

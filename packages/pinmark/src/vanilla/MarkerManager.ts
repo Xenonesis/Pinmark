@@ -48,6 +48,10 @@ const MARKER_STYLES = (color: string) => `
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
 
+  .pinmark-marker.pinmark-marker-multi {
+    background-color: var(--pmk-success, #22c55e);
+  }
+
   .pinmark-marker.hidden {
     opacity: 0;
     pointer-events: none;
@@ -171,6 +175,9 @@ export class MarkerManager {
 
     const marker = document.createElement('div');
     marker.className = 'pinmark-marker';
+    if (feedback.markerType === 'multi' || feedback.markerType === 'area') {
+      marker.classList.add('pinmark-marker-multi');
+    }
     marker.dataset.feedbackId = feedback.id;
     marker.textContent = feedback.index.toString();
     marker.style.top = `${rect.top + scrollTop - 14}px`;

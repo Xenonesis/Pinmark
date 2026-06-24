@@ -17,6 +17,7 @@ const settingsInputs = {
   blockInteractions: document.getElementById('blockInteractions') as HTMLInputElement,
   githubToken: document.getElementById('githubToken') as HTMLInputElement,
   githubRepo: document.getElementById('githubRepo') as HTMLInputElement,
+  webhookUrl: document.getElementById('webhookUrl') as HTMLInputElement,
 };
 
 // Theme adapter backed by the ExtensionSettings.theme field (keeps it in
@@ -78,6 +79,7 @@ function loadSettings(settings: ExtensionSettings) {
   if (settingsInputs.blockInteractions) settingsInputs.blockInteractions.checked = settings.blockInteractions;
   if (settingsInputs.githubToken) settingsInputs.githubToken.value = settings.githubToken || '';
   if (settingsInputs.githubRepo) settingsInputs.githubRepo.value = settings.githubRepo || '';
+  if (settingsInputs.webhookUrl) settingsInputs.webhookUrl.value = settings.webhookUrl || '';
 }
 
 async function saveSetting(key: keyof ExtensionSettings, value: unknown) {
@@ -189,6 +191,10 @@ settingsInputs.githubToken?.addEventListener('input', async (e) => {
 
 settingsInputs.githubRepo?.addEventListener('input', async (e) => {
   await saveSetting('githubRepo', (e.target as HTMLInputElement).value);
+});
+
+settingsInputs.webhookUrl?.addEventListener('input', async (e) => {
+  await saveSetting('webhookUrl', (e.target as HTMLInputElement).value);
 });
 
 init();

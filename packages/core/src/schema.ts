@@ -71,6 +71,7 @@ export const PinmarkAnnotationSchema = z.object({
   intent: z.enum(['fix', 'change', 'question', 'approve']).optional(),
   severity: z.enum(['blocking', 'important', 'suggestion']).optional(),
   kind: z.enum(['feedback', 'placement', 'rearrange']).optional(),
+  markerType: z.enum(['single', 'multi', 'area']).optional(),
 
   // Status (managed by server)
   status: z.enum(['pending', 'acknowledged', 'resolved', 'dismissed']).optional(),
