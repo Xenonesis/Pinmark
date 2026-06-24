@@ -4,7 +4,8 @@ const TOOLBAR_STYLES = `
   .pinmark-toolbar {
     position: fixed;
     top: 16px;
-    left: calc(100vw - 320px);
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 4px;
@@ -16,11 +17,6 @@ const TOOLBAR_STYLES = `
     pointer-events: all;
     cursor: move;
     user-select: none;
-    transition: transform 0.2s ease;
-  }
-
-  .pinmark-toolbar:hover {
-    transform: scale(1.02);
   }
 
   .pinmark-toolbar-btn {
@@ -143,48 +139,48 @@ export class Toolbar {
 
   private setupDragListeners() {
     let isDragging = false;
-    let currentX: number;
-    let currentY: number;
-    let initialX: number;
-    let initialY: number;
-    let xOffset = 0;
-    let yOffset = 0;
+    let startMouseX = 0;
+    let startMouseY = 0;
+    let startElLeft = 0;
+    let startElTop = 0;
 
     const dragStart = (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest('button')) return;
+      if (e.target !== this.element) return;
 
-      initialX = e.clientX - xOffset;
-      initialY = e.clientY - yOffset;
+      isDragging = true;
+      startMouseX = e.clientX;
+      startMouseY = e.clientY;
 
-      if (e.target === this.element) {
-        isDragging = true;
-      }
+      // Get actual position of toolbar in viewport
+      const rect = this.element.getBoundingClientRect();
+      startElLeft = rect.left;
+      startElTop = rect.top;
+
+      // Switch from centered CSS to absolute left/top
+      this.element.style.transform = 'none';
+      this.element.style.left = `${startElLeft}px`;
+      this.element.style.top = `${startElTop}px`;
     };
 
     const dragEnd = () => {
-      initialX = currentX;
-      initialY = currentY;
       isDragging = false;
     };
 
     const drag = (e: MouseEvent) => {
-      if (isDragging) {
-        e.preventDefault();
-        currentX = e.clientX - initialX;
-        currentY = e.clientY - initialY;
-        xOffset = currentX;
-        yOffset = currentY;
-        this.setTranslate(currentX, currentY, this.element);
-      }
+      if (!isDragging) return;
+      e.preventDefault();
+      const dx = e.clientX - startMouseX;
+      const dy = e.clientY - startMouseY;
+      const newLeft = Math.max(0, Math.min(window.innerWidth - this.element.offsetWidth, startElLeft + dx));
+      const newTop = Math.max(0, Math.min(window.innerHeight - this.element.offsetHeight, startElTop + dy));
+      this.element.style.left = `${newLeft}px`;
+      this.element.style.top = `${newTop}px`;
     };
 
     this.element.addEventListener('mousedown', dragStart);
     document.addEventListener('mouseup', dragEnd);
     document.addEventListener('mousemove', drag);
-  }
-
-  private setTranslate(xPos: number, yPos: number, el: HTMLElement) {
-    el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
   }
 
   private createToolbar(): HTMLElement {
