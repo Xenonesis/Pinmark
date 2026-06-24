@@ -5,44 +5,7 @@ import { sendMessage } from '../shared/messaging';
 
 console.log('[Pinmark] Content script loaded');
 
-function injectLogger() {
-  const script = document.createElement('script');
-  script.textContent = `(${function() {
-    function sendLog(type: string, data: any) {
-      window.postMessage({ source: 'pinmark-logger', type, data }, '*');
-    }
-    
-    ['log', 'warn', 'error', 'info'].forEach((method) => {
-      const original = (console as any)[method];
-      (console as any)[method] = function(...args: any[]) {
-        sendLog('console', { method, args: args.map(a => {
-          try { return typeof a === 'object' ? JSON.stringify(a) : String(a); } catch { return String(a); }
-        })});
-        return original.apply(this, args);
-      };
-    });
-    
-    window.addEventListener('error', (e) => {
-      sendLog('console', { method: 'error', args: [e.message, e.filename, e.lineno] });
-    });
-    
-    const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
-      sendLog('network', { type: 'fetch', url: String(args[0]), method: (args[1] as any)?.method || 'GET' });
-      return originalFetch.apply(this, args);
-    };
-    
-    const originalXHR = window.XMLHttpRequest.prototype.open;
-    window.XMLHttpRequest.prototype.open = function(method, url) {
-      sendLog('network', { type: 'xhr', method: String(method), url: String(url) });
-      return originalXHR.apply(this, arguments as any);
-    };
-  }.toString()})();`;
-  (document.head || document.documentElement).appendChild(script);
-  script.remove();
-}
 
-injectLogger();
 
 let overlay: Overlay | null = null;
 let feedbackManager: FeedbackManager | null = null;
