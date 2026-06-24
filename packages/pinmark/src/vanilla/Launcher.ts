@@ -18,7 +18,7 @@ export const LAUNCHER_STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
+    cursor: move;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s, background 0.2s;
     border: none;
@@ -94,10 +94,8 @@ export const LAUNCHER_STYLES = `
   }
 
   .pinmark-launcher-badge svg {
-    width: 10px;
-    height: 10px;
-    color: white;
-    fill: currentColor;
+    width: 100%;
+    height: 100%;
   }
 
   .pinmark-tooltip {
@@ -150,10 +148,10 @@ export class Launcher {
       <span class="pinmark-launcher-line"></span>
     `;
 
-    // Sparkle badge (top-right of button)
+    // Sparkle badge replaced by Pinmark logo (top-right of button)
     this.badgeEl = document.createElement('div');
     this.badgeEl.className = 'pinmark-launcher-badge';
-    this.badgeEl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74z"/></svg>`;
+    this.badgeEl.innerHTML = `<svg viewBox="0 0 128 128" aria-hidden="true"><path d="M64 118 C64 118 102 82 102 50 C102 26 86 8 64 8 C42 8 26 26 26 50 C26 82 64 118 64 118 Z" fill="#E11D48"/><circle cx="64" cy="48" r="14" fill="#FFFFFF"/><circle cx="64" cy="48" r="6" fill="#4338CA"/></svg>`;
 
     // Tooltip
     const tooltip = document.createElement('div');
@@ -164,9 +162,62 @@ export class Launcher {
     this.btn.appendChild(this.badgeEl);
     this.btn.appendChild(tooltip);
 
+    let isDragging = false;
+    let startMouseX = 0;
+    let startMouseY = 0;
+    let startElLeft = 0;
+    let startElTop = 0;
+    let hasDragged = false;
+
+    const dragStart = (e: MouseEvent) => {
+      isDragging = true;
+      hasDragged = false;
+      startMouseX = e.clientX;
+      startMouseY = e.clientY;
+
+      const rect = this.element.getBoundingClientRect();
+      startElLeft = rect.left;
+      startElTop = rect.top;
+
+      // Switch to absolute positioning from viewport edges
+      this.element.style.bottom = 'auto';
+      this.element.style.right = 'auto';
+      this.element.style.left = `${startElLeft}px`;
+      this.element.style.top = `${startElTop}px`;
+    };
+
+    const dragEnd = () => {
+      isDragging = false;
+    };
+
+    const drag = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      const dx = e.clientX - startMouseX;
+      const dy = e.clientY - startMouseY;
+      
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        hasDragged = true;
+      }
+
+      if (hasDragged) {
+        e.preventDefault();
+        const newLeft = Math.max(0, Math.min(window.innerWidth - this.btn.offsetWidth, startElLeft + dx));
+        const newTop = Math.max(0, Math.min(window.innerHeight - this.btn.offsetHeight, startElTop + dy));
+        this.element.style.left = `${newLeft}px`;
+        this.element.style.top = `${newTop}px`;
+      }
+    };
+
+    this.btn.addEventListener('mousedown', dragStart);
+    document.addEventListener('mouseup', dragEnd);
+    document.addEventListener('mousemove', drag);
+
     this.btn.onclick = (e) => {
       e.stopPropagation();
-      this.onClick?.();
+      if (!hasDragged) {
+        this.onClick?.();
+      }
     };
 
     shadowRoot.appendChild(this.btn);
