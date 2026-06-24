@@ -180,6 +180,11 @@ export class Overlay {
     } else if (e.key.toLowerCase() === 'l') {
       e.preventDefault();
       this.toggleLayoutMode();
+    } else if (e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      this.animationInspector.togglePause();
+      const isFrozen = this.animationInspector.getIsPaused();
+      this.showToast(isFrozen ? '❄️ Animations Frozen (Press F to resume)' : '▶️ Animations Resumed');
     } else if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey) {
       e.preventDefault();
       this.clearAll();
@@ -1052,9 +1057,41 @@ export class Overlay {
 
   toggleMarkers() {
     this.markersVisible = !this.markersVisible;
-    this.markerManager.setVisible(this.markersVisible);
     this.toolbar.setMarkersVisible(this.markersVisible);
+    this.markerManager.setVisible(this.markersVisible);
   }
+
+  public showToast(message: string) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: system-ui, sans-serif;
+      z-index: 2147483647;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      animation: pmkToastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1), pmkToastOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) 1.7s forwards;
+    `;
+    toast.textContent = message;
+
+    if (!this.shadowRoot.querySelector('#pmk-toast-anim')) {
+      const animStyle = document.createElement('style');
+      animStyle.id = 'pmk-toast-anim';
+      animStyle.textContent = '@keyframes pmkToastIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } } @keyframes pmkToastOut { from { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; transform: translate(-50%, 10px); } }';
+      this.shadowRoot.appendChild(animStyle);
+    }
+
+    this.shadowRoot.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+  }
+
 
   async copyToClipboard(text: string): Promise<boolean> {
     if (navigator.clipboard && window.isSecureContext) {

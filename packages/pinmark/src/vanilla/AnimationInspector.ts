@@ -296,6 +296,7 @@ export class AnimationInspector {
 
   // Pause tab state
   private isPaused = false;
+  public getIsPaused() { return this.isPaused; }
   private pauseStyleEl: HTMLStyleElement | null = null;
 
   public onAnnotate?: (data: { animationData: AnimationInfo[]; steps: RecordedStep[]; element?: HTMLElement }) => void;
@@ -750,6 +751,11 @@ export class AnimationInspector {
     body.appendChild(resetBtn);
   }
 
+  public togglePause() {
+    if (this.isPaused) this.resumeAnimations();
+    else this.pauseAnimations();
+  }
+
   public pauseAnimations() {
     if (this.isPaused) return;
     this.isPaused = true;
@@ -758,10 +764,13 @@ export class AnimationInspector {
       this.pauseStyleEl = document.createElement('style');
       this.pauseStyleEl.id = 'pinmark-pause-animations';
     }
+    // Deep freeze: pauses keyframes and uses 99999s transition delay to completely lock hover/focus/active states
     this.pauseStyleEl.textContent = `
       *, *::before, *::after {
         animation-play-state: paused !important;
-        transition-duration: 0.001ms !important;
+        transition-property: all !important;
+        transition-duration: 0s !important;
+        transition-delay: 99999s !important;
       }
     `;
     document.head.appendChild(this.pauseStyleEl);
