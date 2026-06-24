@@ -131,11 +131,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
 
     case 'OPEN_SETTINGS':
-      if (chrome.runtime.openOptionsPage) {
-        chrome.runtime.openOptionsPage();
-      } else {
-        window.open(chrome.runtime.getURL('popup/index.html'));
-      }
+      chrome.tabs.create({ url: chrome.runtime.getURL('src/popup/index.html') });
       sendResponse({ success: true });
       return true;
   }
