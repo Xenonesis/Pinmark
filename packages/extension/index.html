@@ -596,23 +596,35 @@ h3 {
 .md-interactive {
   position: relative;
   cursor: pointer;
-  transition: color 200ms ease;
+  transition: color 200ms ease, transform 200ms ease, text-shadow 200ms ease;
   text-decoration: underline;
   text-decoration-color: transparent;
   text-underline-offset: 6px;
   outline: none;
+  animation: mdAttract 3.6s ease-in-out infinite;
 }
 .md-interactive:hover,
 .md-interactive:focus-visible {
   color: var(--accent);
   text-decoration-color: var(--accent);
+  transform: scale(1.04);
+  animation: none;
+}
+.md-interactive:active {
+  transform: scale(0.92);
+  color: var(--marker);
+}
+@keyframes mdAttract {
+  0%, 100% { text-shadow: 0 0 0 transparent; }
+  60% { text-shadow: 0 0 0 transparent; }
+  72% { text-shadow: 0 0 12px var(--accent), 0 0 40px color-mix(in srgb, var(--accent) 40%, transparent); }
+  80% { text-shadow: 0 0 0 transparent; }
 }
 .md-interactive::after {
   content: 'Click to see the format →';
   position: absolute;
   bottom: -36px;
   left: 50%;
-  transform: translateX(-50%);
   white-space: nowrap;
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 12px;
@@ -632,6 +644,14 @@ h3 {
 .md-interactive:focus-visible::after {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+.md-interactive-flash {
+  animation: mdFlash 600ms ease;
+}
+@keyframes mdFlash {
+  0% { box-shadow: 0 0 0 0 var(--accent); }
+  50% { box-shadow: 0 0 0 10px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
 }
 
 /* interactive targets */
@@ -4637,8 +4657,15 @@ footer a:hover { color: var(--ink); }
   (() => {
     const el = document.querySelector('.md-interactive');
     if (!el) return;
+    const MAX_HITS = 3;
+    let hitCount = 0;
     el.addEventListener('click', () => {
+      hitCount++;
+      el.classList.remove('md-interactive-flash');
+      void el.offsetWidth;
+      el.classList.add('md-interactive-flash');
       document.querySelector('.tryit')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (hitCount >= MAX_HITS) el.style.animation = 'none';
     });
     el.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') {

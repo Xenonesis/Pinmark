@@ -331,6 +331,8 @@ export class Toolbar {
       btn.innerHTML = '';
     }
 
+    btn.title = title;
+    
     const tooltip = document.createElement('div');
     tooltip.className = 'pinmark-tooltip';
     if (title.includes('[')) {
