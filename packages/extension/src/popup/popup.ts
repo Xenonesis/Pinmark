@@ -1,116 +1,204 @@
 import type { ExtensionSettings } from '../shared/types';
 import { sendMessage } from '../shared/messaging';
-import { ThemeProvider, type ThemeStorage, type ThemeMode } from '../shared/theme-provider';
 import { getSettings, saveSettings } from '../shared/storage';
 
 let currentTabId: number | null = null;
 let isActive = false;
 
+// ── DOM refs ──────────────────────────────────────────
 const toggleBtn = document.getElementById('toggleBtn') as HTMLButtonElement;
-const btnText = toggleBtn?.querySelector('.btn-text') as HTMLElement;
+const activateLabel = toggleBtn?.querySelector('.activate-label') as HTMLElement;
+const activateShortcut = toggleBtn?.querySelector('.activate-shortcut') as HTMLElement;
+const statusMsg = document.getElementById('statusMsg') as HTMLElement;
 
-const settingsInputs = {
-  markerColor: document.getElementById('markerColor') as HTMLInputElement,
-  outputDetail: document.getElementById('outputDetail') as HTMLSelectElement,
-  theme: document.getElementById('theme') as HTMLSelectElement,
-  clearAfterCopy: document.getElementById('clearAfterCopy') as HTMLInputElement,
-  blockInteractions: document.getElementById('blockInteractions') as HTMLInputElement,
-  githubToken: document.getElementById('githubToken') as HTMLInputElement,
-  githubRepo: document.getElementById('githubRepo') as HTMLInputElement,
-  webhookUrl: document.getElementById('webhookUrl') as HTMLInputElement,
-};
+const outputDetailLabel = document.getElementById('outputDetailLabel') as HTMLElement;
+const outputDetailSelect = document.getElementById('outputDetail') as HTMLSelectElement;
+const outputDetailTrigger = document.getElementById('outputDetailTrigger') as HTMLButtonElement;
 
-// Theme adapter backed by the ExtensionSettings.theme field (keeps it in
-// sync with the rest of the extension's settings).
-const settingsThemeStorage: ThemeStorage = {
-  async get() {
-    const s = await getSettings();
-    const t = s.theme;
-    return t === 'light' || t === 'dark' || t === 'auto' ? t : null;
-  },
-  async set(mode: ThemeMode) {
-    await saveSettings({ theme: mode });
-  },
-};
+const blockInteractionsToggle = document.getElementById('blockInteractions') as HTMLInputElement;
+const reactComponentsToggle = document.getElementById('reactComponents') as HTMLInputElement;
+const clearAfterCopyCheckbox = document.getElementById('clearAfterCopy') as HTMLInputElement;
+const markerColorInput = document.getElementById('markerColor') as HTMLInputElement;
+const themeToggleBtn = document.getElementById('themeToggleBtn') as HTMLButtonElement;
 
-const theme = new ThemeProvider({
-  storage: settingsThemeStorage,
-});
+const swatches = document.querySelectorAll('.swatch[data-color]') as NodeListOf<HTMLButtonElement>;
 
-async function init() {
-  await theme.init();
-  if (settingsInputs.theme) settingsInputs.theme.value = theme.mode;
+const openAdvancedBtn = document.getElementById('openAdvanced') as HTMLButtonElement;
+const closeAdvancedBtn = document.getElementById('closeAdvanced') as HTMLButtonElement;
+const mainCard = document.querySelector('.card:not(.advanced-panel)') as HTMLElement;
+const advancedPanel = document.getElementById('advancedPanel') as HTMLElement;
 
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  currentTabId = tab.id || null;
+const webhookUrlInput = document.getElementById('webhookUrl') as HTMLInputElement;
+const githubTokenInput = document.getElementById('githubToken') as HTMLInputElement;
+const githubRepoInput = document.getElementById('githubRepo') as HTMLInputElement;
+const copyJsonBtn = document.getElementById('copyJsonBtn') as HTMLButtonElement;
 
-  if (currentTabId === null) {
-    const status = document.getElementById('statusMsg');
-    if (status) {
-      status.textContent = '⚠ Open a webpage first, then click the Pinmark icon to annotate.';
-      status.style.display = 'block';
-    }
-    return;
+// ── Theme ─────────────────────────────────────────────
+let isDark = true;
+
+async function applyTheme(theme: 'light' | 'dark' | 'auto') {
+  if (theme === 'auto') {
+    isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } else {
+    isDark = theme === 'dark';
   }
-
-  const response = await sendMessage({ type: 'GET_STATE', tabId: currentTabId }) as { isActive: boolean };
-  isActive = response.isActive;
-  updateToggleButton();
-
-  const settings = await sendMessage<ExtensionSettings>({ type: 'GET_SETTINGS' });
-  loadSettings(settings);
+  document.body.style.background = isDark ? 'transparent' : '#f0f0f0';
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(c => {
+    (c as HTMLElement).style.background = isDark ? '#1a1a1a' : '#ffffff';
+    (c as HTMLElement).style.color = isDark ? '#e0e0e0' : '#111';
+  });
 }
 
+// ── Update toggle button state ─────────────────────────
 function updateToggleButton() {
   if (isActive) {
-    toggleBtn?.classList.add('active');
-    if (btnText) btnText.textContent = 'Deactivate';
+    toggleBtn.classList.add('active');
+    activateLabel.textContent = 'Deactivate';
+    if (activateShortcut) activateShortcut.textContent = 'on';
   } else {
-    toggleBtn?.classList.remove('active');
-    if (btnText) btnText.textContent = 'Activate';
+    toggleBtn.classList.remove('active');
+    activateLabel.textContent = 'Activate';
+    if (activateShortcut) activateShortcut.textContent = 'off';
   }
 }
 
+// ── Load settings into UI ─────────────────────────────
 function loadSettings(settings: ExtensionSettings) {
-  if (settingsInputs.markerColor) settingsInputs.markerColor.value = settings.markerColor;
-  if (settingsInputs.outputDetail) settingsInputs.outputDetail.value = settings.outputDetail;
-  if (settingsInputs.theme) settingsInputs.theme.value = settings.theme;
-  if (settingsInputs.clearAfterCopy) settingsInputs.clearAfterCopy.checked = settings.clearAfterCopy;
-  if (settingsInputs.blockInteractions) settingsInputs.blockInteractions.checked = settings.blockInteractions;
-  if (settingsInputs.githubToken) settingsInputs.githubToken.value = settings.githubToken || '';
-  if (settingsInputs.githubRepo) settingsInputs.githubRepo.value = settings.githubRepo || '';
-  if (settingsInputs.webhookUrl) settingsInputs.webhookUrl.value = settings.webhookUrl || '';
+  if (outputDetailSelect) {
+    outputDetailSelect.value = settings.outputDetail;
+    if (outputDetailLabel) {
+      const map: Record<string, string> = { minimal: 'Minimal', standard: 'Standard', comprehensive: 'Detailed' };
+      outputDetailLabel.textContent = map[settings.outputDetail] || 'Standard';
+    }
+  }
+  if (blockInteractionsToggle) blockInteractionsToggle.checked = settings.blockInteractions;
+  if (clearAfterCopyCheckbox) clearAfterCopyCheckbox.checked = settings.clearAfterCopy;
+
+  // Marker color
+  const color = settings.markerColor || '#d63031';
+  markerColorInput.value = color;
+  updateSwatchSelection(color);
+
+  if (webhookUrlInput) webhookUrlInput.value = settings.webhookUrl || '';
+  if (githubTokenInput) githubTokenInput.value = settings.githubToken || '';
+  if (githubRepoInput) githubRepoInput.value = settings.githubRepo || '';
 }
 
-async function saveSetting(key: keyof ExtensionSettings, value: unknown) {
-  await sendMessage({
-    type: 'SAVE_SETTINGS',
-    settings: { [key]: value },
+function updateSwatchSelection(color: string) {
+  swatches.forEach(s => {
+    s.classList.toggle('selected', s.dataset.color?.toLowerCase() === color.toLowerCase());
   });
-  // Relay to the active tab's content script so overlay settings
-  // (clearAfterCopy, blockInteractions, markerColor) take effect immediately.
+}
+
+// ── Save a single setting ─────────────────────────────
+async function saveSetting(key: keyof ExtensionSettings, value: unknown) {
+  await sendMessage({ type: 'SAVE_SETTINGS', settings: { [key]: value } });
   if (currentTabId) {
-    chrome.tabs.sendMessage(currentTabId, {
-      type: 'UPDATE_SETTINGS',
-      settings: { [key]: value },
-    }).catch(() => {
-      // content script may not be loaded yet — ignore
-    });
+    chrome.tabs.sendMessage(currentTabId, { type: 'UPDATE_SETTINGS', settings: { [key]: value } }).catch(() => {});
   }
 }
 
+// ── Output Detail Dropdown ─────────────────────────────
+let dropdownOpen = false;
+let dropdown: HTMLElement | null = null;
+
+function closeDropdown() {
+  if (dropdown) { dropdown.remove(); dropdown = null; }
+  dropdownOpen = false;
+}
+
+function openDropdown() {
+  if (dropdownOpen) { closeDropdown(); return; }
+  dropdownOpen = true;
+
+  dropdown = document.createElement('div');
+  dropdown.className = 'dropdown-menu';
+  dropdown.style.position = 'fixed';
+
+  const rect = outputDetailTrigger.getBoundingClientRect();
+  dropdown.style.top = `${rect.bottom + 6}px`;
+  dropdown.style.left = `${rect.left - 100}px`;
+
+  const options = [
+    { value: 'minimal', label: 'Minimal' },
+    { value: 'standard', label: 'Standard' },
+    { value: 'comprehensive', label: 'Detailed' },
+  ];
+
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'dropdown-item';
+    btn.textContent = opt.label;
+    if (outputDetailSelect.value === opt.value) btn.classList.add('active');
+    btn.onclick = async () => {
+      outputDetailSelect.value = opt.value;
+      if (outputDetailLabel) outputDetailLabel.textContent = opt.label;
+      await saveSetting('outputDetail', opt.value as 'minimal' | 'standard' | 'comprehensive');
+      closeDropdown();
+    };
+    dropdown!.appendChild(btn);
+  });
+
+  document.body.appendChild(dropdown);
+
+  setTimeout(() => {
+    document.addEventListener('click', closeDropdown, { once: true });
+  }, 0);
+}
+
+outputDetailTrigger?.addEventListener('click', (e) => { e.stopPropagation(); openDropdown(); });
+
+// ── Swatches ──────────────────────────────────────────
+swatches.forEach(s => {
+  s.addEventListener('click', async () => {
+    const color = s.dataset.color!;
+    markerColorInput.value = color;
+    updateSwatchSelection(color);
+    await saveSetting('markerColor', color);
+  });
+});
+
+markerColorInput?.addEventListener('input', async (e) => {
+  const color = (e.target as HTMLInputElement).value;
+  updateSwatchSelection(color);
+  await saveSetting('markerColor', color);
+});
+
+// ── Toggles ───────────────────────────────────────────
+blockInteractionsToggle?.addEventListener('change', async () => {
+  await saveSetting('blockInteractions', blockInteractionsToggle.checked);
+});
+
+reactComponentsToggle?.addEventListener('change', async () => {
+  // no-op: reactComponents is a UI hint only, not a persistent setting
+});
+
+clearAfterCopyCheckbox?.addEventListener('change', async () => {
+  await saveSetting('clearAfterCopy', clearAfterCopyCheckbox.checked);
+});
+
+// ── Theme Toggle ──────────────────────────────────────
+themeToggleBtn?.addEventListener('click', async () => {
+  const s = await getSettings();
+  const themes: Array<'auto' | 'light' | 'dark'> = ['auto', 'dark', 'light'];
+  const idx = themes.indexOf((s.theme as 'auto' | 'light' | 'dark') || 'auto');
+  const next = themes[(idx + 1) % themes.length];
+  await saveSettings({ theme: next });
+  applyTheme(next);
+  if (currentTabId) {
+    chrome.tabs.sendMessage(currentTabId, { type: 'UPDATE_SETTINGS', settings: { theme: next } }).catch(() => {});
+  }
+});
+
+// ── Activate / Deactivate ─────────────────────────────
 toggleBtn?.addEventListener('click', async () => {
   if (currentTabId === null) {
-    const status = document.getElementById('statusMsg');
-    if (status) {
-      status.textContent = '⚠ No active tab detected. Try clicking the extension icon while on a webpage.';
-      status.style.display = 'block';
-    }
+    showStatus('No active tab. Open a webpage first.');
     return;
   }
 
   const prevState = isActive;
-
   try {
     const response = await sendMessage({ type: 'TOGGLE_EXTENSION', tabId: currentTabId }) as { isActive: boolean };
     isActive = response.isActive;
@@ -119,82 +207,86 @@ toggleBtn?.addEventListener('click', async () => {
     if (isActive) {
       try {
         await chrome.tabs.sendMessage(currentTabId, { type: 'ACTIVATE_OVERLAY' });
-      } catch (msgError) {
-        // Content script not reachable — revert state and warn the user
+        hideStatus();
+      } catch {
         await sendMessage({ type: 'TOGGLE_EXTENSION', tabId: currentTabId });
         isActive = false;
         updateToggleButton();
-        const status = document.getElementById('statusMsg');
-        if (status) {
-          status.textContent = '⚠ Could not activate — try refreshing the page or enabling file:// access in chrome://extensions';
-          status.style.display = 'block';
-          setTimeout(() => { status.style.display = 'none'; }, 5000);
-        }
-        return;
+        showStatus('Could not activate — try refreshing the page.');
       }
-      // Clear any previous error
-      const status = document.getElementById('statusMsg');
-      if (status) { status.style.display = 'none'; status.textContent = ''; }
     } else {
       chrome.tabs.sendMessage(currentTabId, { type: 'DEACTIVATE_OVERLAY' }).catch(() => {});
     }
-  } catch (bgError) {
-    // Background not reachable
+  } catch {
     isActive = prevState;
     updateToggleButton();
-    console.error('Toggle failed:', bgError);
   }
 });
 
-const copyJsonBtn = document.getElementById('copyJsonBtn') as HTMLButtonElement;
-copyJsonBtn?.addEventListener('click', async () => {
+// ── Advanced Panel ─────────────────────────────────────
+openAdvancedBtn?.addEventListener('click', () => {
+  mainCard.style.display = 'none';
+  advancedPanel.style.display = '';
+});
+
+closeAdvancedBtn?.addEventListener('click', () => {
+  advancedPanel.style.display = 'none';
+  mainCard.style.display = '';
+});
+
+// ── Integrations inputs ───────────────────────────────
+webhookUrlInput?.addEventListener('input', async () => {
+  await saveSetting('webhookUrl', webhookUrlInput.value);
+  if (currentTabId) chrome.tabs.sendMessage(currentTabId, { type: 'UPDATE_SETTINGS', settings: { webhookUrl: webhookUrlInput.value } }).catch(() => {});
+});
+
+githubTokenInput?.addEventListener('input', async () => {
+  await saveSetting('githubToken', githubTokenInput.value);
+});
+
+githubRepoInput?.addEventListener('input', async () => {
+  await saveSetting('githubRepo', githubRepoInput.value);
+});
+
+// ── Copy JSON ─────────────────────────────────────────
+copyJsonBtn?.addEventListener('click', () => {
   if (currentTabId !== null && isActive) {
     chrome.tabs.sendMessage(currentTabId, { type: 'COPY_JSON' }).catch(() => {});
-    const btnTextSpan = copyJsonBtn.querySelector('.btn-text');
-    if (btnTextSpan) {
-      btnTextSpan.textContent = 'Copied!';
-      copyJsonBtn.style.background = 'var(--pmk-success, #22c55e)';
-      copyJsonBtn.style.color = 'white';
-      setTimeout(() => {
-        btnTextSpan.textContent = 'Copy JSON';
-        copyJsonBtn.style.background = 'var(--pmk-bg-3)';
-        copyJsonBtn.style.color = 'var(--pmk-text)';
-      }, 1500);
-    }
+    copyJsonBtn.textContent = 'Copied!';
+    setTimeout(() => { copyJsonBtn.textContent = 'Copy JSON'; }, 1500);
   }
 });
 
-settingsInputs.markerColor?.addEventListener('input', async (e) => {
-  await saveSetting('markerColor', (e.target as HTMLInputElement).value);
-});
+// ── Status helpers ─────────────────────────────────────
+function showStatus(msg: string) {
+  statusMsg.textContent = msg;
+  statusMsg.style.display = 'block';
+  setTimeout(hideStatus, 4000);
+}
+function hideStatus() {
+  statusMsg.style.display = 'none';
+  statusMsg.textContent = '';
+}
 
-settingsInputs.outputDetail?.addEventListener('change', async (e) => {
-  await saveSetting('outputDetail', (e.target as HTMLSelectElement).value);
-});
+// ── Init ──────────────────────────────────────────────
+async function init() {
+  const settings = await getSettings();
+  applyTheme((settings.theme as 'light' | 'dark' | 'auto') || 'auto');
 
-settingsInputs.theme?.addEventListener('change', async (e) => {
-  const mode = (e.target as HTMLSelectElement).value as ThemeMode;
-  await theme.set(mode);
-});
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  currentTabId = tab?.id || null;
 
-settingsInputs.clearAfterCopy?.addEventListener('change', async (e) => {
-  await saveSetting('clearAfterCopy', (e.target as HTMLInputElement).checked);
-});
+  if (currentTabId === null) {
+    showStatus('Open a webpage, then click the Pinmark icon.');
+    return;
+  }
 
-settingsInputs.blockInteractions?.addEventListener('change', async (e) => {
-  await saveSetting('blockInteractions', (e.target as HTMLInputElement).checked);
-});
+  const response = await sendMessage({ type: 'GET_STATE', tabId: currentTabId }) as { isActive: boolean };
+  isActive = response?.isActive || false;
+  updateToggleButton();
 
-settingsInputs.githubToken?.addEventListener('input', async (e) => {
-  await saveSetting('githubToken', (e.target as HTMLInputElement).value);
-});
-
-settingsInputs.githubRepo?.addEventListener('input', async (e) => {
-  await saveSetting('githubRepo', (e.target as HTMLInputElement).value);
-});
-
-settingsInputs.webhookUrl?.addEventListener('input', async (e) => {
-  await saveSetting('webhookUrl', (e.target as HTMLInputElement).value);
-});
+  const fullSettings = await sendMessage<ExtensionSettings>({ type: 'GET_SETTINGS' });
+  loadSettings(fullSettings);
+}
 
 init();

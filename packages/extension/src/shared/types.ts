@@ -35,6 +35,7 @@ export type Message =
   | { type: 'REMOVE_FEEDBACK'; id: string }
   | { type: 'UPDATE_FEEDBACK'; id: string; updates: Partial<FeedbackItem> }
   | { type: 'COPY_FEEDBACK'; url: string }
+  | { type: 'COPY_JSON' }
   | { type: 'CLEAR_FEEDBACK' }
   | { type: 'TOGGLE_MARKERS' }
   | { type: 'TOGGLE_PAUSE' }
