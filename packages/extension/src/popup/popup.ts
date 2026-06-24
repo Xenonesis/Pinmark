@@ -23,10 +23,6 @@ const themeToggleBtn = document.getElementById('themeToggleBtn') as HTMLButtonEl
 
 const swatches = document.querySelectorAll('.swatch[data-color]') as NodeListOf<HTMLButtonElement>;
 
-const openAdvancedBtn = document.getElementById('openAdvanced') as HTMLButtonElement;
-const closeAdvancedBtn = document.getElementById('closeAdvanced') as HTMLButtonElement;
-const mainCard = document.querySelector('.card:not(.advanced-panel)') as HTMLElement;
-const advancedPanel = document.getElementById('advancedPanel') as HTMLElement;
 
 const webhookUrlInput = document.getElementById('webhookUrl') as HTMLInputElement;
 const githubTokenInput = document.getElementById('githubToken') as HTMLInputElement;
@@ -223,15 +219,32 @@ toggleBtn?.addEventListener('click', async () => {
   }
 });
 
-// ── Advanced Panel ─────────────────────────────────────
+// ── Advanced Panel (inline slide) ────────────────────
+const openAdvancedBtn = document.getElementById('openAdvanced') as HTMLButtonElement;
+const closeAdvancedBtn = document.getElementById('closeAdvanced') as HTMLButtonElement;
+const mainCard = document.querySelector('.card:not(.advanced-panel)') as HTMLElement;
+const advancedPanel = document.getElementById('advancedPanel') as HTMLElement;
+
 openAdvancedBtn?.addEventListener('click', () => {
-  mainCard.style.display = 'none';
-  advancedPanel.style.display = '';
+  mainCard.classList.add('slide-out');
+  setTimeout(() => {
+    mainCard.style.display = 'none';
+    mainCard.classList.remove('slide-out');
+    advancedPanel.style.display = '';
+    advancedPanel.classList.add('slide-in');
+    advancedPanel.addEventListener('animationend', () => advancedPanel.classList.remove('slide-in'), { once: true });
+  }, 150);
 });
 
 closeAdvancedBtn?.addEventListener('click', () => {
-  advancedPanel.style.display = 'none';
-  mainCard.style.display = '';
+  advancedPanel.classList.add('slide-out');
+  setTimeout(() => {
+    advancedPanel.style.display = 'none';
+    advancedPanel.classList.remove('slide-out');
+    mainCard.style.display = '';
+    mainCard.classList.add('slide-in');
+    mainCard.addEventListener('animationend', () => mainCard.classList.remove('slide-in'), { once: true });
+  }, 150);
 });
 
 // ── Integrations inputs ───────────────────────────────

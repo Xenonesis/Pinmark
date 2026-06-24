@@ -131,7 +131,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
 
     case 'OPEN_SETTINGS':
-      chrome.tabs.create({ url: chrome.runtime.getURL('src/popup/index.html') });
+      // Open the extension popup inline (not a new tab)
+      chrome.action.openPopup().catch(() => {
+        // openPopup() requires user gesture — fallback: do nothing
+        // The user can click the extension icon to open settings
+      });
       sendResponse({ success: true });
       return true;
   }
