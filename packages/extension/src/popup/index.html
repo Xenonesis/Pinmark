@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,89 +7,154 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="container">
-    <header class="header">
-      <h1 class="title">
-        <svg class="popup-pin" viewBox="0 0 128 128" aria-hidden="true">
-          <path d="M64 118 C64 118 102 82 102 50 C102 26 86 8 64 8 C42 8 26 26 26 50 C26 82 64 118 64 118 Z" fill="#E11D48"/>
-          <circle cx="64" cy="48" r="14" fill="#FFFFFF"/>
-          <circle cx="64" cy="48" r="6" fill="#4338CA"/>
+  <div class="card">
+    <!-- Header -->
+    <div class="header">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.4"/>
+          <line x1="10" y1="15" x2="10" y2="19" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="10" cy="8.5" r="2.2" fill="currentColor"/>
         </svg>
-        Pinmark
-      </h1>
-      <span class="version">v1.0.0</span>
-    </header>
-
-    <div class="main-content">
-      <div id="statusMsg" class="status-msg"></div>
-      <button id="toggleBtn" class="toggle-btn">
-        <span class="status-indicator"></span>
-        <span class="btn-text">Activate</span>
-      </button>
-
-      <button id="copyJsonBtn" class="toggle-btn secondary">
-        <span class="btn-text">Copy JSON</span>
-      </button>
-
-      <div id="settingsSection" class="settings-section">
-        <h2 class="settings-title">Settings</h2>
-
-        <div class="setting-item">
-          <label for="markerColor">Marker Color</label>
-          <input type="color" id="markerColor" value="#ef4444" class="color-input">
-        </div>
-
-        <div class="setting-item">
-          <label for="outputDetail">Output Detail</label>
-          <select id="outputDetail" class="select-input">
-            <option value="minimal">Minimal</option>
-            <option value="standard" selected>Standard</option>
-            <option value="comprehensive">Comprehensive</option>
-          </select>
-        </div>
-
-        <div class="setting-item">
-          <label for="theme">Theme</label>
-          <select id="theme" class="select-input">
-            <option value="auto" selected>Auto</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </div>
-
-        <div class="setting-item checkbox">
-          <label class="checkbox-label">
-            <input type="checkbox" id="clearAfterCopy">
-            <span>Clear after copy</span>
-          </label>
-        </div>
-
-        <div class="setting-item checkbox">
-          <label class="checkbox-label">
-            <input type="checkbox" id="blockInteractions">
-            <span>Block page interactions</span>
-          </label>
-        </div>
-
-        <div style="height: 16px;"></div>
-        <h2 class="settings-title">Integrations</h2>
-        
-        <div class="setting-item col">
-          <label for="webhookUrl">Webhook URL</label>
-          <input type="url" id="webhookUrl" class="text-input" placeholder="https://api.example.com/webhook">
-        </div>
-        
-        <div class="setting-item col">
-          <label for="githubToken">GitHub PAT Token</label>
-          <input type="password" id="githubToken" class="text-input" placeholder="ghp_...">
-        </div>
-        
-        <div class="setting-item col">
-          <label for="githubRepo">GitHub Repo</label>
-          <input type="text" id="githubRepo" class="text-input" placeholder="owner/repo">
-        </div>
+        <span class="brand-name">Pinmark</span>
+      </div>
+      <div class="header-right">
+        <span class="version-tag">v1.0.0</span>
+        <button id="themeToggleBtn" class="icon-btn" title="Toggle Theme" aria-label="Toggle theme">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4">
+            <circle cx="10" cy="10" r="3.5"/>
+            <line x1="10" y1="1.5" x2="10" y2="3"/>
+            <line x1="10" y1="17" x2="10" y2="18.5"/>
+            <line x1="1.5" y1="10" x2="3" y2="10"/>
+            <line x1="17" y1="10" x2="18.5" y2="10"/>
+            <line x1="4.1" y1="4.1" x2="5.2" y2="5.2"/>
+            <line x1="14.8" y1="14.8" x2="15.9" y2="15.9"/>
+            <line x1="15.9" y1="4.1" x2="14.8" y2="5.2"/>
+            <line x1="5.2" y1="14.8" x2="4.1" y2="15.9"/>
+          </svg>
+        </button>
       </div>
     </div>
+
+    <!-- Status Message -->
+    <div id="statusMsg" class="status-msg"></div>
+
+    <!-- Activate Button -->
+    <button id="toggleBtn" class="activate-btn">
+      <span class="activate-dot"></span>
+      <span class="activate-label">Activate</span>
+      <span class="activate-shortcut">off</span>
+    </button>
+
+    <div class="divider"></div>
+
+    <!-- Output Detail -->
+    <div class="setting-row">
+      <div class="setting-label-group">
+        <span class="setting-label">Output Detail</span>
+      </div>
+      <div class="setting-value-group">
+        <span id="outputDetailLabel" class="setting-value-text">Standard</span>
+        <select id="outputDetail" class="hidden-select">
+          <option value="minimal">Minimal</option>
+          <option value="standard" selected>Standard</option>
+          <option value="comprehensive">Comprehensive</option>
+        </select>
+        <button class="value-dots" id="outputDetailTrigger" title="Change output detail">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <circle cx="8" cy="3" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="8" cy="13" r="1.2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- React Components Toggle -->
+    <div class="setting-row">
+      <span class="setting-label">React Components</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="reactComponents">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <!-- Block Interactions Toggle -->
+    <div class="setting-row">
+      <span class="setting-label">Block Interactions</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="blockInteractions">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Marker Color -->
+    <div class="color-section">
+      <span class="section-label">Marker Color</span>
+      <div class="color-swatches">
+        <button class="swatch" data-color="#6c5ce7" style="background:#6c5ce7" title="Purple"></button>
+        <button class="swatch" data-color="#0984e3" style="background:#0984e3" title="Blue"></button>
+        <button class="swatch" data-color="#00cec9" style="background:#00cec9" title="Teal"></button>
+        <button class="swatch" data-color="#00b894" style="background:#00b894" title="Green"></button>
+        <button class="swatch" data-color="#fdcb6e" style="background:#fdcb6e" title="Yellow"></button>
+        <button class="swatch" data-color="#e17055" style="background:#e17055" title="Orange"></button>
+        <button class="swatch" data-color="#d63031" style="background:#d63031" title="Red"></button>
+        <label class="swatch swatch-custom" title="Custom color">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+            <circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/>
+          </svg>
+          <input type="color" id="markerColor" style="display:none">
+        </label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Clear on copy -->
+    <label class="setting-row checkbox-row">
+      <input type="checkbox" id="clearAfterCopy" class="sq-checkbox">
+      <span class="setting-label">Clear on copy/send</span>
+    </label>
+
+    <div class="divider"></div>
+
+    <!-- Manage MCP & Webhooks → nav row -->
+    <button class="nav-row" id="openAdvanced">
+      <span class="setting-label">Manage MCP &amp; Webhooks</span>
+      <svg class="nav-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <polyline points="6,4 10,8 6,12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Advanced Panel (hidden by default) -->
+  <div class="card advanced-panel" id="advancedPanel" style="display:none">
+    <div class="header">
+      <button class="back-btn" id="closeAdvanced">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="10,4 6,8 10,12"/>
+        </svg>
+        Back
+      </button>
+      <span class="panel-title">Integrations</span>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="webhookUrl">Webhook URL</label>
+      <input type="url" id="webhookUrl" class="field-input" placeholder="https://...">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="githubToken">GitHub Token</label>
+      <input type="password" id="githubToken" class="field-input" placeholder="ghp_...">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="githubRepo">GitHub Repo</label>
+      <input type="text" id="githubRepo" class="field-input" placeholder="owner/repo">
+    </div>
+
+    <button id="copyJsonBtn" class="action-btn">Copy JSON</button>
   </div>
 
   <script type="module" src="popup.ts"></script>

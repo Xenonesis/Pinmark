@@ -5,8 +5,8 @@ const MODAL_STYLES = `
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -15,37 +15,36 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal {
-    background: rgba(24, 24, 27, 0.97);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 14px;
-    padding: 24px;
+    background: #111113;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 20px;
     width: 460px;
     max-width: 90vw;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.05);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
   }
 
   .pinmark-modal-title {
-    color: rgba(255, 255, 255, 0.95);
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0 0 14px 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0 0 12px 0;
     letter-spacing: -0.01em;
   }
 
   .pinmark-modal-input {
     width: 100%;
-    padding: 12px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.25);
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
     outline: none;
-    transition: all 0.15s ease;
+    transition: border-color 0.15s ease;
     box-sizing: border-box;
     resize: vertical;
     min-height: 80px;
@@ -54,115 +53,104 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-input:focus {
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   .pinmark-modal-input::placeholder {
-    color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.2);
   }
 
   .pinmark-modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    margin-top: 18px;
+    gap: 6px;
+    margin-top: 14px;
   }
 
   .pinmark-modal-btn {
-    padding: 8px 18px;
+    padding: 7px 16px;
     border: none;
-    border-radius: 7px;
+    border-radius: 6px;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: opacity 0.15s ease, background 0.15s ease;
     font-family: inherit;
   }
 
   .pinmark-modal-btn:disabled {
-    opacity: 0.4;
+    opacity: 0.35;
     cursor: not-allowed;
   }
 
   .pinmark-modal-btn.cancel {
     background: transparent;
-    color: rgba(255, 255, 255, 0.45);
-    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255,255,255,0.07);
   }
 
   .pinmark-modal-btn.cancel:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.07);
-    color: rgba(255,255,255,0.8);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255,255,255,0.6);
   }
 
   .pinmark-modal-btn.submit {
-    background: #ffffff;
-    color: #000000;
+    background: rgba(255, 255, 255, 0.92);
+    color: #111113;
   }
 
   .pinmark-modal-btn.submit:hover:not(:disabled) {
-    background: #e5e5e5;
-    transform: translateY(-1px);
+    background: #ffffff;
   }
 
   .pinmark-modal-element-info {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 7px;
-    padding: 8px 12px;
-    margin-bottom: 14px;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.55);
+    border-radius: 6px;
+    padding: 7px 10px;
+    margin-bottom: 12px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
     font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .pinmark-modal-element-tag { color: #f472b6; }
-  .pinmark-modal-element-class { color: #60a5fa; }
-  .pinmark-modal-element-id { color: #fbbf24; }
-  .pinmark-modal-element-component { color: #34d399; margin-left: 8px; font-family: system-ui, sans-serif; }
+  .pinmark-modal-element-tag { color: rgba(255, 255, 255, 0.55); }
+  .pinmark-modal-element-class { color: rgba(255, 255, 255, 0.35); }
+  .pinmark-modal-element-id { color: rgba(255, 255, 255, 0.45); }
+  .pinmark-modal-element-component {
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: 8px;
+    font-family: system-ui, sans-serif;
+    font-size: 11px;
+  }
 
-  /* Selection text highlight */
+  /* Selection text */
   .pinmark-modal-selection {
-    background: rgba(59, 130, 246, 0.12);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
     padding: 8px 12px;
-    margin-bottom: 14px;
-    font-size: 13px;
-    color: rgba(255,255,255,0.8);
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
     font-style: italic;
     line-height: 1.5;
-  }
-
-  .pinmark-modal-selection::before {
-    content: '"';
-    color: #60a5fa;
-    font-size: 16px;
-    font-style: normal;
-    margin-right: 2px;
-  }
-  .pinmark-modal-selection::after {
-    content: '"';
-    color: #60a5fa;
-    font-size: 16px;
-    font-style: normal;
-    margin-left: 2px;
   }
 
   /* Computed Styles Panel */
   .pinmark-modal-styles-toggle {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     cursor: pointer;
-    color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.3);
     font-size: 11px;
-    padding: 6px 0;
-    margin-bottom: 12px;
+    padding: 5px 0;
+    margin-bottom: 10px;
     user-select: none;
     border: none;
     background: none;
@@ -171,12 +159,12 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-styles-toggle:hover {
-    color: rgba(255,255,255,0.7);
+    color: rgba(255,255,255,0.55);
   }
 
   .pinmark-modal-styles-toggle-icon {
-    width: 12px;
-    height: 12px;
+    width: 11px;
+    height: 11px;
     transition: transform 0.15s ease;
     flex-shrink: 0;
   }
@@ -186,11 +174,11 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-styles-body {
-    background: rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 7px;
-    padding: 12px;
-    margin-bottom: 14px;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 12px;
     display: none;
     max-height: 160px;
     overflow-y: auto;
@@ -209,13 +197,13 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-style-prop {
-    color: #f472b6;
+    color: rgba(255, 255, 255, 0.4);
     flex-shrink: 0;
     min-width: 130px;
   }
 
   .pinmark-modal-style-val {
-    color: #60a5fa;
+    color: rgba(255, 255, 255, 0.6);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -223,20 +211,20 @@ const MODAL_STYLES = `
 
   /* Component tree */
   .pinmark-modal-component-tree {
-    background: rgba(52, 211, 153, 0.06);
-    border: 1px solid rgba(52, 211, 153, 0.15);
-    border-radius: 7px;
-    padding: 8px 12px;
-    margin-bottom: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
     font-size: 11px;
     font-family: 'SF Mono', Monaco, monospace;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.35);
     line-height: 1.8;
   }
 
   .pinmark-modal-component-name {
-    color: #34d399;
-    font-weight: 600;
+    color: rgba(255,255,255,0.65);
+    font-weight: 500;
   }
 `;
 
@@ -327,9 +315,9 @@ export class FeedbackModal {
       treeEl.className = 'pinmark-modal-component-tree';
       const hierarchy = componentInfo.hierarchy.slice(-5); // last 5 in tree
       treeEl.innerHTML = hierarchy.map((name, i) => {
-        const indent = '  '.repeat(i);
+        const indent = '&nbsp;&nbsp;'.repeat(i);
         const isLast = i === hierarchy.length - 1;
-        return `<div>${indent}<span class="${isLast ? 'pinmark-modal-component-name' : ''}">${isLast ? '↳ ' : ''}${name}</span></div>`;
+        return `<div>${indent}<span class="${isLast ? 'pinmark-modal-component-name' : ''}">${name}</span></div>`;
       }).join('');
       modal.appendChild(treeEl);
     }
@@ -468,8 +456,7 @@ export class FeedbackModal {
 
     let componentHTML = '';
     if (componentInfo && componentInfo.name && componentInfo.name !== 'Unknown') {
-      const icon = componentInfo.framework === 'react' ? '⚛' : componentInfo.framework === 'vue' ? '💚' : '🔷';
-      componentHTML = `<span class="pinmark-modal-element-component">${icon} ${componentInfo.name}</span>`;
+      componentHTML = `<span class="pinmark-modal-element-component">${componentInfo.name}</span>`;
     }
 
     if (smartName) {

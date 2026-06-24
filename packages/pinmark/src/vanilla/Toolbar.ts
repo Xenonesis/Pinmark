@@ -8,11 +8,11 @@ const TOOLBAR_STYLES = `
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 6px;
-    background: #1C1C1C;
+    gap: 2px;
+    padding: 5px 6px;
+    background: #111113;
     border-radius: 999px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.07);
     z-index: 2147483646;
     pointer-events: all;
     cursor: move;
@@ -24,57 +24,59 @@ const TOOLBAR_STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     padding: 0;
     border: none;
     border-radius: 50%;
     background: transparent;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.55);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.15s ease, color 0.15s ease;
   }
 
   .pinmark-toolbar-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
   }
 
   .pinmark-toolbar-btn:active {
-    transform: scale(0.95);
+    opacity: 0.7;
   }
 
   .pinmark-toolbar-btn.active {
-    background: rgba(59, 130, 246, 0.25);
-    color: #3b82f6;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
   }
 
   .pinmark-toolbar-btn svg {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
   }
 
   .pinmark-toolbar-divider {
     width: 1px;
-    height: 16px;
-    background: rgba(255, 255, 255, 0.15);
-    margin: 0 4px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 3px;
   }
 
   .pinmark-tooltip {
     position: absolute;
     top: -30px;
-    background: #111;
-    color: #fff;
+    background: #1a1a1c;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.85);
     font-size: 11px;
-    padding: 4px 8px;
-    border-radius: 6px;
+    padding: 3px 8px;
+    border-radius: 5px;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
     transform: translateY(4px);
-    transition: all 0.15s ease;
-    font-family: system-ui, -apple-system, sans-serif;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    letter-spacing: 0;
   }
 
   .pinmark-toolbar-btn:hover .pinmark-tooltip {
@@ -83,11 +85,11 @@ const TOOLBAR_STYLES = `
   }
 
   .pinmark-toolbar-btn.exit-btn {
-    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
   }
   .pinmark-toolbar-btn.exit-btn:hover {
-    background: rgba(255, 60, 60, 0.2);
-    color: #ff4444;
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.8);
   }
 `;
 
@@ -202,7 +204,7 @@ export class Toolbar {
       this.onPauseToggle?.();
     };
 
-    const eyeBtn = this.createButton('eye', 'Toggle markers [H]', 'markers');
+    const eyeBtn = this.createButton('eye', 'Toggle Markers', 'markers');
     eyeBtn.classList.add('active');
     eyeBtn.onclick = (e) => {
       e.stopPropagation();
@@ -210,7 +212,7 @@ export class Toolbar {
       this.onMarkersToggle?.();
     };
 
-    this.layoutBtn = this.createButton('layout', 'Layout Mode [L]', 'layout') as HTMLButtonElement;
+    this.layoutBtn = this.createButton('layout', 'Layout Mode', 'layout') as HTMLButtonElement;
     this.layoutBtn.onclick = (e) => {
       e.stopPropagation();
       this.setLayoutMode(!this.isLayoutMode);
@@ -288,7 +290,7 @@ export class Toolbar {
     const divider3 = document.createElement('div');
     divider3.className = 'pinmark-toolbar-divider';
 
-    const exitBtn = this.createButton('exit', 'Exit [Esc]', 'exit');
+    const exitBtn = this.createButton('exit', 'Exit', 'exit');
     exitBtn.onclick = (e) => {
       e.stopPropagation();
       this.onExitClick?.();
