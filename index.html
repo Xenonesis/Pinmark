@@ -1331,6 +1331,101 @@ h3 {
   white-space: nowrap;
 }
 
+/* ---------- browser support cards ---------- */
+.browser-card {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+  position: relative;
+  user-select: none;
+}
+.browser-card:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+  border-color: var(--accent);
+  background: var(--bg-elev, #f8f8f8);
+}
+.browser-card:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.browser-card.supported {
+  border-left: 3px solid var(--accent, #22c55e);
+}
+.browser-card.supported::after {
+  content: "✓";
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 13px;
+  color: var(--accent, #22c55e);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.browser-card.supported:hover::after {
+  opacity: 1;
+}
+.browser-card.supported:active {
+  background: color-mix(in srgb, var(--accent, #22c55e) 8%, var(--bg-elev, #fff));
+}
+.browser-card .new-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: var(--accent, #22c55e);
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  animation: badge-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  pointer-events: none;
+}
+@keyframes badge-pop {
+  0% { transform: scale(0) rotate(-12deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.browser-card .new-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--ink, #18181b);
+  color: var(--bg, #fff);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.browser-card .new-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--ink, #18181b);
+}
+.browser-card:hover .new-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* ---------- capture list ---------- */
 .capture {
   display: grid;
@@ -3267,22 +3362,22 @@ footer a:hover { color: var(--ink); }
     <p class="lede">Pinmark is a Manifest V3 extension. It runs on Chromium-based browsers and Firefox — no installation friction.</p>
 
     <div class="capture" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: 40px;">
-      <li style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; border: 1px solid var(--line); background: var(--bg-elev);">
+      <li class="browser-card supported" tabindex="0" role="button" aria-label="Chrome — supported">
         <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Google_Chrome_icon_%28February_2022%29.svg" width="36" height="36" alt="Chrome Logo" />
         <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink);">Chrome</span>
         <span style="font-size: 12px; color: var(--muted);">Primary target</span>
       </li>
-      <li style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; border: 1px solid var(--line); background: var(--bg-elev);">
+      <li class="browser-card" tabindex="0" role="button" aria-label="Edge — Chromium-based">
         <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg" width="36" height="36" alt="Edge Logo" />
         <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink);">Edge</span>
         <span style="font-size: 12px; color: var(--muted);">Chromium-based</span>
       </li>
-      <li style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; border: 1px solid var(--line); background: var(--bg-elev);">
+      <li class="browser-card" tabindex="0" role="button" aria-label="Brave — Chromium-based">
         <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Brave_icon_lionface.png" width="36" height="36" alt="Brave Logo" style="object-fit: contain;" />
         <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink);">Brave</span>
         <span style="font-size: 12px; color: var(--muted);">Chromium-based</span>
       </li>
-      <li style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; border: 1px solid var(--line); background: var(--bg-elev);">
+      <li class="browser-card" tabindex="0" role="button" aria-label="Opera — Chromium-based">
         <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
           <circle cx="24" cy="24" r="22" fill="#FF1B2D"/>
           <text x="24" y="30" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="18">O</text>
@@ -3290,7 +3385,9 @@ footer a:hover { color: var(--ink); }
         <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink);">Opera</span>
         <span style="font-size: 12px; color: var(--muted);">Chromium-based</span>
       </li>
-      <li style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; border: 1px solid var(--line); background: var(--bg-elev);">
+      <li class="browser-card supported" tabindex="0" role="button" aria-label="Firefox — supported">
+        <span class="new-badge">New</span>
+        <span class="new-tooltip">Newly Supported</span>
         <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/Firefox_logo%2C_2019.svg" width="36" height="36" alt="Firefox Logo" style="object-fit: contain;" />
         <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink);">Firefox</span>
         <span style="font-size: 12px; color: var(--muted);">MV3 WebExtensions</span>
@@ -3298,7 +3395,7 @@ footer a:hover { color: var(--ink); }
     </div>
 
     <div class="note" style="margin-top: 24px;">
-      <strong>Not supported:</strong> Safari uses a different extension model (Safari App Extensions, distributed via the App Store). Pinmark's Manifest V3 build targets Chromium and Firefox (WebExtensions); a Safari port is out of scope for now.
+      <strong>Not supported:</strong> Safari uses a different extension model (Safari App Extensions, distributed via the App Store). Pinmark's Manifest V3 build targets Chromium and Firefox (WebExtensions); a Safari port is out of scope for now. Firefox is <strong>fully supported</strong> as of the latest release.
     </div>
   </div>
 </section>
