@@ -3259,6 +3259,42 @@ footer a:hover { color: var(--ink); }
   </div>
 </section>
 
+<!-- BROWSER SUPPORT -->
+<section>
+  <div class="wrap">
+    <span class="eyebrow">// browser support</span>
+    <h2>Works where you work</h2>
+    <p class="lede">Pinmark is a Manifest V3 extension. It runs on any Chromium-based browser — no installation friction.</p>
+
+    <div class="capture" style="grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 40px;">
+      <li style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; border: 1px solid var(--line); background: var(--bg-elev);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink);">Chrome</span>
+        <span style="font-size: 12px; color: var(--muted);">Primary target</span>
+      </li>
+      <li style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; border: 1px solid var(--line); background: var(--bg-elev);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink);">Edge</span>
+        <span style="font-size: 12px; color: var(--muted);">Chromium-based</span>
+      </li>
+      <li style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; border: 1px solid var(--line); background: var(--bg-elev);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink);">Brave</span>
+        <span style="font-size: 12px; color: var(--muted);">Chromium-based</span>
+      </li>
+      <li style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; border: 1px solid var(--line); background: var(--bg-elev);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink);">Opera</span>
+        <span style="font-size: 12px; color: var(--muted);">Chromium-based</span>
+      </li>
+    </div>
+
+    <div class="note" style="margin-top: 24px;">
+      <strong>Not supported:</strong> Firefox and Safari use different extension APIs (WebExtensions / Safari App Extensions). Pinmark relies on Chrome's Manifest V3 service worker, Shadow DOM, and <code>chrome.storage.sync</code> — none of which are portable to those platforms without a full rewrite.
+    </div>
+  </div>
+</section>
+
 <!-- ARCHITECTURE -->
 <section>
   <div class="wrap">
