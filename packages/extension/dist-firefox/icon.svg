@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Pinmark">
+  <title>Pinmark</title>
+  <!-- pin teardrop body -->
+  <path d="M64 118 C64 118 102 82 102 50 C102 26 86 8 64 8 C42 8 26 26 26 50 C26 82 64 118 64 118 Z" fill="#E11D48"/>
+  <!-- inner highlight (off-center for depth) -->
+  <path d="M50 38 C50 30 56 24 64 24 L64 16 C50 16 38 28 38 42 Z" fill="#FB7185" opacity="0.55"/>
+  <!-- center dot -->
+  <circle cx="64" cy="48" r="14" fill="#FFFFFF"/>
+  <circle cx="64" cy="48" r="6" fill="#4338CA"/>
+</svg>
