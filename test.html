@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinmark Local Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background: #fafafa; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        button { padding: 10px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        .text-block { margin-top: 20px; padding: 10px; background: #eee; border-left: 4px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Pinmark UI Testing Page</h1>
+    <p>This page is used to test the Pinmark overlay functionalities directly in the browser.</p>
+
+    <div class="card" id="card-1">
+        <h2>Interactive Elements</h2>
+        <button id="btn-submit">Submit Form</button>
+        <button id="btn-cancel" style="background: #ef4444;">Cancel</button>
+    </div>
+
+    <div class="card" id="card-2" style="display: flex; flex-direction: column; gap: 10px; align-items: start;">
+        <h2>Computed Styles Test</h2>
+        <div class="text-block" id="selectable-text">
+            This is a block of text. Try selecting a portion of this text and verify that the floating "Add Annotation" button appears.
+        </div>
+    </div>
+
+    <!-- Load React component mocked info for testing -->
+    <script>
+        // Mock React detection by adding a property
+        const btn = document.getElementById('btn-submit');
+        btn._reactRootContainer = {}; // Fake
+        btn.__reactFiber$test = {
+            return: {
+                elementType: { name: 'SubmitButton' },
+                return: { elementType: { name: 'CardComponent' } }
+            }
+        };
+    </script>
+
+    <!-- Import and Initialize Pinmark -->
+    <script type="module">
+        import { Overlay, FeedbackManager } from './packages/pinmark/dist/index.js';
+        
+        class MockStorage {
+            async getSettings() {
+                return { theme: 'dark', autoSync: false, blockInteractions: false };
+            }
+            async getFeedback() { return []; }
+        }
+
+        const config = {
+            url: window.location.href,
+            storage: new MockStorage(),
+            onToggle: (isActive) => console.log('Toggled:', isActive)
+        };
+
+        const overlay = new Overlay({ theme: 'dark', autoSync: false }, config, []);
+        overlay.activate();
+        
+        // Expose to window for testing
+        window.pinmarkOverlay = overlay;
+    </script>
+</body>
+</html>

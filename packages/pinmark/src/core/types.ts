@@ -2,7 +2,7 @@ import type { PinmarkAnnotation } from '@pinmark/core';
 
 export interface PinmarkSettings {
   markerColor: string;
-  outputDetail: 'minimal' | 'standard' | 'comprehensive';
+  outputDetail: 'minimal' | 'standard' | 'comprehensive' | 'forensic';
   clearAfterCopy: boolean;
   blockInteractions: boolean;
   theme: 'light' | 'dark' | 'auto';

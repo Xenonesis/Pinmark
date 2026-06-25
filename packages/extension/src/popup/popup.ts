@@ -67,7 +67,7 @@ function loadSettings(settings: ExtensionSettings) {
   if (outputDetailSelect) {
     outputDetailSelect.value = settings.outputDetail;
     if (outputDetailLabel) {
-      const map: Record<string, string> = { minimal: 'Minimal', standard: 'Standard', comprehensive: 'Detailed' };
+      const map: Record<string, string> = { minimal: 'Compact', compact: 'Compact', standard: 'Standard', comprehensive: 'Detailed', detailed: 'Detailed', forensic: 'Forensic' };
       outputDetailLabel.textContent = map[settings.outputDetail] || 'Standard';
     }
   }
@@ -120,9 +120,10 @@ function openDropdown() {
   dropdown.style.left = `${rect.left - 100}px`;
 
   const options = [
-    { value: 'minimal', label: 'Minimal' },
+    { value: 'minimal', label: 'Compact' },
     { value: 'standard', label: 'Standard' },
     { value: 'comprehensive', label: 'Detailed' },
+    { value: 'forensic', label: 'Forensic' },
   ];
 
   options.forEach(opt => {
@@ -133,7 +134,7 @@ function openDropdown() {
     btn.onclick = async () => {
       outputDetailSelect.value = opt.value;
       if (outputDetailLabel) outputDetailLabel.textContent = opt.label;
-      await saveSetting('outputDetail', opt.value as 'minimal' | 'standard' | 'comprehensive');
+      await saveSetting('outputDetail', opt.value as 'minimal' | 'standard' | 'comprehensive' | 'forensic');
       closeDropdown();
     };
     dropdown!.appendChild(btn);

@@ -3,7 +3,7 @@ export type { FeedbackItem, ElementInfo, ComponentInfo };
 
 export interface ExtensionSettings {
   markerColor: string;
-  outputDetail: 'minimal' | 'standard' | 'comprehensive';
+  outputDetail: 'minimal' | 'standard' | 'comprehensive' | 'forensic';
   clearAfterCopy: boolean;
   blockInteractions: boolean;
   theme: 'light' | 'dark' | 'auto';
