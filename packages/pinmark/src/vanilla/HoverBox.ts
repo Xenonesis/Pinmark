@@ -104,11 +104,8 @@ export class HoverBox {
     this.currentElement = target;
 
     const rect = target.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-
-    this.element.style.top = `${rect.top + scrollTop}px`;
-    this.element.style.left = `${rect.left + scrollLeft}px`;
+    this.element.style.top = `${rect.top}px`;
+    this.element.style.left = `${rect.left}px`;
     this.element.style.width = `${rect.width}px`;
     this.element.style.height = `${rect.height}px`;
     this.element.style.display = 'block';

@@ -141,6 +141,7 @@ export class Overlay {
     document.addEventListener('click', this.handleClick, true);
     document.addEventListener('keydown', this.handleKeydown, true);
     window.addEventListener('resize', this.handleResize);
+    window.addEventListener('scroll', this.handleScroll, { passive: true, capture: true });
   }
 
   private removeEventListeners() {
@@ -151,7 +152,16 @@ export class Overlay {
     document.removeEventListener('click', this.handleClick, true);
     document.removeEventListener('keydown', this.handleKeydown, true);
     window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('scroll', this.handleScroll, { capture: true });
   }
+
+  private handleScroll = () => {
+    if (!this.isActive || this.isPaused) return;
+    this.markerManager.updatePositions(this.feedbackManager.getAll());
+    if (this.isAreaSelectActive) return;
+    this.hoverBox.hide();
+    this.hideSelectionButton();
+  };
 
   private handleKeydown = (e: KeyboardEvent) => {
     // Don't intercept if user is typing in our modal

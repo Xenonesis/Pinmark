@@ -170,9 +170,27 @@ export class MarkerManager {
   }
 
   addMarker(feedback: FeedbackItem) {
-    const rect = feedback.element.boundingRect;
+    let rectTop: number;
+    let rectLeft: number;
+
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+    try {
+      const currentElement = feedback.element.selector ? document.querySelector(feedback.element.selector) : null;
+      if (currentElement) {
+        const liveRect = currentElement.getBoundingClientRect();
+        rectTop = liveRect.top;
+        rectLeft = liveRect.left + liveRect.width / 2;
+      } else {
+        // Fallback to absolute saved rect
+        rectTop = feedback.element.boundingRect.y - scrollTop;
+        rectLeft = feedback.element.boundingRect.x - scrollLeft + feedback.element.boundingRect.width / 2;
+      }
+    } catch (e) {
+      rectTop = feedback.element.boundingRect.y - scrollTop;
+      rectLeft = feedback.element.boundingRect.x - scrollLeft + feedback.element.boundingRect.width / 2;
+    }
 
     const marker = document.createElement('div');
     marker.className = 'pinmark-marker';
@@ -181,8 +199,8 @@ export class MarkerManager {
     }
     marker.dataset.feedbackId = feedback.id;
     marker.textContent = feedback.index.toString();
-    marker.style.top = `${rect.top + scrollTop - 14}px`;
-    marker.style.left = `${rect.left + scrollLeft + rect.width / 2 - 14}px`;
+    marker.style.top = `${rectTop - 14}px`;
+    marker.style.left = `${rectLeft - 14}px`;
 
     // Create popup container
     const popup = document.createElement('div');
@@ -287,16 +305,27 @@ export class MarkerManager {
       const markerData = this.markers.get(item.id);
       if (!markerData) return;
 
+      let rectTop: number;
+      let rectLeft: number;
+
       try {
-        const currentElement = document.querySelector(item.element.selector);
+        const currentElement = item.element.selector ? document.querySelector(item.element.selector) : null;
         if (currentElement) {
-          const rect = currentElement.getBoundingClientRect();
-          markerData.element.style.top = `${rect.top + scrollTop - 14}px`;
-          markerData.element.style.left = `${rect.left + scrollLeft + rect.width / 2 - 14}px`;
+          const liveRect = currentElement.getBoundingClientRect();
+          rectTop = liveRect.top;
+          rectLeft = liveRect.left + liveRect.width / 2;
+        } else {
+          // Fallback to absolute saved rect
+          rectTop = item.element.boundingRect.y - scrollTop;
+          rectLeft = item.element.boundingRect.x - scrollLeft + item.element.boundingRect.width / 2;
         }
       } catch (e) {
-        // Ignore selector errors, keep original marker position
+        rectTop = item.element.boundingRect.y - scrollTop;
+        rectLeft = item.element.boundingRect.x - scrollLeft + item.element.boundingRect.width / 2;
       }
+
+      markerData.element.style.top = `${rectTop - 14}px`;
+      markerData.element.style.left = `${rectLeft - 14}px`;
     });
   }
 
