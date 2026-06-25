@@ -184,7 +184,7 @@ export class Overlay {
       this.showToast(this.isFrozen ? '❄️ Animations Frozen (Press F to resume)' : '▶️ Animations Resumed');
     } else if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey) {
       e.preventDefault();
-      this.clearAll();
+      this.copyFeedback();
     } else if (e.key === 'Backspace' || e.key === 'Delete') {
       const all = this.feedbackManager.getAll();
       if (all.length > 0) {
@@ -551,11 +551,12 @@ export class Overlay {
     if (this.isDragging) {
       const areaRect = this.areaSelectionBox.end();
       this.isDragging = false;
+      this.isAreaSelectActive = false;
+      this.toolbar.toggleAreaSelect(false);
+      
       if (areaRect) {
         const target = document.elementFromPoint(areaRect.x + areaRect.width / 2, areaRect.y + areaRect.height / 2) as HTMLElement;
         this.promptForFeedback(target || document.body, areaRect);
-        this.isAreaSelectActive = false;
-        this.toolbar.toggleAreaSelect(false);
       }
       return;
     }
@@ -587,12 +588,10 @@ export class Overlay {
     btn.className = 'pinmark-selection-btn';
     btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Add Annotation`;
     
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
     btn.style.cssText = `
-      position: absolute;
-      top: ${rect.top + scrollTop - 36}px;
-      left: ${rect.left + scrollLeft + rect.width / 2}px;
+      position: fixed;
+      top: ${rect.top - 36}px;
+      left: ${rect.left + rect.width / 2}px;
       transform: translateX(-50%);
       background: #18181b;
       color: #fff;
@@ -863,12 +862,10 @@ export class Overlay {
 
   private async addLayoutAnnotation(_kind: string, name: string, clientX: number, clientY: number) {
     const target = (document.elementFromPoint(clientX, clientY) as HTMLElement) || document.body;
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
     const placeholderRect = {
-      x: clientX + scrollLeft,
-      y: clientY + scrollTop,
+      x: clientX,
+      y: clientY,
       width: 300,
       height: 80,
       top: clientY,
@@ -992,6 +989,7 @@ export class Overlay {
     this.isFrozen = false;
     this.frozenStyleEl?.remove();
     this.frozenStyleEl = null;
+    this.hideLayoutPanel();
     
     if (this.stopRecording) {
       this.stopRecording();

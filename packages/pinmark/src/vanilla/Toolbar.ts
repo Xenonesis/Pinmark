@@ -154,6 +154,9 @@ export class Toolbar {
     let startElLeft = 0;
     let startElTop = 0;
 
+    let dragMoveHandler: (e: MouseEvent) => void;
+    let dragEndHandler: () => void;
+
     const dragStart = (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest('button')) return;
       if (e.target !== this.element) return;
@@ -162,22 +165,26 @@ export class Toolbar {
       startMouseX = e.clientX;
       startMouseY = e.clientY;
 
-      // Get actual position of toolbar in viewport
       const rect = this.element.getBoundingClientRect();
       startElLeft = rect.left;
       startElTop = rect.top;
 
-      // Switch from centered CSS to absolute left/top
       this.element.style.transform = 'none';
       this.element.style.left = `${startElLeft}px`;
       this.element.style.top = `${startElTop}px`;
+
+      document.addEventListener('mouseup', dragEndHandler);
+      document.addEventListener('mousemove', dragMoveHandler);
     };
 
-    const dragEnd = () => {
+    dragEndHandler = () => {
+      if (!isDragging) return;
       isDragging = false;
+      document.removeEventListener('mouseup', dragEndHandler);
+      document.removeEventListener('mousemove', dragMoveHandler);
     };
 
-    const drag = (e: MouseEvent) => {
+    dragMoveHandler = (e: MouseEvent) => {
       if (!isDragging) return;
       e.preventDefault();
       const dx = e.clientX - startMouseX;
@@ -189,8 +196,6 @@ export class Toolbar {
     };
 
     this.element.addEventListener('mousedown', dragStart);
-    document.addEventListener('mouseup', dragEnd);
-    document.addEventListener('mousemove', drag);
   }
 
   private createToolbar(): HTMLElement {
@@ -314,8 +319,11 @@ export class Toolbar {
     toolbar.appendChild(githubBtn);
     toolbar.appendChild(clearBtn);
     toolbar.appendChild(settingsBtn);
-    toolbar.appendChild(this.sendBtn);
+    
+    // We'll hide divider2 by default since sendBtn is hidden by default
+    divider2.style.display = 'none';
     toolbar.appendChild(divider2);
+    toolbar.appendChild(this.sendBtn);
     toolbar.appendChild(divider3);
     toolbar.appendChild(exitBtn);
 
@@ -325,6 +333,8 @@ export class Toolbar {
   setWebhookEnabled(enabled: boolean) {
     if (this.sendBtn) {
       this.sendBtn.style.display = enabled ? 'flex' : 'none';
+      const divider2 = this.element.querySelectorAll('.pinmark-toolbar-divider')[1] as HTMLElement;
+      if (divider2) divider2.style.display = enabled ? 'block' : 'none';
     }
   }
 

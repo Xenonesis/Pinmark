@@ -144,18 +144,13 @@ async function handleUrlChange() {
 function setupUrlMonitoring() {
   let lastCheckedUrl = window.location.href;
 
-  function checkUrl() {
+  setInterval(() => {
     const currentUrl = window.location.href;
-
     if (currentUrl !== lastCheckedUrl && overlay) {
       lastCheckedUrl = currentUrl;
       handleUrlChange();
     }
-
-    requestAnimationFrame(checkUrl);
-  }
-
-  requestAnimationFrame(checkUrl);
+  }, 1000);
 
   window.addEventListener('popstate', () => {
     lastCheckedUrl = window.location.href;

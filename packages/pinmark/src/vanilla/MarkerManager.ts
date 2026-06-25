@@ -286,18 +286,16 @@ export class MarkerManager {
       const markerData = this.markers.get(item.id);
       if (!markerData) return;
 
-      let rect = item.element.boundingRect;
       try {
         const currentElement = document.querySelector(item.element.selector);
         if (currentElement) {
-          rect = currentElement.getBoundingClientRect();
+          const rect = currentElement.getBoundingClientRect();
+          markerData.element.style.top = `${rect.top + scrollTop - 14}px`;
+          markerData.element.style.left = `${rect.left + scrollLeft + rect.width / 2 - 14}px`;
         }
       } catch (e) {
-        // Ignore selector errors, keep original rect
+        // Ignore selector errors, keep original marker position
       }
-
-      markerData.element.style.top = `${rect.top + scrollTop - 14}px`;
-      markerData.element.style.left = `${rect.left + scrollLeft + rect.width / 2 - 14}px`;
     });
   }
 
