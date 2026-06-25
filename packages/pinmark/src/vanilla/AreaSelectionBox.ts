@@ -48,17 +48,17 @@ export class AreaSelectionBox {
   end(): DOMRect | null {
     if (!this.isActive) return null;
     this.isActive = false;
-    this.element.style.display = 'none';
 
-    // Only return a rect if the user actually dragged a decent amount (e.g., > 10px)
-    // to distinguish from a simple click
+    // Read rect BEFORE hiding — getBoundingClientRect returns zeros after display:none
     const width = parseInt(this.element.style.width || '0', 10);
     const height = parseInt(this.element.style.height || '0', 10);
     
+    let rect: DOMRect | null = null;
     if (width > 10 && height > 10) {
-      return this.element.getBoundingClientRect();
+      rect = this.element.getBoundingClientRect();
     }
-    
-    return null;
+
+    this.element.style.display = 'none';
+    return rect;
   }
 }

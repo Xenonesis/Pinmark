@@ -77,7 +77,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
           }
           
-          const mcpEndpoint = 'http://127.0.0.1:4747';
+          const mcpEndpoint = settings.mcpEndpoint || 'http://127.0.0.1:4747';
           const sessionId = 'session_' + btoa(message.url).replace(/[^a-z0-9]/gi, '').substring(0, 10);
           await fetch(`${mcpEndpoint}/sessions`, {
             method: 'POST',

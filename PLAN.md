@@ -1,270 +1,85 @@
-# Plan: Agentation vs Pinmark Feature Comparison
+# Deep Bug Audit — All Modified Files
 
-## Context
+## Bugs Found (10)
 
-The user wants a detailed feature-by-feature comparison between **Agentation** (https://www.agentation.com/features) and **Pinmark** (our codebase), identifying:
-1. Features Agentation has that Pinmark is **missing**
-2. Features Pinmark already has that **match or exceed** Agentation
-3. Features Pinmark has that Agentation **lacks** (our advantages)
+### BUG-1: Rearrange mode state not reset on panel close [HIGH]
+**File:** `packages/pinmark/src/vanilla/Overlay.ts` — `hideLayoutPanel()`  
+**Issue:** When the layout panel is closed (via `L` key or `toggleLayoutMode(false)`), `isRearrangeMode` stays `true` inside the closure. If a user reopens the panel, rearrange mode is visually off but the old document-level mousedown/mousemove/mouseup handlers were removed — so the toggle button is out of sync. Worse: if `_cleanup` runs while rearrange mode is active, the handlers are removed but `isRearrangeMode` remains `true`, so clicking the button again won't re-add them (it just toggles the flag).  
+**Fix:** Reset `isRearrangeMode = false` inside `_cleanup` and also use a MutationObserver or direct callback to ensure the button state resets.
 
----
+### BUG-2: Rearrange mousedown fires alongside overlay's `handleClick` → double feedback [HIGH]
+**File:** `packages/pinmark/src/vanilla/Overlay.ts` — `onRearrangeMouseDown`  
+**Issue:** `onRearrangeMouseDown` does NOT call `e.preventDefault()` or `e.stopPropagation()`. When rearrange mode is ON and the user clicks an element, the overlay's `handleClick` also fires (it calls `promptForFeedback`), creating an unwanted feedback modal *plus* starting a rearrange drag. The two actions conflict.  
+**Fix:** Add `e.preventDefault(); e.stopPropagation();` in `onRearrangeMouseDown` when `isRearrangeMode` is active.
 
-## Feature-by-Feature Comparison
+### BUG-3: SPA navigation loses `hideUntilRestart` setting [MEDIUM]
+**File:** `packages/extension/src/content/index.ts` — `handleUrlChange()`  
+**Issue:** On SPA navigation, the overlay is destroyed and recreated. The new `initializeOverlay()` call at the bottom is not made — the code inline-creates a new `Overlay`. The `hideUntilRestart` toggle is only applied in `initializeOverlay()`, not in the inline recreation in `handleUrlChange()`. Markers will reappear on SPA navigation even with `hideUntilRestart: true`.  
+**Fix:** Add the same `hideUntilRestart` check after `overlay.activate()` inside `handleUrlChange()`.
 
-### 1. 🎯 Text Selection Annotation
+### BUG-4: `ThreadReplySchema.author` rejects `'user'` — but store uses `'agent'` for agent messages [MEDIUM]
+**File:** `packages/core/src/schema.ts` — `ThreadReplySchema`  
+**Issue:** `author` is `z.enum(['human', 'agent'])`. The `Store.addReply()` always sets `author: 'agent'` regardless of who actually called it. If a human asks a question via the HTTP API, the reply is still labeled `author: 'agent'`. There's no way for a human to reply via the API with `author: 'human'` because the MCP tool and HTTP endpoint don't expose an author choice — and human replies would fail Zod validation if they tried to use `'user'`.  
+**Fix:** Accept `'human'` in the schema (already does) and add a `role` parameter to the HTTP endpoint so callers can specify human vs agent.
 
-| Aspect | Agentation | Pinmark |
-|--------|-----------|---------|
-| Select text to annotate | ✅ | ✅ |
-| Quoted text in output | ✅ | ✅ (selectionText field + "**Selected:**" in markdown) |
-| Floating "Add Annotation" button on selection | ✅ | ✅ (`showSelectionButton()` in Overlay.ts) |
+### BUG-5: `handleKeydown` fires `X` → `clearAll()` even when focus is in purpose textarea [MEDIUM]
+**File:** `packages/pinmark/src/vanilla/Overlay.ts` — `handleKeydown`  
+**Issue:** The `handleKeydown` is registered with `capture: true`. When the user types in the purpose textarea (inside the layout panel), pressing `x` triggers `clearAll()`, wiping all annotations instead of typing the letter. The handler checks `if (this.isModalOpen)` but NOT if focus is in the layout panel's textarea.  
+**Fix:** Check if the active element is an input/textarea inside the shadow root before processing single-letter shortcuts.
 
-**Status: ✅ PARITY — Pinmark already matches Agentation**
+### BUG-6: Wireframe overlay + opacity slider state lost on panel reopen [LOW]
+**File:** `packages/pinmark/src/vanilla/Overlay.ts` — `hideLayoutPanel()`  
+**Issue:** `_cleanup` removes `wireframeOverlay` from the DOM. If the user had wireframe active at 40% opacity and toggles layout mode off/on, the wireframe resets to off/70%.  
+**Fix:** Persist wireframe state on the `Overlay` instance and restore it when `showLayoutPanel()` is called.
 
----
+### BUG-7: Reply `id` uses weak randomness [LOW]
+**File:** `packages/mcp/src/store.ts` — `addReply()`  
+**Reply IDs** use `Math.random().toString(36).substring(2, 15)` — only 13 chars of entropy. Annotation IDs use `crypto.randomUUID()` (122 bits). The inconsistency could cause collision on heavy reply volumes.  
+**Fix:** Use the same `crypto.randomUUID()` pattern for reply IDs.
 
-### 2. 🛠️ Toolbar Controls
+### BUG-8: `addLayoutAnnotation` and `addRearrangeAnnotation` are `async` but don't `await` anything [LOW]
+**File:** `packages/pinmark/src/vanilla/Overlay.ts`  
+**Issue:** Both methods are declared `async` but contain no `await`. This creates unnecessary promise wrappers and could swallow errors if `this.feedbackManager.add()` ever becomes async.  
+**Fix:** Remove `async` keyword.
 
-| Control | Agentation | Pinmark |
-|---------|-----------|---------|
-| Pause animations | ✅ | ✅ (P key + toolbar button + CSS injection to freeze) |
-| Toggle marker visibility | ✅ | ✅ (H key + eye button) |
-| Copy structured markdown | ✅ | ✅ |
-| Clear all annotations | ✅ | ✅ |
-| Send to webhook | ✅ | ✅ (configurable webhook URL) |
-| Layout Mode | ✅ | ✅ (L key + layout button) |
-| Settings | ✅ | ✅ (opens popup) |
-| Draggable toolbar | ✅ | ✅ (`setupDragListeners()` in Toolbar.ts) |
-| **Download JSON** | ❌ | ✅ (Pinmark exclusive) |
-| **Create GitHub Issue** | ❌ | ✅ (Pinmark exclusive) |
-| **Exit button** | ❌ | ✅ (Pinmark exclusive) |
+### BUG-9: `clearAll()` called from `X` shortcut has no empty-check guard [LOW]
+**File:** `packages/pinmark/src/vanilla/Overlay.ts` — `clearAll()`  
+**Issue:** `clearAll()` calls `this.feedbackManager.clearAll()` and `this.markerManager.clearAll()` even when there are zero annotations. It also doesn't call `persist()` through the manager — the `FeedbackManager.clearAll()` does call `persist()`, so this is fine, but there's no toast or visual confirmation for the user.  
+**Fix:** Add a toast after clear.
 
-**Status: ✅ PINMARK EXCEEDS — Has all Agentation controls + JSON download, GitHub Issues, Exit button**
-
----
-
-### 3. 📌 Marker Types
-
-| Marker Type | Agentation | Pinmark |
-|-------------|-----------|---------|
-| Single element selection | ✅ | ✅ |
-| Multi-select (area, green) | ✅ | ✅ (green markers for multi/area) |
-| Area drag selection | ✅ | ✅ (`AreaSelectionBox` with dashed blue border) |
-| Text selection annotation | ✅ | ✅ |
-| Edit/Delete/Copy per marker | ✅ | ✅ (popup on hover with edit, copy, delete buttons) |
-
-**Status: ✅ PARITY**
+### BUG-10: Rearrange ghost element appended to `document.body` (outside shadow DOM) [LOW]
+**File:** `packages/pinmark/src/vanilla/Overlay.ts` — `onRearrangeMouseMove`  
+**Issue:** The ghost div is appended to `document.body`, not the shadow root. This means it's outside the shadow DOM boundary. While it works (the ghost is visible), it leaks into the main DOM and could be accidentally captured by other scripts or screenshot tools.  
+**Fix:** Append ghost to `this.shadowRoot` instead.
 
 ---
-
-### 4. 🔍 Smart Identification (for code search / grep)
-
-| Aspect | Agentation | Pinmark |
-|--------|-----------|---------|
-| Elements named by text content | ✅ | ✅ (`getSmartName()` in HoverBox + MarkdownFormatter) |
-| Buttons/links named by text | ✅ | ✅ |
-| CSS selector generation | ✅ | ✅ (`SelectorGenerator.ts` — id, class, data-attr, path selectors) |
-| Data attributes captured | ✅ | ✅ (`extractDataAttributes()` in ElementAnalyzer) |
-| Tag name + classes in output | ✅ | ✅ |
-
-**Status: ✅ PARITY — Both generate grep-friendly selectors**
-
----
-
-### 5. 🎨 Computed Styles
-
-| Aspect | Agentation | Pinmark |
-|--------|-----------|---------|
-| View computed CSS in popup | ✅ | ✅ (collapsible "Computed Styles" section in FeedbackModal) |
-| Relevant properties (colors, fonts, spacing) | ✅ | ✅ (filters out none/normal/0px/transparent values) |
-| In markdown output | ✅ | ✅ (forensic level: `#### Computed Styles` with JSON) |
-
-**Status: ✅ PARITY**
-
----
-
-### 6. ⚛️ React Component Detection
-
-| Aspect | Agentation | Pinmark |
-|--------|-----------|---------|
-| Auto-detect React hierarchy | ✅ | ✅ (`FrameworkDetector.ts`) |
-| Hover shows component tree | ✅ | ✅ (shown in HoverBox label + FeedbackModal) |
-| Toggle on/off in settings | ✅ | ✅ (popup toggle) |
-| **Angular detection** | ❌ | ✅ |
-| **Vue detection** | ❌ | ✅ |
-| **Svelte detection** | ❌ | ✅ |
-| Source file + line number | ✅ | ✅ (from fiber `_debugSource` / Vue `__file`) |
-| Output format adapts (Compact/Standard/Detailed/Forensic) | ✅ | ✅ (hierarchy shown in standard+, props in comprehensive+) |
-
-**Status: ✅ PINMARK EXCEEDS — Detects 4 frameworks (React, Angular, Vue, Svelte) vs Agentation's React-only**
-
----
-
-### 7. 📐 Layout Mode
-
-| Aspect | Agentation | Pinmark |
-|--------|-----------|---------|
-| Press L to toggle | ✅ | ✅ |
-| Component palette (drag to place) | ✅ (65+ types) | ✅ (30 types — fewer) |
-| Rearrange existing sections | ✅ | ❌ **MISSING** |
-| Wireframe mode (fade page, sketch layout) | ✅ | ✅ (wireframe toggle with opacity overlay) |
-| Purpose field for context | ✅ | ❌ **MISSING** |
-| Agent sync via MCP (placement/rearrange) | ✅ | ✅ (annotations saved with markerType/areaRect) |
-| Opacity slider | ✅ | ❌ **MISSING** (binary toggle only) |
-
-**Status: ⚠️ GAPS — Pinmark is missing: rearrange existing sections, purpose field, opacity slider. Also fewer component types (30 vs 65+).**
-
----
-
-### 8. ⌨️ Keyboard Shortcuts
-
-| Shortcut | Agentation | Pinmark |
-|----------|-----------|---------|
-| `Cmd+Shift+F` / `Ctrl+Shift+F` | Toggle feedback mode | Toggle feedback mode |
-| `Esc` | Close toolbar / cancel | Close toolbar / deactivate |
-| `L` | Layout mode | Layout mode |
-| `P` | Pause/resume | Pause/resume |
-| `H` | Hide/show markers | Hide/show markers |
-| `C` | Copy feedback | Copy feedback |
-| `X` | Clear all | ❌ **MISSING** (uses trash button instead) |
-| `F` | ❌ | Freeze animations (CSS injection) |
-| `Delete`/`Backspace` | ❌ | Delete last annotation |
-
-**Status: ✅ MOSTLY PARITY — Pinmark missing `X` for clear, but has `F` for freeze + `Delete` for undo**
-
----
-
-### 9. 🤖 Agent Sync (MCP Integration)
-
-| Aspect | Agentation | Pinmark |
-|--------|-----------|---------|
-| MCP server integration | ✅ | ✅ (`@pinmark/mcp` package) |
-| Annotations as structured data | ✅ | ✅ (full schema with zod validation) |
-| Two-way communication | ✅ (agents can acknowledge, ask questions, resolve, dismiss) | ✅ (MCP tools: acknowledge, resolve, dismiss) |
-| **Agent can ask questions** | ✅ | ❌ **MISSING** (no question/clarification flow) |
-| **Agent can resolve with summary** | ✅ | ✅ (`pinmark_resolve` with agentName) |
-| **Threading / replies** | ✅ | ✅ (`ThreadReplySchema` in core schema) |
-| SSE real-time updates | ✅ | ✅ (`sse.ts` — broadcasts annotation updates) |
-| HTTP API for extension sync | ✅ | ✅ (HTTP routes in `http-routes.ts`) |
-| **Cross-page persistence** | ✅ (MCP server) | ✅ (MCP server stores sessions) |
-| **Annotation Format Schema** | ✅ | ✅ (`@pinmark/core` schema.ts) |
-
-**Status: ⚠️ MINOR GAP — Pinmark missing explicit "agent asks question" tool, but schema supports replies**
-
----
-
-### 10. ⚙️ Settings
-
-| Setting | Agentation | Pinmark |
-|---------|-----------|---------|
-| Output detail levels | ✅ (Compact, Standard, Detailed, Forensic) | ✅ (minimal/compact, standard, detailed, comprehensive, forensic) |
-| Marker color | ✅ | ✅ (color picker + preset swatches) |
-| Clear on copy/send | ✅ | ✅ (`clearAfterCopy`) |
-| Block page interactions | ✅ | ✅ (`blockInteractions`) |
-| Hide until restart | ✅ | ❌ **MISSING** |
-| React components toggle | ✅ | ✅ (popup toggle) |
-| **Theme (light/dark/auto)** | ❌ | ✅ (Pinmark exclusive) |
-| **Webhook URL** | ✅ | ✅ |
-| **GitHub integration** | ❌ | ✅ (token + repo config) |
-
-**Status: ✅ MOSTLY PARITY — Pinmark missing "hide until restart" but adds theme + GitHub integration**
-
----
-
-### 11. 📸 Screenshots & Image Editing
-
-| Aspect | Agentation | Pinmark |
-|--------|-----------|---------|
-| Screenshots | ❌ (text-only output, explicitly listed as limitation) | ✅ (html2canvas capture per element) |
-| Draw on screenshots | ❌ | ✅ (freehand drawing in FeedbackModal canvas) |
-| Screenshot in markdown output | ❌ | ✅ (collapsible `<details>` in comprehensive+ levels) |
-
-**Status: ✅ PINMARK EXCEEDS — Major advantage, Agentation explicitly lacks screenshots**
-
----
-
-### 12. 🔴 State & Log Capture (Pinmark Exclusive)
-
-| Feature | Agentation | Pinmark |
-|---------|-----------|---------|
-| Console log capture | ❌ | ✅ (intercepts console.log/warn/error) |
-| Network request capture | ❌ | ✅ (intercepts XHR/Fetch) |
-| Session recording (rrweb) | ❌ | ✅ (full DOM mutation recording) |
-| Browser state (localStorage, sessionStorage, cookies) | ❌ | ✅ |
-| Animations/transitions detection | ❌ | ✅ (CSS animation + transition analysis) |
-| Accessibility info (aria, roles, tabindex) | ❌ | ✅ |
-
-**Status: ✅ PINMARK EXCEEDS — All unique Pinmark features, Agentation has none of these**
-
----
-
-## Summary: What's Missing in Pinmark
-
-### Critical Gaps (should implement)
-1. **Layout Mode — Rearrange existing sections** — Agentation allows grabbing and repositioning existing page elements, not just placing new ones
-2. **Layout Mode — Component palette expansion** — Only 30 component types vs Agentation's 65+. Should add more (avatar, card grid, timeline, stepper, carousel, accordion, notification, progress bar, skeleton, etc.)
-3. **Layout Mode — Purpose field** — When placing components, Agentation lets you add a text description of intent
-4. **Layout Mode — Opacity slider for wireframe** — Agentation has a slider vs our binary toggle
-5. **Keyboard shortcut `X` to clear all** — Minor but expected by Agentation users
-6. **"Hide until restart" setting** — Persist marker visibility state
-
-### Minor Gaps (nice to have)
-7. **Agent "ask question" MCP tool** — Allow agents to request clarification on an annotation
-8. **Annotation kind field** — Agentation uses `kind: "placement"` or `kind: "rearrange"` to distinguish layout annotations from feedback; Pinmark schema has the field but it's not actively used
-
-### Already Implemented (parity or better)
-- ✅ Text selection annotation with floating button
-- ✅ All toolbar controls (pause, visibility, copy, clear, webhook, layout, settings)
-- ✅ All marker types (single, multi, area)
-- ✅ Smart element identification for grep
-- ✅ Computed styles in popup + output
-- ✅ React component detection (plus Angular, Vue, Svelte)
-- ✅ MCP integration with two-way sync
-- ✅ Full keyboard shortcuts (most match, some extras)
-- ✅ Multiple output detail levels
-- ✅ Draggable toolbar
-
-### Pinmark Advantages Over Agentation
-- 📸 Screenshots with drawing tools (Agentation is text-only)
-- 🌐 Multi-framework detection (React + Angular + Vue + Svelte)
-- 🔴 Console log capture
-- 📡 Network request capture
-- 🎬 Session recording (rrweb)
-- 💾 Browser state capture (localStorage, sessionStorage, cookies)
-- ♿ Accessibility info extraction
-- 🎞️ Animation/transition detection
-- 📥 JSON download
-- 🐙 GitHub Issue creation
-- 🎨 Light/dark/auto theme support
-- ❄️ Freeze animations with F key (CSS injection)
-
----
-
-## Recommended Implementation Steps
-
-### Priority 1: Close Critical Gaps
-- [x] Expand Layout Mode component palette to 65+ types
-- [x] Add "rearrange existing sections" capability in Layout Mode
-- [x] Add purpose/intent text field for layout placements
-- [x] Add opacity slider for wireframe mode (replaces binary toggle)
-- [x] Add `X` keyboard shortcut for clear all
-- [x] Add "Hide until restart" setting
-
-### Priority 2: Minor Enhancements
-- [x] Add `pinmark_ask_question` MCP tool for agent clarification requests
-- [x] Actively use `kind` field in annotations (set "placement"/"rearrange" for layout mode items)
-
-### Priority 3: Verification
-- [x] Build and test all changes
-- [ ] Manual comparison against Agentation features page
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `packages/pinmark/src/vanilla/Overlay.ts` | Layout mode enhancements (rearrange, purpose field, opacity slider, expanded palette) |
-| `packages/pinmark/src/vanilla/Toolbar.ts` | No changes needed (all controls exist) |
-| `packages/pinmark/src/core/types.ts` | Add `hideUntilRestart` setting |
-| `packages/extension/src/popup/popup.ts` | Add hide-until-restart toggle |
-| `packages/extension/src/popup/index.html` | Add hide-until-restart UI element |
-| `packages/mcp/src/mcp-tools.ts` | Add `pinmark_ask_question` tool |
+| File | Bugs |
+|------|------|
+| `packages/pinmark/src/vanilla/Overlay.ts` | BUG-1, BUG-2, BUG-5, BUG-6, BUG-8, BUG-9, BUG-10 |
+| `packages/extension/src/content/index.ts` | BUG-3 |
+| `packages/mcp/src/store.ts` | BUG-7 |
+| `packages/core/src/schema.ts` | BUG-4 (optional) |
+
+## Implementation Steps
+
+- [ ] Step 1: Fix BUG-2 — Add `e.preventDefault(); e.stopPropagation();` in `onRearrangeMouseDown`
+- [ ] Step 2: Fix BUG-1 — Reset `isRearrangeMode = false` in `_cleanup`
+- [ ] Step 3: Fix BUG-5 — Guard keyboard shortcuts when focus is in shadow root inputs
+- [ ] Step 4: Fix BUG-3 — Apply `hideUntilRestart` in SPA `handleUrlChange`
+- [ ] Step 5: Fix BUG-6 — Persist wireframe/opacity state on Overlay instance
+- [ ] Step 6: Fix BUG-10 — Append rearrange ghost to shadow root
+- [ ] Step 7: Fix BUG-8 — Remove unnecessary `async` from layout methods
+- [ ] Step 8: Fix BUG-9 — Add toast confirmation to `clearAll()`
+- [ ] Step 9: Fix BUG-7 — Use `crypto.randomUUID()` for reply IDs
+- [ ] Step 10: Build and verify
+
+## Verification
+
+- `npm run build` — all 4 packages compile cleanly
+- Manual: open layout panel → rearrange mode ON → click element → confirm no double feedback modal
+- Manual: open layout panel → type in purpose field → press `x` → confirm letter types, no clear
+- Manual: enable hide-until-restart → SPA navigate → confirm markers stay hidden
+- Manual: layout panel → wireframe ON → close panel → reopen → confirm wireframe state restored

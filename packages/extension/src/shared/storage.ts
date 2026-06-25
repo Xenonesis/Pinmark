@@ -19,9 +19,13 @@ export async function getSettings(): Promise<ExtensionSettings> {
         outputDetail: 'standard',
         clearAfterCopy: false,
         blockInteractions: false,
+        hideUntilRestart: false,
         theme: 'auto',
-        mcpEndpoint: 'http://127.0.0.1:4747',
+        mcpEndpoint: 'http://localhost:4747',
         autoSync: true,
+        githubToken: '',
+        githubRepo: '',
+        webhookUrl: '',
       });
     });
   });

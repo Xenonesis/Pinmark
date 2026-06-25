@@ -5,6 +5,9 @@ export class Store {
 
   createSession(url: string, sessionId?: string): Session {
     const id = sessionId || Math.random().toString(36).substring(2, 9);
+    // Return existing session to avoid losing annotations
+    const existing = this.sessions.get(id);
+    if (existing) return existing;
     const session: Session = {
       id,
       url,

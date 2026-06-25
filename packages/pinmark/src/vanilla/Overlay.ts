@@ -65,6 +65,7 @@ export class Overlay {
   private elementAnalyzer: ElementAnalyzer;
   private frameworkDetector: FrameworkDetector;
   private feedbackManager: FeedbackManager;
+  getFeedbackManager() { return this.feedbackManager; }
   private settings: PinmarkSettings;
   private config: PinmarkConfig;
   private _isActive = false;
@@ -1168,14 +1169,18 @@ export class Overlay {
     if (this.config.onToggle) this.config.onToggle(true);
     
     try {
-      this.stopRecording = rrweb.record({
+      const stopFn = rrweb.record({
         emit: (event) => {
           this.rrwebEvents.push(event);
           if (this.rrwebEvents.length > 2000) {
             this.rrwebEvents = this.rrwebEvents.slice(-1000);
           }
         },
-      }) as unknown as () => void;
+      });
+      // rrweb.record() may return undefined if recording is already active
+      if (stopFn) {
+        this.stopRecording = stopFn as () => void;
+      }
     } catch (e) {
       console.warn('[Pinmark] Failed to start rrweb recording:', e);
     }

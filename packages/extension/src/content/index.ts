@@ -57,7 +57,7 @@ async function initializeOverlay() {
   try {
     console.log('[Pinmark] Initializing overlay...');
     overlay = new Overlay(settings, config, feedback);
-    feedbackManager = (overlay as any).feedbackManager;
+    feedbackManager = overlay.getFeedbackManager();
     console.log('[Pinmark] Activating overlay...');
     overlay.activate();
     // Apply hide-until-restart: markers start hidden if setting is on
@@ -137,7 +137,7 @@ async function handleUrlChange() {
       // it is safer to just recreate it for SPA navigation.
       overlay.deactivate();
       overlay = new Overlay(settings, config, feedback);
-      feedbackManager = (overlay as any).feedbackManager;
+      feedbackManager = overlay.getFeedbackManager();
       overlay.activate();
     }
   } finally {
@@ -204,6 +204,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   switch (message.type) {
     case 'TOGGLE_EXTENSION':
       if (message.isActive) {
+        initializeLauncher();
         initializeOverlay();
       } else {
         deactivateOverlay();

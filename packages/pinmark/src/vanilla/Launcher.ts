@@ -25,6 +25,7 @@ export const LAUNCHER_STYLES = `
     outline: none;
     padding: 0;
     position: relative;
+    touch-action: none;
   }
   
   .pinmark-launcher:hover {
@@ -169,7 +170,9 @@ export class Launcher {
     let startElTop = 0;
     let hasDragged = false;
 
-    const dragStart = (e: MouseEvent) => {
+    const dragStart = (e: PointerEvent) => {
+      // Ignore right clicks
+      if (e.button !== 0) return;
       isDragging = true;
       hasDragged = false;
       startMouseX = e.clientX;
@@ -190,7 +193,7 @@ export class Launcher {
       isDragging = false;
     };
 
-    const drag = (e: MouseEvent) => {
+    const drag = (e: PointerEvent) => {
       if (!isDragging) return;
       
       const dx = e.clientX - startMouseX;
@@ -209,9 +212,10 @@ export class Launcher {
       }
     };
 
-    this.btn.addEventListener('mousedown', dragStart);
-    document.addEventListener('mouseup', dragEnd);
-    document.addEventListener('mousemove', drag);
+    this.btn.addEventListener('pointerdown', dragStart);
+    document.addEventListener('pointerup', dragEnd);
+    document.addEventListener('pointercancel', dragEnd);
+    document.addEventListener('pointermove', drag, { passive: false });
 
     this.btn.onclick = (e) => {
       e.stopPropagation();
@@ -219,6 +223,11 @@ export class Launcher {
         this.onClick?.();
       }
     };
+
+    // ponytail: store refs so destroy() can clean up
+    this._dragEnd = dragEnd;
+    this._drag = drag;
+    this._dragStart = dragStart;
 
     shadowRoot.appendChild(this.btn);
 
@@ -240,7 +249,17 @@ export class Launcher {
     this.badgeEl.style.opacity = count > 0 ? '1' : '0';
   }
 
+  private _dragEnd?: (e: PointerEvent) => void;
+  private _drag?: (e: PointerEvent) => void;
+  private _dragStart?: (e: PointerEvent) => void;
+
   public destroy() {
+    if (this._dragStart) this.btn.removeEventListener('pointerdown', this._dragStart);
+    if (this._dragEnd) {
+      document.removeEventListener('pointerup', this._dragEnd);
+      document.removeEventListener('pointercancel', this._dragEnd);
+    }
+    if (this._drag) document.removeEventListener('pointermove', this._drag);
     this.element.remove();
   }
 }
