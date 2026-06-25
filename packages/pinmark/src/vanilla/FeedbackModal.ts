@@ -15,8 +15,8 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal {
-    background: #111113;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--pmk-bg-2, #111827);
+    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.08));
     border-radius: 10px;
     padding: 20px;
     width: 460px;
@@ -28,7 +28,7 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-title {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--pmk-text, #f9fafb);
     font-size: 14px;
     font-weight: 500;
     margin: 0 0 12px 0;
@@ -38,10 +38,10 @@ const MODAL_STYLES = `
   .pinmark-modal-input {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.08));
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(255, 255, 255, 0.85);
+    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.04));
+    color: var(--pmk-text, #f9fafb);
     font-size: 13px;
     outline: none;
     transition: border-color 0.15s ease;
@@ -53,11 +53,11 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-input:focus {
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--pmk-accent, #3b82f6);
   }
 
   .pinmark-modal-input::placeholder {
-    color: rgba(255, 255, 255, 0.2);
+    color: var(--pmk-text-muted, #6b7280);
   }
 
   .pinmark-modal-actions {
@@ -85,18 +85,18 @@ const MODAL_STYLES = `
 
   .pinmark-modal-btn.cancel {
     background: transparent;
-    color: rgba(255, 255, 255, 0.35);
-    border: 1px solid rgba(255,255,255,0.07);
+    color: var(--pmk-text-muted, #9ca3af);
+    border: 1px solid var(--pmk-border, rgba(255,255,255,0.07));
   }
 
   .pinmark-modal-btn.cancel:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(255,255,255,0.6);
+    background: var(--pmk-bg-3, #374151);
+    color: var(--pmk-text, #f9fafb);
   }
 
   .pinmark-modal-btn.submit {
-    background: rgba(255, 255, 255, 0.92);
-    color: #111113;
+    background: var(--pmk-text, #f9fafb);
+    color: var(--pmk-bg-2, #111827);
   }
 
   .pinmark-modal-btn.submit:hover:not(:disabled) {
@@ -104,24 +104,24 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-element-info {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.06));
     border-radius: 6px;
     padding: 7px 10px;
     margin-bottom: 12px;
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--pmk-text-muted, #9ca3af);
     font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .pinmark-modal-element-tag { color: rgba(255, 255, 255, 0.55); }
-  .pinmark-modal-element-class { color: rgba(255, 255, 255, 0.35); }
-  .pinmark-modal-element-id { color: rgba(255, 255, 255, 0.45); }
+  .pinmark-modal-element-tag { color: var(--pmk-text-muted, #9ca3af); }
+  .pinmark-modal-element-class { color: var(--pmk-text-muted, #6b7280); }
+  .pinmark-modal-element-id { color: var(--pmk-text-muted, #9ca3af); }
   .pinmark-modal-element-component {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--pmk-text-muted, #9ca3af);
     margin-left: 8px;
     font-family: system-ui, sans-serif;
     font-size: 11px;
@@ -129,14 +129,14 @@ const MODAL_STYLES = `
 
   /* Selection text */
   .pinmark-modal-selection {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-left: 2px solid rgba(255, 255, 255, 0.2);
+    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.08));
+    border-left: 2px solid var(--pmk-accent, #3b82f6);
     border-radius: 4px;
     padding: 8px 12px;
     margin-bottom: 12px;
     font-size: 12px;
-    color: rgba(255,255,255,0.55);
+    color: var(--pmk-text-muted, #9ca3af);
     font-style: italic;
     line-height: 1.5;
   }
@@ -147,7 +147,7 @@ const MODAL_STYLES = `
     align-items: center;
     gap: 5px;
     cursor: pointer;
-    color: rgba(255,255,255,0.3);
+    color: var(--pmk-text-muted, #6b7280);
     font-size: 11px;
     padding: 5px 0;
     margin-bottom: 10px;
@@ -159,7 +159,7 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-styles-toggle:hover {
-    color: rgba(255,255,255,0.55);
+    color: var(--pmk-text, #f9fafb);
   }
 
   .pinmark-modal-styles-toggle-icon {
@@ -174,8 +174,8 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-styles-body {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: var(--pmk-bg-3, rgba(255,255,255,0.03));
+    border: 1px solid var(--pmk-border, rgba(255,255,255,0.06));
     border-radius: 6px;
     padding: 10px;
     margin-bottom: 12px;
@@ -197,13 +197,13 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-style-prop {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--pmk-text-muted, #6b7280);
     flex-shrink: 0;
     min-width: 130px;
   }
 
   .pinmark-modal-style-val {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--pmk-text, #f9fafb);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -211,19 +211,19 @@ const MODAL_STYLES = `
 
   /* Component tree */
   .pinmark-modal-component-tree {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.06));
     border-radius: 6px;
     padding: 8px 10px;
     margin-bottom: 12px;
     font-size: 11px;
     font-family: 'SF Mono', Monaco, monospace;
-    color: rgba(255,255,255,0.35);
+    color: var(--pmk-text-muted, #6b7280);
     line-height: 1.8;
   }
 
   .pinmark-modal-component-name {
-    color: rgba(255,255,255,0.65);
+    color: var(--pmk-text, #f9fafb);
     font-weight: 500;
   }
 `;
@@ -361,7 +361,7 @@ export class FeedbackModal {
     let drawnScreenshot: string | undefined = screenshotUrl;
     if (screenshotUrl) {
       const markupContainer = document.createElement('div');
-      markupContainer.style.cssText = 'margin-top:14px;position:relative;border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;background:#000;display:flex;flex-direction:column;';
+      markupContainer.style.cssText = 'margin-top:14px;position:relative;border:1px solid var(--pmk-border,rgba(255,255,255,0.1));border-radius:8px;overflow:hidden;background:var(--pmk-bg,#000);display:flex;flex-direction:column;';
 
       const canvas = document.createElement('canvas');
       canvas.style.cssText = 'max-width:100%;max-height:180px;object-fit:contain;display:block;cursor:crosshair;';
@@ -400,7 +400,7 @@ export class FeedbackModal {
 
       const hint = document.createElement('div');
       hint.textContent = 'Draw to highlight';
-      hint.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.9);padding:5px 10px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);border-radius:20px;border:1px solid rgba(255,255,255,0.1);position:absolute;top:10px;left:50%;transform:translateX(-50%);pointer-events:none;white-space:nowrap;';
+      hint.style.cssText = 'font-size:11px;color:var(--pmk-text,#f9fafb);padding:5px 10px;background:var(--pmk-bg-2,rgba(0,0,0,0.6));backdrop-filter:blur(4px);border-radius:20px;border:1px solid var(--pmk-border,rgba(255,255,255,0.1));position:absolute;top:10px;left:50%;transform:translateX(-50%);pointer-events:none;white-space:nowrap;';
 
       markupContainer.appendChild(canvas);
       markupContainer.appendChild(hint);
@@ -460,7 +460,7 @@ export class FeedbackModal {
     }
 
     if (smartName) {
-      return `<span class="pinmark-modal-element-tag">&lt;${tag}&gt;</span> <span style="color:rgba(255,255,255,0.5)">"${smartName}"</span>${componentHTML}`;
+      return `<span class="pinmark-modal-element-tag">&lt;${tag}&gt;</span> <span style="color:var(--pmk-text-muted,#9ca3af)">"${smartName}"</span>${componentHTML}`;
     }
 
     return `<span class="pinmark-modal-element-tag">&lt;${tag}&gt;</span>${id}${classes}${componentHTML}`;

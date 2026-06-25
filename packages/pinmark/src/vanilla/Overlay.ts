@@ -607,9 +607,9 @@ export class Overlay {
       top: ${rect.top - 36}px;
       left: ${rect.left + rect.width / 2}px;
       transform: translateX(-50%);
-      background: #18181b;
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.15);
+      background: var(--pmk-bg-2, #111827);
+      color: var(--pmk-text, #f9fafb);
+      border: 1px solid var(--pmk-border, rgba(255,255,255,0.15));
       border-radius: 20px;
       padding: 5px 12px;
       font-size: 12px;
@@ -1256,8 +1256,8 @@ export class Overlay {
       bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.85);
-      color: #fff;
+      background: var(--pmk-bg-2, #111827);
+      color: var(--pmk-text, #f9fafb);
       padding: 8px 16px;
       border-radius: 8px;
       font-size: 13px;

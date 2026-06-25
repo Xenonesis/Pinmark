@@ -37,8 +37,8 @@ const MARKER_STYLES = (color: string) => `
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(255, 255, 255, 1);
-    border: 2px solid rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 2.5px var(--pmk-text, #fff);
+    border: 2px solid rgba(0,0,0,0.15);
     transition: transform 0.15s ease-out, opacity 0.15s ease-out;
     pointer-events: all;
     user-select: none;
@@ -46,7 +46,7 @@ const MARKER_STYLES = (color: string) => `
 
   .pinmark-marker:hover {
     transform: scale(1.15);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(255, 255, 255, 1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6), 0 0 0 2.5px var(--pmk-text, #fff);
   }
 
   .pinmark-marker.pinmark-marker-multi {
@@ -63,14 +63,14 @@ const MARKER_STYLES = (color: string) => `
     bottom: calc(100% + 10px);
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(24, 24, 27, 0.95);
+    background: var(--pmk-bg-2, #111827);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.1));
     border-radius: 8px;
     padding: 12px 14px;
     min-width: 200px;
     max-width: 280px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -85,7 +85,7 @@ const MARKER_STYLES = (color: string) => `
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
-    border-top-color: rgba(24, 24, 27, 0.95);
+    border-top-color: var(--pmk-bg-2, #111827);
   }
 
   .pinmark-marker:hover .pinmark-marker-popup {
@@ -96,7 +96,7 @@ const MARKER_STYLES = (color: string) => `
   }
 
   .pinmark-marker-comment {
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--pmk-text, #f9fafb);
     font-size: 13px;
     line-height: 1.5;
     margin-bottom: 12px;
@@ -121,15 +121,15 @@ const MARKER_STYLES = (color: string) => `
     border: none;
     border-radius: 6px;
     background: transparent;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--pmk-text-muted, #9ca3af);
     cursor: pointer;
     transition: all 0.15s ease;
     padding: 0;
   }
 
   .pinmark-marker-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: var(--pmk-bg-3, #374151);
+    color: var(--pmk-text, #f9fafb);
   }
 
   .pinmark-marker-btn.delete:hover {

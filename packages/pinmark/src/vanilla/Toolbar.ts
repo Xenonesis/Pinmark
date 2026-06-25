@@ -10,9 +10,9 @@ const TOOLBAR_STYLES = `
     align-items: center;
     gap: 2px;
     padding: 5px 6px;
-    background: #111113;
+    background: var(--pmk-bg-2, #111827);
     border-radius: 999px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.07);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--pmk-border, rgba(255, 255, 255, 0.07));
     z-index: 2147483646;
     pointer-events: all;
     cursor: move;
@@ -30,14 +30,14 @@ const TOOLBAR_STYLES = `
     border: none;
     border-radius: 50%;
     background: transparent;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--pmk-text-muted, #9ca3af);
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
   }
 
   .pinmark-toolbar-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.9);
+    background: var(--pmk-bg-3, #374151);
+    color: var(--pmk-text, #f9fafb);
   }
 
   .pinmark-toolbar-btn:active {
@@ -45,9 +45,9 @@ const TOOLBAR_STYLES = `
   }
 
   .pinmark-toolbar-btn.active {
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
-    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.4);
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.3);
   }
 
   .pinmark-toolbar-btn svg {
@@ -58,16 +58,16 @@ const TOOLBAR_STYLES = `
   .pinmark-toolbar-divider {
     width: 1px;
     height: 14px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--pmk-bg-3, #374151);
     margin: 0 3px;
   }
 
   .pinmark-tooltip {
     position: absolute;
     top: -30px;
-    background: #1a1a1c;
-    border: 1px solid rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.85);
+    background: var(--pmk-bg-2, #111827);
+    border: 1px solid var(--pmk-border, rgba(255,255,255,0.1));
+    color: var(--pmk-text, #f9fafb);
     font-size: 11px;
     padding: 3px 8px;
     border-radius: 5px;
@@ -86,11 +86,11 @@ const TOOLBAR_STYLES = `
   }
 
   .pinmark-toolbar-btn.exit-btn {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--pmk-text-muted, #6b7280);
   }
   .pinmark-toolbar-btn.exit-btn:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.8);
+    background: var(--pmk-bg-3, #374151);
+    color: var(--pmk-text, #f9fafb);
   }
 `;
 

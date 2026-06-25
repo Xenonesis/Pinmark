@@ -4,8 +4,8 @@ import { FrameworkDetector } from './FrameworkDetector';
 const HOVER_BOX_STYLES = `
   .pinmark-hover-box {
     position: absolute;
-    border: 1.5px solid rgba(255, 255, 255, 0.4);
-    background-color: rgba(255, 255, 255, 0.04);
+    border: 1.5px solid var(--pmk-accent, #3b82f6);
+    background-color: rgba(59, 130, 246, 0.06);
     pointer-events: none;
     transition: top 0.08s ease-out, left 0.08s ease-out, width 0.08s ease-out, height 0.08s ease-out;
     z-index: 2147483644;
@@ -16,13 +16,13 @@ const HOVER_BOX_STYLES = `
     position: absolute;
     top: -26px;
     left: 0;
-    background: #111113;
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--pmk-bg-2, #111827);
+    border: 1px solid var(--pmk-border, rgba(255,255,255,0.1));
     border-radius: 5px;
     padding: 2px 8px;
     font-size: 11px;
     font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Fira Code', monospace;
-    color: rgba(255,255,255,0.75);
+    color: var(--pmk-text, #f9fafb);
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -35,17 +35,17 @@ const HOVER_BOX_STYLES = `
   }
 
   .pinmark-hover-label-tag {
-    color: rgba(255,255,255,0.7);
+    color: var(--pmk-text-muted, #9ca3af);
     font-weight: 500;
     flex-shrink: 0;
   }
 
   .pinmark-hover-label-id {
-    color: rgba(255,255,255,0.5);
+    color: var(--pmk-text-muted, #9ca3af);
   }
 
   .pinmark-hover-label-class {
-    color: rgba(255,255,255,0.35);
+    color: var(--pmk-text-muted, #6b7280);
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -53,12 +53,12 @@ const HOVER_BOX_STYLES = `
   .pinmark-hover-label-divider {
     width: 1px;
     height: 10px;
-    background: rgba(255,255,255,0.12);
+    background: var(--pmk-border, rgba(255,255,255,0.12));
     flex-shrink: 0;
   }
 
   .pinmark-hover-label-component {
-    color: rgba(255,255,255,0.55);
+    color: var(--pmk-text-muted, #9ca3af);
     font-weight: 400;
     font-family: system-ui, -apple-system, sans-serif;
     font-size: 11px;
@@ -69,7 +69,7 @@ const HOVER_BOX_STYLES = `
   }
 
   .pinmark-hover-label-dims {
-    color: rgba(255,255,255,0.25);
+    color: var(--pmk-text-muted, #6b7280);
     font-size: 10px;
     flex-shrink: 0;
     margin-left: auto;
