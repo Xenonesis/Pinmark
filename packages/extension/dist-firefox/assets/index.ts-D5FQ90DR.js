@@ -11,21 +11,21 @@ import{g as _c,s as Gc,a as Vc,b as Wc,c as Xc}from"./storage-BaaasMr-.js";impor
 
   .pinmark-hover-label {
     position: absolute;
-    top: -26px;
+    bottom: 100%;
+    margin-bottom: 4px;
     left: 0;
     background: var(--pmk-bg-2, #111827);
     border: 1px solid var(--pmk-border, rgba(255,255,255,0.1));
     border-radius: 5px;
-    padding: 2px 8px;
+    padding: 4px 8px;
     font-size: 11px;
     font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Fira Code', monospace;
     color: var(--pmk-text, #f9fafb);
-    white-space: nowrap;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 5px;
     max-width: 320px;
-    overflow: hidden;
     pointer-events: none;
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     line-height: 1.4;
@@ -43,8 +43,7 @@ import{g as _c,s as Gc,a as Vc,b as Wc,c as Xc}from"./storage-BaaasMr-.js";impor
 
   .pinmark-hover-label-class {
     color: var(--pmk-text-muted, #6b7280);
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-all;
   }
 
   .pinmark-hover-label-divider {
@@ -60,9 +59,6 @@ import{g as _c,s as Gc,a as Vc,b as Wc,c as Xc}from"./storage-BaaasMr-.js";impor
     font-family: system-ui, -apple-system, sans-serif;
     font-size: 11px;
     flex-shrink: 0;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .pinmark-hover-label-dims {
@@ -73,14 +69,17 @@ import{g as _c,s as Gc,a as Vc,b as Wc,c as Xc}from"./storage-BaaasMr-.js";impor
   }
 
   .pinmark-hover-label.shift-down {
+    bottom: auto;
     top: 100%;
+    margin-bottom: 0;
     margin-top: 4px;
   }
 
   .pinmark-hover-label.shift-inside {
+    bottom: auto;
     top: 4px;
   }
-`;class $c{constructor(A){Object.defineProperty(this,"element",{enumerable:!0,configurable:!0,writable:!0,value:void 0}),Object.defineProperty(this,"label",{enumerable:!0,configurable:!0,writable:!0,value:void 0}),Object.defineProperty(this,"currentElement",{enumerable:!0,configurable:!0,writable:!0,value:null}),Object.defineProperty(this,"frameworkDetector",{enumerable:!0,configurable:!0,writable:!0,value:void 0}),this.frameworkDetector=new Ys,this.element=document.createElement("div"),this.element.className="pinmark-hover-box",this.element.style.display="none",this.label=document.createElement("div"),this.label.className="pinmark-hover-label",this.element.appendChild(this.label);const t=document.createElement("style");t.textContent=Jc,A.appendChild(t),A.appendChild(this.element)}show(A){if(this.currentElement===A)return;this.currentElement=A;const t=A.getBoundingClientRect();this.element.style.top=`${t.top}px`,this.element.style.left=`${t.left}px`,this.element.style.width=`${t.width}px`,this.element.style.height=`${t.height}px`,this.element.style.display="block",this.label.innerHTML=this.buildLabelHTML(A,t),t.top<30?t.bottom+30>window.innerHeight?(this.label.classList.add("shift-inside"),this.label.classList.remove("shift-down")):(this.label.classList.add("shift-down"),this.label.classList.remove("shift-inside")):this.label.classList.remove("shift-down","shift-inside")}buildLabelHTML(A,t){const r=A.tagName.toLowerCase(),n=this.getSmartName(A),s=A.id?`<span class="pinmark-hover-label-id">#${A.id}</span>`:"",i=A.classList.length>0?Array.from(A.classList).filter(f=>!f.startsWith("pinmark")).slice(0,2).map(f=>`<span class="pinmark-hover-label-class">.${f}</span>`).join(""):"";let l="";try{const f=this.frameworkDetector.detect(A);f&&f.name&&f.name!=="Unknown"&&(l=`
+`;class $c{constructor(A){Object.defineProperty(this,"element",{enumerable:!0,configurable:!0,writable:!0,value:void 0}),Object.defineProperty(this,"label",{enumerable:!0,configurable:!0,writable:!0,value:void 0}),Object.defineProperty(this,"currentElement",{enumerable:!0,configurable:!0,writable:!0,value:null}),Object.defineProperty(this,"frameworkDetector",{enumerable:!0,configurable:!0,writable:!0,value:void 0}),this.frameworkDetector=new Ys,this.element=document.createElement("div"),this.element.className="pinmark-hover-box",this.element.style.display="none",this.label=document.createElement("div"),this.label.className="pinmark-hover-label",this.element.appendChild(this.label);const t=document.createElement("style");t.textContent=Jc,A.appendChild(t),A.appendChild(this.element)}show(A){if(this.currentElement===A)return;this.currentElement=A;const t=A.getBoundingClientRect();this.element.style.top=`${t.top}px`,this.element.style.left=`${t.left}px`,this.element.style.width=`${t.width}px`,this.element.style.height=`${t.height}px`,this.element.style.display="block",this.label.innerHTML=this.buildLabelHTML(A,t),t.top<30?t.bottom+30>window.innerHeight?(this.label.classList.add("shift-inside"),this.label.classList.remove("shift-down")):(this.label.classList.add("shift-down"),this.label.classList.remove("shift-inside")):this.label.classList.remove("shift-down","shift-inside"),this.label.style.left="0",this.label.style.right="auto",this.label.getBoundingClientRect().right>window.innerWidth&&(this.label.style.left="auto",this.label.style.right="0")}buildLabelHTML(A,t){const r=A.tagName.toLowerCase(),n=this.getSmartName(A),s=A.id?`<span class="pinmark-hover-label-id">#${A.id}</span>`:"",i=A.classList.length>0?Array.from(A.classList).filter(f=>!f.startsWith("pinmark")).slice(0,2).map(f=>`<span class="pinmark-hover-label-class">.${f}</span>`).join(""):"";let l="";try{const f=this.frameworkDetector.detect(A);f&&f.name&&f.name!=="Unknown"&&(l=`
           <span class="pinmark-hover-label-divider"></span>
           <span class="pinmark-hover-label-component">${f.framework==="react"?"⚛":f.framework==="vue"?"💚":"🔷"} ${f.name}</span>
         `)}catch{}const o=Math.round(t.width),c=Math.round(t.height),a=`<span class="pinmark-hover-label-dims">${o}×${c}</span>`;return n?`

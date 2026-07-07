@@ -14,21 +14,21 @@ const HOVER_BOX_STYLES = `
 
   .pinmark-hover-label {
     position: absolute;
-    top: -26px;
+    bottom: 100%;
+    margin-bottom: 4px;
     left: 0;
     background: var(--pmk-bg-2, #111827);
     border: 1px solid var(--pmk-border, rgba(255,255,255,0.1));
     border-radius: 5px;
-    padding: 2px 8px;
+    padding: 4px 8px;
     font-size: 11px;
     font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Fira Code', monospace;
     color: var(--pmk-text, #f9fafb);
-    white-space: nowrap;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 5px;
     max-width: 320px;
-    overflow: hidden;
     pointer-events: none;
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     line-height: 1.4;
@@ -46,8 +46,7 @@ const HOVER_BOX_STYLES = `
 
   .pinmark-hover-label-class {
     color: var(--pmk-text-muted, #6b7280);
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-all;
   }
 
   .pinmark-hover-label-divider {
@@ -63,9 +62,6 @@ const HOVER_BOX_STYLES = `
     font-family: system-ui, -apple-system, sans-serif;
     font-size: 11px;
     flex-shrink: 0;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .pinmark-hover-label-dims {
@@ -76,11 +72,14 @@ const HOVER_BOX_STYLES = `
   }
 
   .pinmark-hover-label.shift-down {
+    bottom: auto;
     top: 100%;
+    margin-bottom: 0;
     margin-top: 4px;
   }
 
   .pinmark-hover-label.shift-inside {
+    bottom: auto;
     top: 4px;
   }
 `;
@@ -133,6 +132,16 @@ export class HoverBox {
       }
     } else {
       this.label.classList.remove('shift-down', 'shift-inside');
+    }
+
+    // Prevent right cutoff
+    // Reset left/right first to measure natural width
+    this.label.style.left = '0';
+    this.label.style.right = 'auto';
+    const labelRect = this.label.getBoundingClientRect();
+    if (labelRect.right > window.innerWidth) {
+      this.label.style.left = 'auto';
+      this.label.style.right = '0';
     }
   }
 
