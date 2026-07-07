@@ -29,7 +29,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.ts-loader-ZUsUT-eu.js"
+        "assets/index.ts-loader-NRZksWnO.js"
       ],
       "matches": [
         "<all_urls>"
@@ -73,7 +73,7 @@
       "resources": [
         "assets/storage-BaaasMr-.js",
         "assets/messaging-BIPspj2q.js",
-        "assets/index.ts-BbT4B_rH.js",
+        "assets/index.ts-BroLvbEr.js",
         "assets/main-world.ts-D1_KfGMT.js"
       ]
     }

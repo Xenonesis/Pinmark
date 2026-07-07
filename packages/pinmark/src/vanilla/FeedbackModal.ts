@@ -24,16 +24,46 @@ const MODAL_STYLES = `
     background: var(--pmk-bg-2, #111827);
     border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.08));
     border-radius: 16px;
-    padding: 20px;
     width: 460px;
     max-width: 90vw;
     max-height: 85vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
     opacity: 0;
     transform: scale(0.95) translateY(8px);
     transition: opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .pinmark-modal-header {
+    padding: 20px 20px 0 20px;
+    flex-shrink: 0;
+  }
+
+  .pinmark-modal-body {
+    padding: 12px 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .pinmark-modal-body::-webkit-scrollbar {
+    width: 6px;
+  }
+  .pinmark-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .pinmark-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+  .pinmark-modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .pinmark-modal-footer {
+    padding: 0 20px 20px 20px;
+    flex-shrink: 0;
   }
 
   .pinmark-modal-overlay.visible .pinmark-modal {
@@ -249,7 +279,7 @@ const MODAL_STYLES = `
   .pinmark-modal-select-row {
     display: flex;
     gap: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
   .pinmark-modal-select-col {
     flex: 1;
@@ -346,27 +376,35 @@ export class FeedbackModal {
     const modal = document.createElement('div');
     modal.className = 'pinmark-modal';
 
+    const header = document.createElement('div');
+    header.className = 'pinmark-modal-header';
+
+    const body = document.createElement('div');
+    body.className = 'pinmark-modal-body';
+
+    const footer = document.createElement('div');
+    footer.className = 'pinmark-modal-footer';
+
     // Title
     const title = document.createElement('h3');
     title.className = 'pinmark-modal-title';
     title.textContent = existingComment ? 'Edit Feedback' : 'Add Feedback';
+    header.appendChild(title);
 
     // Element info row
     const elementInfo = document.createElement('div');
     elementInfo.className = 'pinmark-modal-element-info';
     elementInfo.innerHTML = this.formatElementInfo(element, smartName, componentInfo);
+    header.appendChild(elementInfo);
+    
+    modal.appendChild(header);
 
     // Selection text badge (if text was selected)
     if (selectionText) {
       const selBadge = document.createElement('div');
       selBadge.className = 'pinmark-modal-selection';
       selBadge.textContent = selectionText.length > 100 ? selectionText.slice(0, 100) + '…' : selectionText;
-      modal.appendChild(title);
-      modal.appendChild(elementInfo);
-      modal.appendChild(selBadge);
-    } else {
-      modal.appendChild(title);
-      modal.appendChild(elementInfo);
+      body.appendChild(selBadge);
     }
 
     // React component hierarchy
@@ -379,7 +417,7 @@ export class FeedbackModal {
         const isLast = i === hierarchy.length - 1;
         return `<div>${indent}<span class="${isLast ? 'pinmark-modal-component-name' : ''}">${name}</span></div>`;
       }).join('');
-      modal.appendChild(treeEl);
+      body.appendChild(treeEl);
     }
 
     // Input
@@ -387,7 +425,7 @@ export class FeedbackModal {
     input.className = 'pinmark-modal-input';
     input.placeholder = 'Enter your feedback... (Ctrl+Enter to submit)';
     input.value = existingComment || '';
-    modal.appendChild(input);
+    body.appendChild(input);
 
     // Computed styles panel
     if (computedStyles && Object.keys(computedStyles).length > 0) {
@@ -413,8 +451,8 @@ export class FeedbackModal {
         if (icon) icon.classList.toggle('open', isOpen);
       };
 
-      modal.appendChild(toggleBtn);
-      modal.appendChild(stylesBody);
+      body.appendChild(toggleBtn);
+      body.appendChild(stylesBody);
     }
 
     // Screenshot canvas
@@ -464,8 +502,10 @@ export class FeedbackModal {
 
       markupContainer.appendChild(canvas);
       markupContainer.appendChild(hint);
-      modal.appendChild(markupContainer);
+      body.appendChild(markupContainer);
     }
+    
+    modal.appendChild(body);
 
     // Dropdowns
     const selectRow = document.createElement('div');
@@ -520,7 +560,7 @@ export class FeedbackModal {
     selectRow.appendChild(categorySelect.col);
     selectRow.appendChild(intentSelect.col);
     selectRow.appendChild(severitySelect.col);
-    modal.appendChild(selectRow);
+    footer.appendChild(selectRow);
 
     // Actions
     const actions = document.createElement('div');
@@ -567,7 +607,9 @@ export class FeedbackModal {
 
     actions.appendChild(cancelBtn);
     actions.appendChild(submitBtn);
-    modal.appendChild(actions);
+    footer.appendChild(actions);
+    
+    modal.appendChild(footer);
 
     this.modalOverlay.appendChild(modal);
     this.shadowRoot.appendChild(this.modalOverlay);
