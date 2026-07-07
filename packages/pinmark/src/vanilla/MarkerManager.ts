@@ -16,7 +16,7 @@ const ICONS = {
 
 const MARKER_STYLES = (color: string) => `
   .pinmark-markers-container {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     pointer-events: none;

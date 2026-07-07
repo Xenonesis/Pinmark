@@ -18,3 +18,7 @@ npm-debug.log*
 
 # Playwright browser profile
 .playwright-profile/
+
+# Temp scripts
+*.ps1
+nul

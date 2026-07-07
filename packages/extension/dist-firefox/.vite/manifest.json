@@ -9,30 +9,30 @@
     "file": "assets/messaging-BIPspj2q.js",
     "name": "messaging"
   },
-  "_storage-djIQZ4CK.js": {
-    "file": "assets/storage-djIQZ4CK.js",
+  "_storage-BaaasMr-.js": {
+    "file": "assets/storage-BaaasMr-.js",
     "name": "storage"
   },
   "index.ts-loader.js": {
-    "file": "assets/index.ts-loader-DaBEwJnz.js",
+    "file": "assets/index.ts-loader-CxWZzuEs.js",
     "src": "index.ts-loader.js"
   },
   "src/background/index.ts": {
-    "file": "assets/index.ts-b300CQ5d.js",
+    "file": "assets/index.ts-DwqLuwvM.js",
     "name": "index.ts",
     "src": "src/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_storage-djIQZ4CK.js"
+      "_storage-BaaasMr-.js"
     ]
   },
   "src/content/index.ts": {
-    "file": "assets/index.ts-Cs7SozPW.js",
+    "file": "assets/index.ts-CuR3F40o.js",
     "name": "index.ts",
     "src": "src/content/index.ts",
     "isEntry": true,
     "imports": [
-      "_storage-djIQZ4CK.js",
+      "_storage-BaaasMr-.js",
       "_messaging-BIPspj2q.js"
     ]
   },
@@ -43,13 +43,13 @@
     "isEntry": true
   },
   "src/popup/index.html": {
-    "file": "assets/index.html-BbVTmApd.js",
+    "file": "assets/index.html-8KKmfIMT.js",
     "name": "index.html",
     "src": "src/popup/index.html",
     "isEntry": true,
     "imports": [
       "_messaging-BIPspj2q.js",
-      "_storage-djIQZ4CK.js"
+      "_storage-BaaasMr-.js"
     ],
     "css": [
       "assets/index-fJm8CFcQ.css"

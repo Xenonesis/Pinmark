@@ -173,6 +173,14 @@ export class Overlay {
       return;
     }
 
+    // Don't intercept if user is typing in an input or textarea on the page
+    const activeElement = document.activeElement;
+    if (activeElement) {
+      const tag = activeElement.tagName.toLowerCase();
+      const isInput = tag === 'input' || tag === 'textarea' || (activeElement as HTMLElement).isContentEditable;
+      if (isInput) return;
+    }
+
     if (e.key === 'Escape') {
       e.preventDefault();
       if (this.isLayoutMode) {
@@ -565,8 +573,6 @@ export class Overlay {
     if (this.isDragging) {
       const areaRect = this.areaSelectionBox.end();
       this.isDragging = false;
-      this.isAreaSelectActive = false;
-      this.toolbar.toggleAreaSelect(false);
       
       if (areaRect) {
         const target = document.elementFromPoint(areaRect.x + areaRect.width / 2, areaRect.y + areaRect.height / 2) as HTMLElement;
@@ -1210,6 +1216,11 @@ export class Overlay {
       this.stopRecording();
       this.stopRecording = null;
     }
+
+    // Clear stale session data
+    this.rrwebEvents = [];
+    this.consoleLogs = [];
+    this.networkRequests = [];
 
     if (this.config.onToggle) this.config.onToggle(false);
   }

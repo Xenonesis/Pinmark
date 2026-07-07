@@ -256,11 +256,11 @@ export class Toolbar {
     const copyBtn = this.createButton('copy', 'Copy Annotations', 'copy');
     copyBtn.onclick = (e) => {
       e.stopPropagation();
-      copyBtn.innerHTML = ICONS.check;
+      this.setButtonIcon(copyBtn, ICONS.check);
       copyBtn.style.background = 'var(--pmk-success, #22c55e)';
       this.onCopy?.();
       setTimeout(() => {
-        copyBtn.innerHTML = ICONS.copy;
+        this.setButtonIcon(copyBtn, ICONS.copy);
         copyBtn.style.background = '';
       }, 1500);
     };
@@ -268,11 +268,11 @@ export class Toolbar {
     const downloadJsonBtn = this.createButton('copyJson', 'Download JSON Data', 'download-json');
     downloadJsonBtn.onclick = (e) => {
       e.stopPropagation();
-      downloadJsonBtn.innerHTML = ICONS.check;
+      this.setButtonIcon(downloadJsonBtn, ICONS.check);
       downloadJsonBtn.style.background = 'var(--pmk-success, #22c55e)';
       this.onDownloadJson?.();
       setTimeout(() => {
-        downloadJsonBtn.innerHTML = ICONS.copyJson;
+        this.setButtonIcon(downloadJsonBtn, ICONS.copyJson);
         downloadJsonBtn.style.background = '';
       }, 1500);
     };
@@ -280,11 +280,11 @@ export class Toolbar {
     const githubBtn = this.createButton('github', 'Create GitHub Issue', 'github');
     githubBtn.onclick = (e) => {
       e.stopPropagation();
-      githubBtn.innerHTML = ICONS.check;
+      this.setButtonIcon(githubBtn, ICONS.check);
       githubBtn.style.background = 'var(--pmk-success, #22c55e)';
       this.onGithubCreate?.();
       setTimeout(() => {
-        githubBtn.innerHTML = ICONS.github;
+        this.setButtonIcon(githubBtn, ICONS.github);
         githubBtn.style.background = '';
       }, 1500);
     };
@@ -352,15 +352,25 @@ export class Toolbar {
 
   showSendSuccess() {
     if (this.sendBtn) {
-      const originalIcon = this.sendBtn.innerHTML;
-      this.sendBtn.innerHTML = ICONS.check;
-      this.sendBtn.style.background = 'var(--pmk-success, #22c55e)';
-      setTimeout(() => {
-        if (this.sendBtn) {
-          this.sendBtn.innerHTML = originalIcon;
-          this.sendBtn.style.background = '';
-        }
-      }, 1500);
+      const iconContainer = this.sendBtn.querySelector('.pinmark-toolbar-icon');
+      if (iconContainer) {
+        const originalIcon = iconContainer.innerHTML;
+        this.setButtonIcon(this.sendBtn, ICONS.check);
+        this.sendBtn.style.background = 'var(--pmk-success, #22c55e)';
+        setTimeout(() => {
+          if (this.sendBtn) {
+            this.setButtonIcon(this.sendBtn, originalIcon);
+            this.sendBtn.style.background = '';
+          }
+        }, 1500);
+      }
+    }
+  }
+
+  private setButtonIcon(btn: HTMLButtonElement, iconHtml: string) {
+    const iconContainer = btn.querySelector('.pinmark-toolbar-icon');
+    if (iconContainer) {
+      iconContainer.innerHTML = iconHtml;
     }
   }
 
@@ -371,14 +381,21 @@ export class Toolbar {
       btn.classList.add('exit-btn');
     }
     btn.dataset.action = action;
+    
+    const iconContainer = document.createElement('div');
+    iconContainer.className = 'pinmark-toolbar-icon';
+    iconContainer.style.display = 'flex';
+    iconContainer.style.alignItems = 'center';
+    iconContainer.style.justifyContent = 'center';
+    
     const svgContent = ICONS[iconKey];
     if (svgContent) {
-      btn.innerHTML = svgContent;
-    } else if (iconKey === 'github') {
-      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>`;
+      iconContainer.innerHTML = svgContent;
     } else {
-      btn.innerHTML = '';
+      iconContainer.innerHTML = '';
     }
+    
+    btn.appendChild(iconContainer);
 
     btn.title = title;
     
@@ -399,7 +416,7 @@ export class Toolbar {
     this.isPaused = paused;
     const pauseBtn = this.element.querySelector('[data-action="pause"]') as HTMLButtonElement;
     if (pauseBtn) {
-      pauseBtn.innerHTML = paused ? ICONS.play : ICONS.pause;
+      this.setButtonIcon(pauseBtn, paused ? ICONS.play : ICONS.pause);
       pauseBtn.title = paused ? 'Resume' : 'Pause';
     }
   }
@@ -408,7 +425,7 @@ export class Toolbar {
     this.markersVisible = visible;
     const eyeBtn = this.element.querySelector('[data-action="markers"]') as HTMLButtonElement;
     if (eyeBtn) {
-      eyeBtn.innerHTML = visible ? ICONS.eye : ICONS.eyeOff;
+      this.setButtonIcon(eyeBtn, visible ? ICONS.eye : ICONS.eyeOff);
       if (visible) {
         eyeBtn.classList.add('active');
       } else {
@@ -428,13 +445,16 @@ export class Toolbar {
   showCopySuccess() {
     const copyBtn = this.element.querySelector('[data-action="copy"]') as HTMLButtonElement;
     if (copyBtn) {
-      const originalIcon = copyBtn.innerHTML;
-      copyBtn.innerHTML = ICONS.check;
-      copyBtn.style.background = 'var(--pmk-success, #22c55e)';
-      setTimeout(() => {
-        copyBtn.innerHTML = originalIcon;
-        copyBtn.style.background = '';
-      }, 1500);
+      const iconContainer = copyBtn.querySelector('.pinmark-toolbar-icon');
+      if (iconContainer) {
+        const originalIcon = iconContainer.innerHTML;
+        this.setButtonIcon(copyBtn, ICONS.check);
+        copyBtn.style.background = 'var(--pmk-success, #22c55e)';
+        setTimeout(() => {
+          this.setButtonIcon(copyBtn, originalIcon);
+          copyBtn.style.background = '';
+        }, 1500);
+      }
     }
   }
 
