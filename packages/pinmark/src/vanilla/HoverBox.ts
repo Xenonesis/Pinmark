@@ -5,11 +5,19 @@ const HOVER_BOX_STYLES = `
   .pinmark-hover-box {
     position: absolute;
     border: 1.5px solid var(--pmk-accent, #3b82f6);
-    background-color: rgba(59, 130, 246, 0.06);
+    background-color: rgba(59, 130, 246, 0.04);
     pointer-events: none;
-    transition: top 0.08s ease-out, left 0.08s ease-out, width 0.08s ease-out, height 0.08s ease-out;
+    transition: opacity 0.12s ease-out, transform 0.12s ease-out, top 0.08s ease-out, left 0.08s ease-out, width 0.08s ease-out, height 0.08s ease-out;
     z-index: 2147483644;
     box-sizing: border-box;
+    border-radius: 4px;
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  .pinmark-hover-box.visible {
+    opacity: 1;
+    transform: scale(1);
   }
 
   .pinmark-hover-label {
@@ -19,10 +27,11 @@ const HOVER_BOX_STYLES = `
     left: 0;
     background: var(--pmk-bg-2, #111827);
     border: 1px solid var(--pmk-border, rgba(255,255,255,0.1));
-    border-radius: 5px;
-    padding: 4px 8px;
+    border-radius: 6px;
+    padding: 5.6px 9.6px;
     font-size: 11px;
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Fira Code', monospace;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 500;
     color: var(--pmk-text, #f9fafb);
     display: flex;
     flex-wrap: wrap;
@@ -30,8 +39,16 @@ const HOVER_BOX_STYLES = `
     gap: 5px;
     max-width: 320px;
     pointer-events: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     line-height: 1.4;
+    opacity: 0;
+    transform: scale(0.95) translateY(4px);
+    transition: opacity 0.1s ease-out, transform 0.1s ease-out;
+  }
+
+  .pinmark-hover-box.visible .pinmark-hover-label {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 
   .pinmark-hover-label-tag {
@@ -117,6 +134,11 @@ export class HoverBox {
     this.element.style.width = `${rect.width}px`;
     this.element.style.height = `${rect.height}px`;
     this.element.style.display = 'block';
+
+    // Trigger visible class animation
+    requestAnimationFrame(() => {
+      this.element.classList.add('visible');
+    });
 
     // Build label content
     this.label.innerHTML = this.buildLabelHTML(target, rect);
@@ -214,8 +236,13 @@ export class HoverBox {
   }
 
   hide() {
-    this.element.style.display = 'none';
     this.currentElement = null;
-    this.label.innerHTML = '';
+    this.element.classList.remove('visible');
+    setTimeout(() => {
+      if (!this.currentElement) {
+        this.element.style.display = 'none';
+        this.label.innerHTML = '';
+      }
+    }, 120);
   }
 }

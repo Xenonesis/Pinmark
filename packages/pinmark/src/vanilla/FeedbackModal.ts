@@ -5,26 +5,40 @@ const MODAL_STYLES = `
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2147483647;
     pointer-events: all;
+    transition: background 0.15s ease-out, backdrop-filter 0.15s ease-out;
+  }
+
+  .pinmark-modal-overlay.visible {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
   }
 
   .pinmark-modal {
     background: var(--pmk-bg-2, #111827);
     border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.08));
-    border-radius: 10px;
+    border-radius: 16px;
     padding: 20px;
     width: 460px;
     max-width: 90vw;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+    transition: opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .pinmark-modal-overlay.visible .pinmark-modal {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 
   .pinmark-modal-title {
@@ -68,14 +82,18 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-btn {
-    padding: 7px 16px;
+    padding: 6.4px 16px;
     border: none;
-    border-radius: 6px;
-    font-size: 13px;
+    border-radius: 14px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    transition: opacity 0.15s ease, background 0.15s ease;
+    transition: opacity 0.15s ease, background 0.15s ease, transform 0.1s ease;
     font-family: inherit;
+  }
+
+  .pinmark-modal-btn:active {
+    transform: scale(0.97);
   }
 
   .pinmark-modal-btn:disabled {
@@ -90,17 +108,17 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-btn.cancel:hover:not(:disabled) {
-    background: var(--pmk-bg-3, #374151);
+    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.06));
     color: var(--pmk-text, #f9fafb);
   }
 
   .pinmark-modal-btn.submit {
-    background: var(--pmk-text, #f9fafb);
-    color: var(--pmk-bg-2, #111827);
+    background: var(--pmk-accent, #3b82f6);
+    color: #ffffff;
   }
 
   .pinmark-modal-btn.submit:hover:not(:disabled) {
-    background: #ffffff;
+    background: #4f46e5;
   }
 
   .pinmark-modal-element-info {
@@ -554,6 +572,13 @@ export class FeedbackModal {
     this.modalOverlay.appendChild(modal);
     this.shadowRoot.appendChild(this.modalOverlay);
 
+    // Trigger visible class animation
+    requestAnimationFrame(() => {
+      if (this.modalOverlay) {
+        this.modalOverlay.classList.add('visible');
+      }
+    });
+
     setTimeout(() => input.focus(), 0);
   }
 
@@ -578,12 +603,22 @@ export class FeedbackModal {
 
   private close(result: ModalResult) {
     if (this.modalOverlay) {
-      this.modalOverlay.remove();
-      this.modalOverlay = null;
-    }
-    if (this.resolvePromise) {
-      this.resolvePromise(result);
-      this.resolvePromise = null;
+      this.modalOverlay.classList.remove('visible');
+      setTimeout(() => {
+        if (this.modalOverlay) {
+          this.modalOverlay.remove();
+          this.modalOverlay = null;
+        }
+        if (this.resolvePromise) {
+          this.resolvePromise(result);
+          this.resolvePromise = null;
+        }
+      }, 150);
+    } else {
+      if (this.resolvePromise) {
+        this.resolvePromise(result);
+        this.resolvePromise = null;
+      }
     }
   }
 
