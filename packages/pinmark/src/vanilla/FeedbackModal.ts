@@ -226,9 +226,48 @@ const MODAL_STYLES = `
     color: var(--pmk-text, #f9fafb);
     font-weight: 500;
   }
+
+  /* Dropdowns */
+  .pinmark-modal-select-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .pinmark-modal-select-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .pinmark-modal-select-label {
+    font-size: 10px;
+    color: var(--pmk-text-muted, #9ca3af);
+    font-family: system-ui, sans-serif;
+  }
+  .pinmark-modal-select {
+    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.1));
+    color: var(--pmk-text, #f9fafb);
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 11px;
+    font-family: system-ui, sans-serif;
+    outline: none;
+    width: 100%;
+  }
+  .pinmark-modal-select option {
+    background: var(--pmk-bg-2, #111827);
+    color: var(--pmk-text, #f9fafb);
+  }
 `;
 
-export type ModalResult = { comment: string; screenshot?: string } | null;
+export type ModalResult = { 
+  comment: string; 
+  screenshot?: string;
+  category?: 'bug' | 'improvement' | 'question' | 'design';
+  intent?: 'fix' | 'change' | 'question' | 'approve';
+  severity?: 'blocking' | 'important' | 'suggestion';
+} | null;
 
 export interface ModalShowOptions {
   existingComment?: string;
@@ -237,6 +276,9 @@ export interface ModalShowOptions {
   selectionText?: string;
   componentInfo?: { framework: string; name: string; hierarchy?: string[] };
   smartName?: string;
+  existingCategory?: 'bug' | 'improvement' | 'question' | 'design';
+  existingIntent?: 'fix' | 'change' | 'question' | 'approve';
+  existingSeverity?: 'blocking' | 'important' | 'suggestion';
 }
 
 export class FeedbackModal {
@@ -407,6 +449,61 @@ export class FeedbackModal {
       modal.appendChild(markupContainer);
     }
 
+    // Dropdowns
+    const selectRow = document.createElement('div');
+    selectRow.className = 'pinmark-modal-select-row';
+
+    const createSelect = (label: string, options: {value: string, text: string}[], initialValue?: string) => {
+      const col = document.createElement('div');
+      col.className = 'pinmark-modal-select-col';
+      const lbl = document.createElement('label');
+      lbl.className = 'pinmark-modal-select-label';
+      lbl.textContent = label;
+      const sel = document.createElement('select');
+      sel.className = 'pinmark-modal-select';
+      
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = '';
+      defaultOpt.textContent = `Select ${label}`;
+      sel.appendChild(defaultOpt);
+      
+      options.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.value;
+        opt.textContent = o.text;
+        sel.appendChild(opt);
+      });
+      if (initialValue) sel.value = initialValue;
+      col.appendChild(lbl);
+      col.appendChild(sel);
+      return { col, sel };
+    };
+
+    const categorySelect = createSelect('Category', [
+      { value: 'bug', text: 'Bug' },
+      { value: 'improvement', text: 'Improvement' },
+      { value: 'question', text: 'Question' },
+      { value: 'design', text: 'Design' }
+    ], opts.existingCategory);
+
+    const intentSelect = createSelect('Intent', [
+      { value: 'fix', text: 'Fix' },
+      { value: 'change', text: 'Change' },
+      { value: 'question', text: 'Question' },
+      { value: 'approve', text: 'Approve' }
+    ], opts.existingIntent);
+
+    const severitySelect = createSelect('Severity', [
+      { value: 'blocking', text: 'Blocking' },
+      { value: 'important', text: 'Important' },
+      { value: 'suggestion', text: 'Suggestion' }
+    ], opts.existingSeverity);
+
+    selectRow.appendChild(categorySelect.col);
+    selectRow.appendChild(intentSelect.col);
+    selectRow.appendChild(severitySelect.col);
+    modal.appendChild(selectRow);
+
     // Actions
     const actions = document.createElement('div');
     actions.className = 'pinmark-modal-actions';
@@ -416,19 +513,32 @@ export class FeedbackModal {
     cancelBtn.textContent = 'Cancel';
     cancelBtn.onclick = () => this.close(null);
 
+    const getResult = (): ModalResult => {
+      const comment = input.value.trim();
+      if (!comment) return null;
+      return {
+        comment,
+        screenshot: drawnScreenshot,
+        category: categorySelect.sel.value as any || undefined,
+        intent: intentSelect.sel.value as any || undefined,
+        severity: severitySelect.sel.value as any || undefined
+      };
+    };
+
     const submitBtn = document.createElement('button');
     submitBtn.className = 'pinmark-modal-btn submit';
     submitBtn.textContent = existingComment ? 'Save' : 'Add';
     submitBtn.onclick = () => {
-      const comment = input.value.trim();
-      if (comment) this.close({ comment, screenshot: drawnScreenshot });
+      const result = getResult();
+      if (result) this.close(result);
     };
 
     input.onkeydown = (e) => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        const comment = input.value.trim();
-        if (comment) this.close({ comment, screenshot: drawnScreenshot });
+        const result = getResult();
+
+        if (result) this.close(result);
       }
       if (e.key === 'Escape') {
         e.preventDefault();

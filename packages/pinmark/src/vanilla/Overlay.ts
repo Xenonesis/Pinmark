@@ -436,6 +436,9 @@ export class Overlay {
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
       index: this.feedbackManager.getAll().length + 1,
       comment: result.comment,
+      category: result.category,
+      intent: result.intent,
+      severity: result.severity,
       timestamp: Date.now(),
       url: this.config.url || window.location.href,
       element: elementInfo,
@@ -462,25 +465,47 @@ export class Overlay {
       const placeholder = document.createElement('div');
       placeholder.textContent = 'Element not found';
       this.isModalOpen = true;
-      const result = await this.feedbackModal.show(placeholder, feedback.comment);
+      const result = await this.feedbackModal.show(placeholder, {
+        existingComment: feedback.comment,
+        existingCategory: feedback.category,
+        existingIntent: feedback.intent,
+        existingSeverity: feedback.severity
+      });
       this.isModalOpen = false;
 
       if (result) {
-        this.feedbackManager.update(id, { comment: result.comment });
+        const updates = { 
+          comment: result.comment,
+          category: result.category,
+          intent: result.intent,
+          severity: result.severity
+        };
+        this.feedbackManager.update(id, updates);
         this.markerManager.updateMarkerTooltip(id, result.comment);
-        if (this.config.onSync) this.config.onSync({ ...feedback, comment: result.comment });
+        if (this.config.onSync) this.config.onSync({ ...feedback, ...updates });
       }
       return;
     }
 
     this.isModalOpen = true;
-    const result = await this.feedbackModal.show(element, feedback.comment);
+    const result = await this.feedbackModal.show(element, {
+      existingComment: feedback.comment,
+      existingCategory: feedback.category,
+      existingIntent: feedback.intent,
+      existingSeverity: feedback.severity
+    });
     this.isModalOpen = false;
 
     if (result) {
-      this.feedbackManager.update(id, { comment: result.comment });
+      const updates = { 
+        comment: result.comment,
+        category: result.category,
+        intent: result.intent,
+        severity: result.severity
+      };
+      this.feedbackManager.update(id, updates);
       this.markerManager.updateMarkerTooltip(id, result.comment);
-      if (this.config.onSync) this.config.onSync({ ...feedback, comment: result.comment });
+      if (this.config.onSync) this.config.onSync({ ...feedback, ...updates });
     }
   }
 
