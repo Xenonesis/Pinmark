@@ -6,10 +6,10 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
   font-size: 13px;
   background: transparent;
-  color: #e0e0e0;
+  color: #ededed;
   -webkit-font-smoothing: antialiased;
-  min-width: 300px;
-  max-width: 340px;
+  min-width: 320px;
+  max-width: 360px;
   overflow: hidden;
 }
 
@@ -26,10 +26,12 @@ body {
 
 /* ── Card ──────────────────────────────────────────── */
 .card {
-  background: #1a1a1a;
-  border-radius: 14px;
-  padding: 14px 0;
+  background: #09090b;
+  border-radius: 16px;
+  padding: 16px 0;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 /* ── Header ────────────────────────────────────────── */
@@ -53,10 +55,10 @@ body {
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #e8e8e8;
+  letter-spacing: -0.015em;
+  color: #f4f4f5;
 }
 
 .header-right {
@@ -67,8 +69,12 @@ body {
 
 .version-tag {
   font-size: 11px;
-  color: #555;
+  color: #71717a;
   letter-spacing: 0;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .icon-btn {
@@ -136,10 +142,11 @@ body {
 
 .setting-label {
   font-size: 13px;
-  font-weight: 400;
-  color: #c0c0c0;
+  font-weight: 500;
+  color: #a1a1aa;
   flex: 1;
   cursor: default;
+  letter-spacing: -0.01em;
 }
 
 .setting-label-group {
@@ -202,32 +209,35 @@ body {
 
 .toggle-track {
   display: block;
-  width: 38px;
-  height: 22px;
-  background: #333;
+  width: 36px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 999px;
   position: relative;
-  transition: background 0.2s ease;
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .toggle-thumb {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  background: #666;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
   border-radius: 50%;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-switch input:checked + .toggle-track {
-  background: #3a3a3a;
+  background: #f4f4f5;
+  border-color: #f4f4f5;
 }
 
 .toggle-switch input:checked + .toggle-track .toggle-thumb {
   transform: translateX(16px);
-  background: #e8e8e8;
+  background: #09090b;
 }
 
 /* ── Color Section ─────────────────────────────────── */
@@ -275,15 +285,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #2a2a2a;
-  border: 1.5px solid #3a3a3a;
-  color: #555;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #71717a;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s, transform 0.15s;
 }
 .swatch-custom:hover {
-  color: #aaa;
-  border-color: #555;
+  color: #e4e4e7;
+  border-color: rgba(255, 255, 255, 0.2);
   transform: scale(1.1);
 }
 .swatch-custom svg { width: 13px; height: 13px; }
@@ -370,48 +380,52 @@ body {
 .field-input {
   width: 100%;
   padding: 8px 10px;
-  background: #252525;
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 7px;
-  color: #e0e0e0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #f4f4f5;
   font-size: 12px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
-.field-input:focus { border-color: rgba(255,255,255,0.2); }
-.field-input::placeholder { color: #444; }
+.field-input:focus { 
+  border-color: rgba(255, 255, 255, 0.25); 
+  background: rgba(255, 255, 255, 0.05);
+}
+.field-input::placeholder { color: #52525b; }
 
 .action-btn {
   display: block;
   width: calc(100% - 32px);
-  margin: 8px 16px 4px;
-  padding: 9px;
-  background: #252525;
-  border: 1px solid rgba(255,255,255,0.07);
+  margin: 12px 16px 4px;
+  padding: 10px;
+  background: #f4f4f5;
+  border: none;
   border-radius: 8px;
-  color: #c0c0c0;
+  color: #09090b;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   text-align: center;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.1s;
 }
-.action-btn:hover { background: #2e2e2e; }
+.action-btn:hover { background: #ffffff; transform: translateY(-1px); }
+.action-btn:active { transform: translateY(0); }
 
 /* ── Output Detail Dropdown Menu ───────────────────── */
 .dropdown-menu {
   position: absolute;
   right: 16px;
   top: 60px;
-  background: #252525;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 9px;
-  padding: 4px;
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 6px;
   z-index: 100;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  min-width: 150px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+  min-width: 160px;
 }
 
 .dropdown-item {
@@ -420,16 +434,16 @@ body {
   padding: 8px 12px;
   background: transparent;
   border: none;
-  color: #c0c0c0;
-  font-size: 13px;
+  color: #a1a1aa;
+  font-size: 12.5px;
   font-family: inherit;
   text-align: left;
   cursor: pointer;
   border-radius: 6px;
-  transition: background 0.1s;
+  transition: background 0.1s, color 0.1s;
 }
-.dropdown-item:hover { background: rgba(255,255,255,0.06); color: #e8e8e8; }
-.dropdown-item.active { color: #e8e8e8; font-weight: 500; }
+.dropdown-item:hover { background: rgba(255, 255, 255, 0.08); color: #f4f4f5; }
+.dropdown-item.active { color: #f4f4f5; font-weight: 500; background: rgba(255, 255, 255, 0.04); }
 
 /* ── Light Theme Overrides ─────────────────────────── */
 body.light { background: #f0f0f0; }
