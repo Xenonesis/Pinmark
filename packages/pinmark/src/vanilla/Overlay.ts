@@ -234,7 +234,7 @@ export class Overlay {
     if (!this.isAreaSelectActive) return;
 
     const target = e.target as HTMLElement;
-    if (this.shadowRoot.contains(target) || target === this.container) return;
+    if (this.shadowRoot.contains(target) || target === this.container || target.id.startsWith('pinmark-')) return;
 
     // We'll initiate dragging if they click and move.
     this.isDragging = false;
@@ -268,7 +268,7 @@ export class Overlay {
     }
 
     const target = document.elementFromPoint(e.clientX, e.clientY);
-    if (!target || target === this.container || target === this.blockOverlay) {
+    if (!target || target === this.container || target === this.blockOverlay || target.id.startsWith('pinmark-')) {
       this.hoverBox.hide();
       this.targetElement = null;
       return;
@@ -299,7 +299,7 @@ export class Overlay {
     const target = e.target as HTMLElement;
 
     // When clicking an element inside Shadow DOM, the event target is retargeted to the host (this.container)
-    if (this.shadowRoot.contains(target) || target === this.container) {
+    if (this.shadowRoot.contains(target) || target === this.container || target.id.startsWith('pinmark-')) {
       return;
     }
 

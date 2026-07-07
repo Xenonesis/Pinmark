@@ -14,7 +14,7 @@
     "name": "storage"
   },
   "index.ts-loader.js": {
-    "file": "assets/index.ts-loader-C5m9R0Rl.js",
+    "file": "assets/index.ts-loader-Db0zWtmh.js",
     "src": "index.ts-loader.js"
   },
   "src/background/index.ts": {
@@ -27,7 +27,7 @@
     ]
   },
   "src/content/index.ts": {
-    "file": "assets/index.ts-D5FQ90DR.js",
+    "file": "assets/index.ts-TOEYc6uR.js",
     "name": "index.ts",
     "src": "src/content/index.ts",
     "isEntry": true,
