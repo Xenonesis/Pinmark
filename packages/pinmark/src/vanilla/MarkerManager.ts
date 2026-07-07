@@ -78,6 +78,16 @@ const MARKER_STYLES = (color: string) => `
     z-index: 2147483646;
   }
 
+  .pinmark-marker-popup::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 12px;
+    background: transparent;
+  }
+
   .pinmark-marker-popup::after {
     content: '';
     position: absolute;

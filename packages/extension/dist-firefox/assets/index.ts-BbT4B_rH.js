@@ -183,6 +183,16 @@ import{g as _c,s as Gc,a as Vc,b as Wc,c as Xc}from"./storage-BaaasMr-.js";impor
     z-index: 2147483646;
   }
 
+  .pinmark-marker-popup::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 12px;
+    background: transparent;
+  }
+
   .pinmark-marker-popup::after {
     content: '';
     position: absolute;
