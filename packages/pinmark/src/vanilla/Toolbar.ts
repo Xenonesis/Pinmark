@@ -73,7 +73,7 @@ const TOOLBAR_STYLES = `
 
   .pinmark-tooltip {
     position: absolute;
-    top: -36px;
+    top: 42px;
     background: rgba(15, 23, 42, 0.98);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -86,7 +86,7 @@ const TOOLBAR_STYLES = `
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
-    transform: translateY(6px);
+    transform: translateY(-6px);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
   }
@@ -397,7 +397,7 @@ export class Toolbar {
     
     btn.appendChild(iconContainer);
 
-    btn.title = title;
+    // Removed native title to prevent overlapping browser tooltips
     
     const tooltip = document.createElement('div');
     tooltip.className = 'pinmark-tooltip';
@@ -417,7 +417,10 @@ export class Toolbar {
     const pauseBtn = this.element.querySelector('[data-action="pause"]') as HTMLButtonElement;
     if (pauseBtn) {
       this.setButtonIcon(pauseBtn, paused ? ICONS.play : ICONS.pause);
-      pauseBtn.title = paused ? 'Resume' : 'Pause';
+      const tooltip = pauseBtn.querySelector('.pinmark-tooltip');
+      if (tooltip) {
+        tooltip.textContent = paused ? 'Resume' : 'Pause';
+      }
     }
   }
 

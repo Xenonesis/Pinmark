@@ -74,6 +74,15 @@ const HOVER_BOX_STYLES = `
     flex-shrink: 0;
     margin-left: auto;
   }
+
+  .pinmark-hover-label.shift-down {
+    top: 100%;
+    margin-top: 4px;
+  }
+
+  .pinmark-hover-label.shift-inside {
+    top: 4px;
+  }
 `;
 
 export class HoverBox {
@@ -112,6 +121,19 @@ export class HoverBox {
 
     // Build label content
     this.label.innerHTML = this.buildLabelHTML(target, rect);
+
+    // Prevent top cutoff
+    if (rect.top < 30) {
+      if (rect.bottom + 30 > window.innerHeight) {
+        this.label.classList.add('shift-inside');
+        this.label.classList.remove('shift-down');
+      } else {
+        this.label.classList.add('shift-down');
+        this.label.classList.remove('shift-inside');
+      }
+    } else {
+      this.label.classList.remove('shift-down', 'shift-inside');
+    }
   }
 
   private buildLabelHTML(target: HTMLElement, rect: DOMRect): string {
