@@ -8,15 +8,22 @@ const TOOLBAR_STYLES = `
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 2px;
-    padding: 5px 6px;
-    background: var(--pmk-bg-2, #111827);
+    gap: 4px;
+    padding: 6px 8px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
     border-radius: 999px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--pmk-border, rgba(255, 255, 255, 0.07));
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.08);
     z-index: 2147483646;
     pointer-events: all;
     cursor: move;
     user-select: none;
+    transition: box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .pinmark-toolbar:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    background: rgba(15, 23, 42, 0.98);
   }
 
   .pinmark-toolbar-btn {
@@ -24,60 +31,64 @@ const TOOLBAR_STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     padding: 0;
     border: none;
-    border-radius: 50%;
+    border-radius: 8px;
     background: transparent;
-    color: var(--pmk-text-muted, #9ca3af);
+    color: rgba(255, 255, 255, 0.65);
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .pinmark-toolbar-btn:hover {
-    background: var(--pmk-bg-3, #374151);
-    color: var(--pmk-text, #f9fafb);
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.95);
+    transform: translateY(-1px);
   }
 
   .pinmark-toolbar-btn:active {
-    opacity: 0.7;
+    transform: translateY(0);
+    opacity: 0.8;
   }
 
   .pinmark-toolbar-btn.active {
     background: rgba(59, 130, 246, 0.15);
-    color: #3b82f6;
+    color: #60a5fa;
     box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.3);
   }
 
   .pinmark-toolbar-btn svg {
-    width: 15px;
-    height: 15px;
+    width: 16px;
+    height: 16px;
   }
 
   .pinmark-toolbar-divider {
     width: 1px;
-    height: 14px;
-    background: var(--pmk-bg-3, #374151);
-    margin: 0 3px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    margin: 0 4px;
   }
 
   .pinmark-tooltip {
     position: absolute;
-    top: -30px;
-    background: var(--pmk-bg-2, #111827);
-    border: 1px solid var(--pmk-border, rgba(255,255,255,0.1));
-    color: var(--pmk-text, #f9fafb);
+    top: -36px;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    color: rgba(255, 255, 255, 0.95);
     font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 5px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    padding: 6px 10px;
+    border-radius: 6px;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
-    transform: translateY(4px);
-    transition: opacity 0.15s ease, transform 0.15s ease;
-    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    letter-spacing: 0;
+    transform: translateY(6px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
   }
 
   .pinmark-toolbar-btn:hover .pinmark-tooltip {
@@ -86,11 +97,11 @@ const TOOLBAR_STYLES = `
   }
 
   .pinmark-toolbar-btn.exit-btn {
-    color: var(--pmk-text-muted, #6b7280);
+    color: rgba(239, 68, 68, 0.65);
   }
   .pinmark-toolbar-btn.exit-btn:hover {
-    background: var(--pmk-bg-3, #374151);
-    color: var(--pmk-text, #f9fafb);
+    background: rgba(239, 68, 68, 0.15);
+    color: rgba(239, 68, 68, 0.95);
   }
 `;
 
@@ -98,7 +109,7 @@ const ICONS = {
   pause: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`,
   play: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
   areaSelect: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-dasharray="3 3"/></svg>`,
-  multiSelect: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><rect x="8" y="10" width="14" height="14" rx="2"/></svg>`,
+  multiSelect: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l7.07 17 2.51-7.39L21 11.07z"/><path d="M16 16v6"/><path d="M13 19h6"/></svg>`,
   eye: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
   eyeOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`,
   copy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,

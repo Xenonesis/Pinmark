@@ -1,6 +1,6 @@
 import type { PinmarkAnnotation as FeedbackItem } from '@pinmark/core';
-import type { PinmarkSettings, PinmarkConfig } from './types';
-import { MarkdownFormatter } from '../vanilla/MarkdownFormatter';
+import type { PinmarkSettings, PinmarkConfig } from './types.js';
+import { MarkdownFormatter } from '../vanilla/MarkdownFormatter.js';
 
 export class FeedbackManager {
   private config: PinmarkConfig;

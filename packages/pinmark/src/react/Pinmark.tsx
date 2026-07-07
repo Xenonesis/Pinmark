@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Overlay } from '../vanilla/Overlay';
-import type { PinmarkSettings, PinmarkConfig } from '../core/types';
+import { Overlay } from '../vanilla/Overlay.js';
+import type { PinmarkSettings, PinmarkConfig } from '../core/types.js';
 import type { PinmarkAnnotation } from '@pinmark/core';
 
 export interface PinmarkProps extends PinmarkConfig {

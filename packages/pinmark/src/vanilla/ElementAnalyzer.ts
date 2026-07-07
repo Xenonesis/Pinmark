@@ -1,6 +1,6 @@
 import type { ElementInfo } from '@pinmark/core';
-import { SelectorGenerator } from './SelectorGenerator';
-import { FrameworkDetector } from './FrameworkDetector';
+import { SelectorGenerator } from './SelectorGenerator.js';
+import { FrameworkDetector } from './FrameworkDetector.js';
 
 export class ElementAnalyzer {
   private selectorGenerator: SelectorGenerator;

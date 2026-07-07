@@ -1,4 +1,4 @@
-import type { PinmarkSettings as ExtensionSettings } from '../core/types';
+import type { PinmarkSettings as ExtensionSettings } from '../core/types.js';
 import type { PinmarkAnnotation as FeedbackItem } from '@pinmark/core';
 
 export interface MarkerCallbacks {

@@ -1,4 +1,4 @@
-import { FrameworkDetector } from './FrameworkDetector';
+import { FrameworkDetector } from './FrameworkDetector.js';
 
 
 const HOVER_BOX_STYLES = `

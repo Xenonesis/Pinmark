@@ -1,4 +1,4 @@
-export { Overlay } from './vanilla/Overlay';
-export { Launcher } from './vanilla/Launcher';
-export type { PinmarkSettings, StorageAdapter, PinmarkConfig } from './core/types';
-export { FeedbackManager } from './core/FeedbackManager';
+export { Overlay } from './vanilla/Overlay.js';
+export { Launcher } from './vanilla/Launcher.js';
+export type { PinmarkSettings, StorageAdapter, PinmarkConfig } from './core/types.js';
+export { FeedbackManager } from './core/FeedbackManager.js';
