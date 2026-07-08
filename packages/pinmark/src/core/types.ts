@@ -31,6 +31,8 @@ export interface PinmarkConfig {
   onToggle?: (isActive: boolean) => void;
   /** Callback fired to create a GitHub issue */
   onGithubCreate?: (markdown: string) => void | Promise<void>;
+  /** Custom callback to take a screenshot of a specific element. Returns base64 image data URL. */
+  captureScreenshot?: (element: HTMLElement) => Promise<string | undefined>;
   /** Whether the overlay is active */
   isActive?: boolean;
 }

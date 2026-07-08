@@ -97,6 +97,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       })();
       return true;
 
+    case 'CAPTURE_TAB':
+      chrome.tabs.captureVisibleTab(chrome.windows.WINDOW_ID_CURRENT, { format: 'jpeg', quality: 80 })
+        .then((dataUrl) => {
+          sendResponse({ dataUrl });
+        })
+        .catch((err) => {
+          console.error('[Pinmark] Error capturing visible tab:', err);
+          sendResponse({ error: err.message });
+        });
+      return true;
+
     case 'CREATE_GITHUB_ISSUE':
       (async () => {
         try {

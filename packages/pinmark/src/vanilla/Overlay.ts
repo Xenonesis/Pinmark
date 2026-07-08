@@ -342,6 +342,9 @@ export class Overlay {
     // Start screenshot capture in the background
     const screenshotPromise = (async () => {
       try {
+        if (this.config.captureScreenshot) {
+          return await this.config.captureScreenshot(element);
+        }
         this.container.style.display = 'none';
         const canvas = await html2canvas(element, {
           useCORS: true,
@@ -707,6 +710,9 @@ export class Overlay {
     // Start screenshot capture in the background
     const screenshotPromise = (async () => {
       try {
+        if (this.config.captureScreenshot) {
+          return await this.config.captureScreenshot(element);
+        }
         this.container.style.display = 'none';
         const canvas = await html2canvas(element, {
           useCORS: true,

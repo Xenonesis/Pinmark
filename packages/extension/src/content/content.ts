@@ -51,6 +51,56 @@ async function initializeOverlay() {
     },
     onToggle: (isActive: boolean) => {
       sendMessage({ type: 'SET_STATE', state: { isActive } }).catch(console.error);
+    },
+    captureScreenshot: async (element: HTMLElement): Promise<string | undefined> => {
+      const response = await new Promise<{ dataUrl?: string; error?: string }>((resolve) => {
+        chrome.runtime.sendMessage({ type: 'CAPTURE_TAB' }, resolve);
+      });
+
+      if (!response || response.error || !response.dataUrl) {
+        console.warn('[Pinmark] Viewport capture failed, falling back to html2canvas:', response?.error);
+        return undefined; // return undefined to trigger html2canvas fallback
+      }
+
+      const rect = element.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Failed to load viewport image'));
+        img.src = response.dataUrl!;
+      });
+
+      const canvas = document.createElement('canvas');
+      const sourceX = Math.max(0, rect.left * dpr);
+      const sourceY = Math.max(0, rect.top * dpr);
+      const sourceW = Math.min(img.width - sourceX, rect.width * dpr);
+      const sourceH = Math.min(img.height - sourceY, rect.height * dpr);
+
+      if (sourceW <= 0 || sourceH <= 0) {
+        return undefined;
+      }
+
+      canvas.width = sourceW;
+      canvas.height = sourceH;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return undefined;
+
+      ctx.drawImage(
+        img,
+        sourceX,
+        sourceY,
+        sourceW,
+        sourceH,
+        0,
+        0,
+        sourceW,
+        sourceH
+      );
+
+      return canvas.toDataURL('image/jpeg', 0.8);
     }
   };
 

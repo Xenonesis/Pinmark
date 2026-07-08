@@ -478,9 +478,11 @@ export class FeedbackModal {
 
     const loadAndSetupCanvas = (url: string) => {
       markupContainer.innerHTML = '';
+      markupContainer.style.minHeight = 'unset';
+      markupContainer.style.display = 'block';
 
       const canvas = document.createElement('canvas');
-      canvas.style.cssText = 'max-width:100%;max-height:180px;object-fit:contain;display:block;cursor:crosshair;';
+      canvas.style.cssText = 'max-width:100%;max-height:180px;object-fit:contain;display:block;cursor:crosshair;margin:0 auto;';
 
       const ctx = canvas.getContext('2d');
       const img = new Image();
