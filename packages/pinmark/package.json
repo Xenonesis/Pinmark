@@ -1,6 +1,6 @@
 {
   "name": "@pinmark/pinmark",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "Visual feedback annotation component for developers",
   "type": "module",
   "main": "dist/index.js",
@@ -19,7 +19,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@pinmark/core": "^1.0.0",
+    "@pinmark/core": "^1.5.0",
     "html2canvas": "^1.4.1"
   },
   "peerDependencies": {

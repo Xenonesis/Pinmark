@@ -234,17 +234,16 @@ function initializeLauncher() {
 // ── Startup: only show UI if extension is active for this tab ──
 async function startupInit() {
   try {
-    const response = await sendMessage({ type: 'GET_STATE' }) as { isActive?: boolean } | null;
-    const isActive = response?.isActive ?? false;
+    const storage = await chrome.storage.local.get('extensionActive');
+    const isActive = storage?.extensionActive ?? false;
 
     if (isActive) {
-      // Extension was previously active on this tab — restore launcher + overlay
+      // Extension was previously active — restore launcher + overlay
       initializeLauncher();
       await initializeOverlay();
     }
-    // If not active, show nothing on the page.
-  } catch {
-    // Background not ready yet — show nothing. User can enable via popup.
+  } catch (e) {
+    console.warn('[Pinmark] Error during startup initialization:', e);
   }
 }
 

@@ -23,7 +23,7 @@ export interface ExtensionState {
 }
 
 export type Message =
-  | { type: 'TOGGLE_EXTENSION'; tabId?: number }
+  | { type: 'TOGGLE_EXTENSION'; tabId?: number; isActive?: boolean }
   | { type: 'GET_STATE'; tabId?: number }
   | { type: 'SET_STATE'; tabId?: number; state: Partial<ExtensionState> }
   | { type: 'GET_SETTINGS' }

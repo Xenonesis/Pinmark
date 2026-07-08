@@ -256,6 +256,42 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--marker);
   flex: 0 0 auto;
 }
+.brand-version {
+  font-size: 10px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 2px;
+}
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.nav-link {
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 150ms ease, background 150ms ease;
+  text-decoration: none;
+}
+.nav-link:hover {
+  color: var(--ink);
+}
+.nav-link.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
 .topbar-meta { color: var(--muted); }
 .topbar-meta span { color: var(--ink); }
 .topbar-actions { display: flex; align-items: center; gap: 12px; }
@@ -680,13 +716,15 @@ h3 {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+.md-interactive.md-interactive-clicked {
+  animation: none;
+}
 .md-interactive-flash {
   animation: mdFlash 600ms ease;
 }
 @keyframes mdFlash {
-  0% { box-shadow: 0 0 0 0 var(--accent); }
-  50% { box-shadow: 0 0 0 10px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
+  0% { color: var(--accent); text-shadow: 0 0 16px var(--accent); }
+  100% { color: inherit; text-shadow: none; }
 }
 
 /* interactive targets */
@@ -2872,6 +2910,7 @@ footer a:hover { color: var(--ink); }
   .hero-page-footer { flex-direction: column; gap: 10px; align-items: stretch; }
   .hero-note { font-size: 10px; max-width: 160px; }
   .topbar-meta { display: none; }
+  .topbar-nav { display: none; }
   .topbar-inner, footer .row, .wrap { padding-left: 20px; padding-right: 20px; }
   .license, .privacy { padding: 24px; }
   .repo-badge .repo-name { display: none; }
@@ -2971,9 +3010,17 @@ footer a:hover { color: var(--ink); }
         <circle cx="64" cy="48" r="14" fill="var(--bg)"/>
         <circle cx="64" cy="48" r="6" fill="var(--accent)"/>
       </svg>
-      Pinmark
+      Pinmark <span class="brand-version">v1.5.0</span>
     </div>
-    <div class="topbar-meta">v1.0.0 &nbsp;·&nbsp; <span>Chrome MV3</span> &nbsp;·&nbsp; TypeScript</div>
+    <nav class="topbar-nav" aria-label="Sections navigation">
+      <a href="#main" class="nav-link active">Home</a>
+      <a href="#demo" class="nav-link">Demo</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#comparison" class="nav-link">Comparison</a>
+      <a href="#changelog" class="nav-link">Changelog</a>
+      <a href="#install" class="nav-link">Install</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+    </nav>
     <div class="topbar-actions">
       <a class="repo-badge" id="repoBadge" href="https://github.com/Xenonesis/Pinmark" target="_blank" rel="noopener" aria-label="View repository on GitHub">
         <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -3074,7 +3121,7 @@ footer a:hover { color: var(--ink); }
 </section>
 
 <!-- OUTPUT -->
-<section>
+<section id="demo">
   <div class="wrap">
     <span class="eyebrow">// try it</span>
     <h2>Click anything on the left</h2>
@@ -3273,7 +3320,7 @@ footer a:hover { color: var(--ink); }
 ### 1. div.wrap
 **Location:** `section:nth-child(18) > div.wrap`
 **Classes:** `wrap`
-**Feedback:** yha pr agentation ka v compare kro</code></pre>
+**Feedback:** Section padding breaks at 1024px — needs container query.</code></pre>
       </div>
       <div class="compare-col good" style="background: var(--bg-elev); border-color: var(--accent);">
         <h4 style="color: var(--accent);">✓ Pinmark — Standard</h4>
@@ -3283,7 +3330,7 @@ footer a:hover { color: var(--ink); }
 **Items:** 1
 
 ### 1. "Wrap" (div.wrap)
-**Feedback:** yha pr agentation ka v compare kro
+**Feedback:** Section padding breaks at 1024px — needs container query.
 **Location:** `section:nth-child(18) > div.wrap`
 **Classes:** `wrap`</code></pre>
       </div>
@@ -3346,7 +3393,7 @@ footer a:hover { color: var(--ink); }
 </section>
 
 <!-- ADVANCED FEATURES -->
-<section>
+<section id="features">
   <div class="wrap">
     <span class="eyebrow">// beyond basics</span>
     <h2>Built for the modern web</h2>
@@ -3374,7 +3421,7 @@ footer a:hover { color: var(--ink); }
 </section>
 
 <!-- OUTPUT COMPARISON -->
-<section>
+<section id="comparison">
   <div class="wrap">
     <span class="eyebrow">// output comparison</span>
     <h2>Agentation vs Pinmark</h2>
@@ -3389,7 +3436,7 @@ footer a:hover { color: var(--ink); }
 ### 1. div.wrap
 **Location:** `section:nth-child(18) > div.wrap`
 **Classes:** `wrap`
-**Feedback:** yha pr agentation ka v compare kro</code></pre>
+**Feedback:** Section padding breaks at 1024px — needs container query.</code></pre>
       </div>
       <div class="compare-col">
         <h4 style="color: var(--accent);">Pinmark — Standard</h4>
@@ -3399,7 +3446,7 @@ footer a:hover { color: var(--ink); }
 **Items:** 1
 
 ### 1. "Wrap" (div.wrap)
-**Feedback:** yha pr agentation ka v compare kro
+**Feedback:** Section padding breaks at 1024px — needs container query.
 **Location:** `section:nth-child(18) > div.wrap`
 **Source:** `index.html:2850`
 **Classes:** `wrap`
@@ -3418,6 +3465,49 @@ footer a:hover { color: var(--ink); }
           <li><strong>Component props + accessibility</strong> in detailed/forensic modes</li>
           <li><strong>Screenshot capture</strong> — collapsible element screenshot embedded in markdown</li>
           <li><strong>Area selection</strong> — drag to annotate regions, not just single elements</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VERSION COMPARISON (v1.0 vs v1.5) -->
+<section id="changelog">
+  <div class="wrap">
+    <span class="eyebrow">// version evolution</span>
+    <h2>Pinmark v1.0 vs Pinmark v1.5</h2>
+    <p class="lede">How Pinmark evolved from a text-only selector tool to a fully integrated visual feedback engine.</p>
+
+    <div class="compare" style="grid-template-columns: repeat(2, 1fr); gap: 32px; margin-top: 40px;">
+      <div class="compare-col" style="border: 1px solid var(--line); padding: 24px; border-radius: 8px;">
+        <h4 style="color: var(--ink); display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">📉</span> Pinmark v1.0 (Legacy)
+        </h4>
+        <p style="font-size: 14px; color: var(--muted); margin-top: 8px; line-height: 1.6;">
+          Focus was strictly on textual DOM elements and selector copies. No screenshots were captured, requiring developers to guess the layout issue visually.
+        </p>
+        <ul style="margin-top: 16px; padding-left: 20px; line-height: 1.8; color: var(--ink-mid); font-size: 13.5px;">
+          <li>❌ No screenshot capture (text-only DOM data)</li>
+          <li>❌ Basic Markdown copying to clipboard only</li>
+          <li>❌ Single-browser build (Chrome only)</li>
+          <li>❌ Simple text comments without categories/severity</li>
+          <li>❌ No API integrations or MCP servers</li>
+        </ul>
+      </div>
+
+      <div class="compare-col good" style="border: 1px solid var(--accent); background: var(--accent-soft); padding: 24px; border-radius: 8px;">
+        <h4 style="color: var(--accent); display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">🚀</span> Pinmark v1.5 (Current)
+        </h4>
+        <p style="font-size: 14px; color: var(--ink-mid); margin-top: 8px; line-height: 1.6;">
+          A fully featured feedback workspace integrating native screenshots, drawing markup, metadata classification, and model-context connections.
+        </p>
+        <ul style="margin-top: 16px; padding-left: 20px; line-height: 1.8; color: var(--ink-mid); font-size: 13.5px;">
+          <li>✨ <strong>Instant viewport screenshot</strong> (&lt;100ms) with canvas crop</li>
+          <li>✨ <strong>Drawing markup tool</strong> to draw highlights directly</li>
+          <li>✨ <strong>Model Context Protocol (MCP) server</strong> for AI agents</li>
+          <li>✨ <strong>Dual-browser package</strong> (Chrome MV3 + Firefox)</li>
+          <li>✨ <strong>Metadata tags</strong> (Intent, Severity, and Categories)</li>
         </ul>
       </div>
     </div>
@@ -3839,7 +3929,7 @@ footer a:hover { color: var(--ink); }
 </section>
 
 <!-- FAQ -->
-<section>
+<section id="faq">
   <div class="wrap">
     <span class="eyebrow">// questions</span>
     <h2>Quick answers</h2>
@@ -5123,8 +5213,10 @@ footer a:hover { color: var(--ink); }
       el.classList.remove('md-interactive-flash');
       void el.offsetWidth;
       el.classList.add('md-interactive-flash');
-      document.querySelector('.tryit')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      if (hitCount >= MAX_HITS) el.style.animation = 'none';
+      document.querySelector('#demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (hitCount >= MAX_HITS) {
+        el.classList.add('md-interactive-clicked');
+      }
     });
     el.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -5151,6 +5243,41 @@ footer a:hover { color: var(--ink); }
     video.addEventListener('timeupdate', update);
     video.playbackRate = 0.7;
     update();
+  })();
+
+  // ---------- dynamic scrollspy navbar ----------
+  (() => {
+    const navLinks = document.querySelectorAll('.topbar-nav .nav-link');
+    const sections = Array.from(navLinks).map(link => {
+      const id = link.getAttribute('href');
+      return document.querySelector(id);
+    }).filter(Boolean);
+
+    const updateActiveLink = () => {
+      let activeSection = null;
+      const scrollPos = window.scrollY + 100; // Offset for sticky topbar
+
+      sections.forEach(section => {
+        const top = section.offsetTop;
+        const height = section.offsetHeight;
+        if (scrollPos >= top && scrollPos < top + height) {
+          activeSection = section;
+        }
+      });
+
+      if (!activeSection && sections.length > 0) {
+        activeSection = sections[0];
+      }
+
+      navLinks.forEach(link => {
+        const id = link.getAttribute('href');
+        const isActive = activeSection && activeSection.id === id.substring(1);
+        link.classList.toggle('active', isActive);
+      });
+    };
+
+    window.addEventListener('scroll', updateActiveLink);
+    updateActiveLink(); // run initially
   })();
 </script>
 </body>

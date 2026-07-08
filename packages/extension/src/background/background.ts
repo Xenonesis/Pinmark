@@ -20,37 +20,61 @@ function getTabState(tabId: number): TabState {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // Use tabId from message payload (for popup) or from sender.tab (for content scripts)
-  const tabId = message.tabId ?? sender.tab?.id;
 
   switch (message.type) {
     case 'TOGGLE_EXTENSION':
-      if (tabId === undefined) {
-        sendResponse({ error: 'No tabId provided', isActive: false });
-        break;
-      }
-      const state = getTabState(tabId);
-      state.isActive = !state.isActive;
-      sendResponse({ isActive: state.isActive });
-      break;
+      (async () => {
+        try {
+          const storage = await chrome.storage.local.get('extensionActive');
+          const nextActive = !storage.extensionActive;
+          await chrome.storage.local.set({ extensionActive: nextActive });
+
+          // Send message to all tabs to update their state
+          const tabs = await chrome.tabs.query({});
+          for (const tab of tabs) {
+            if (tab.id !== undefined) {
+              chrome.tabs.sendMessage(tab.id, {
+                type: 'TOGGLE_EXTENSION',
+                isActive: nextActive
+              }).catch(() => {});
+            }
+          }
+
+          sendResponse({ isActive: nextActive });
+        } catch (e) {
+          sendResponse({ error: (e as Error).message, isActive: false });
+        }
+      })();
+      return true;
 
     case 'GET_STATE':
-      if (tabId === undefined) {
-        sendResponse({ error: 'No tabId provided', isActive: false, isPaused: false, markersVisible: true });
-        break;
-      }
-      sendResponse(getTabState(tabId));
-      break;
+      chrome.storage.local.get('extensionActive').then((storage) => {
+        sendResponse({ isActive: storage.extensionActive ?? false });
+      });
+      return true;
 
     case 'SET_STATE':
-      if (tabId === undefined) {
-        sendResponse({ error: 'No tabId provided' });
-        break;
-      }
-      const currentState = getTabState(tabId);
-      Object.assign(currentState, message.state);
-      sendResponse(getTabState(tabId));
-      break;
+      (async () => {
+        try {
+          const isActive = message.state.isActive;
+          await chrome.storage.local.set({ extensionActive: isActive });
+
+          // Send message to all other tabs to sync the state
+          const tabs = await chrome.tabs.query({});
+          for (const tab of tabs) {
+            if (tab.id !== undefined && tab.id !== sender.tab?.id) {
+              chrome.tabs.sendMessage(tab.id, {
+                type: 'TOGGLE_EXTENSION',
+                isActive: isActive
+              }).catch(() => {});
+            }
+          }
+          sendResponse({ success: true });
+        } catch (e) {
+          sendResponse({ error: (e as Error).message });
+        }
+      })();
+      return true;
 
     case 'GET_SETTINGS':
       getSettings().then(sendResponse);

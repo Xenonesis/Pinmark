@@ -1,6 +1,6 @@
 {
   "name": "pinmark",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "Visual feedback annotation tool for developers to place markers on DOM elements and generate AI-optimized Markdown",
   "type": "module",
   "workspaces": [

@@ -200,35 +200,24 @@ themeToggleBtn?.addEventListener('click', async () => {
 // ── Activate / Deactivate ─────────────────────────────
 toggleBtnCheckbox?.addEventListener('change', async (e) => {
   e.preventDefault();
-  // Revert UI instantly, we will update it after background confirms
+  // Revert UI checkbox instantly; we will update it after confirmation
   toggleBtnCheckbox.checked = isActive;
-  if (currentTabId === null) {
-    showStatus('No active tab. Open a webpage first.');
-    return;
-  }
 
-  const prevState = isActive;
+  const nextActive = !isActive;
   try {
-    const response = await sendMessage({ type: 'TOGGLE_EXTENSION', tabId: currentTabId }) as { isActive: boolean };
+    const response = await sendMessage({ type: 'TOGGLE_EXTENSION', isActive: nextActive }) as { isActive: boolean };
     isActive = response.isActive;
     updateToggleButton();
 
-    if (isActive) {
-      try {
-        await chrome.tabs.sendMessage(currentTabId, { type: 'ACTIVATE_OVERLAY' });
-        hideStatus();
-      } catch {
-        await sendMessage({ type: 'TOGGLE_EXTENSION', tabId: currentTabId });
-        isActive = false;
-        updateToggleButton();
-        showStatus('Could not activate — try refreshing the page.');
+    if (currentTabId !== null) {
+      if (isActive) {
+        chrome.tabs.sendMessage(currentTabId, { type: 'ACTIVATE_OVERLAY' }).catch(() => {});
+      } else {
+        chrome.tabs.sendMessage(currentTabId, { type: 'DEACTIVATE_OVERLAY' }).catch(() => {});
       }
-    } else {
-      chrome.tabs.sendMessage(currentTabId, { type: 'DEACTIVATE_OVERLAY' }).catch(() => {});
     }
-  } catch {
-    isActive = prevState;
-    updateToggleButton();
+  } catch (err) {
+    console.error('[Pinmark] Toggle activation failed:', err);
   }
 });
 
