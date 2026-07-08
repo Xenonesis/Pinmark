@@ -31,7 +31,7 @@ export function createHttpServer() {
   });
 
   app.get('/sessions/:id', (req: Request, res: Response) => {
-    const session = store.getSession(req.params.id);
+    const session = store.getSession(req.params.id as string);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }
@@ -40,7 +40,7 @@ export function createHttpServer() {
 
   app.post('/sessions/:id/annotations', async (req: Request, res: Response) => {
     try {
-      const annotation = await store.addAnnotation(req.params.id, req.body);
+      const annotation = await store.addAnnotation(req.params.id as string, req.body);
       res.json(annotation);
     } catch (e) {
       res.status(404).json({ error: (e as Error).message });
@@ -53,7 +53,7 @@ export function createHttpServer() {
 
   app.patch('/annotations/:id/status', async (req: Request, res: Response) => {
     const { status, agent, reason } = req.body;
-    const annotation = await store.updateAnnotationStatus(req.params.id, status, agent, reason);
+    const annotation = await store.updateAnnotationStatus(req.params.id as string, status, agent, reason);
     if (!annotation) {
       return res.status(404).json({ error: 'Annotation not found' });
     }
@@ -65,7 +65,7 @@ export function createHttpServer() {
     if (!agent || !message) {
       return res.status(400).json({ error: 'agent and message are required' });
     }
-    const annotation = await store.addReply(req.params.id, agent, message);
+    const annotation = await store.addReply(req.params.id as string, agent, message);
     if (!annotation) {
       return res.status(404).json({ error: 'Annotation not found' });
     }

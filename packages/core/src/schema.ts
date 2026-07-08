@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const ComponentInfoSchema = z.object({
   framework: z.enum(['react', 'angular', 'vue', 'svelte', 'unknown']),
   name: z.string(),
-  props: z.record(z.unknown()).optional(),
+  props: z.record(z.string(), z.unknown()).optional(),
   filePath: z.string().optional(),
   lineNumber: z.number().optional(),
   hierarchy: z.array(z.string()).optional()
@@ -15,7 +15,7 @@ export const ElementInfoSchema = z.object({
   id: z.string().optional(),
   classes: z.array(z.string()),
   textContent: z.string().optional(),
-  dataAttributes: z.record(z.string()),
+  dataAttributes: z.record(z.string(), z.string()),
   component: ComponentInfoSchema.optional(),
   boundingRect: z.object({
     x: z.number(),
@@ -27,8 +27,8 @@ export const ElementInfoSchema = z.object({
     bottom: z.number(),
     left: z.number()
   }),
-  computedStyles: z.record(z.string()).optional(),
-  accessibility: z.record(z.string()).optional(),
+  computedStyles: z.record(z.string(), z.string()).optional(),
+  accessibility: z.record(z.string(), z.string()).optional(),
   selectionText: z.string().optional(),
   screenshot: z.string().optional()
 });
@@ -61,8 +61,8 @@ export const PinmarkAnnotationSchema = z.object({
   
   // State Capture
   state: z.object({
-    localStorage: z.record(z.string()).optional(),
-    sessionStorage: z.record(z.string()).optional(),
+    localStorage: z.record(z.string(), z.string()).optional(),
+    sessionStorage: z.record(z.string(), z.string()).optional(),
     cookies: z.string().optional()
   }).optional(),
 

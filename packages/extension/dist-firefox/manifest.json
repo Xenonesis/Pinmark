@@ -29,7 +29,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.ts-loader-BLTfkXt6.js"
+        "assets/content.ts-loader-DrkkTQHM.js"
       ],
       "matches": [
         "<all_urls>"
@@ -38,7 +38,7 @@
     },
     {
       "js": [
-        "assets/main-world.ts-D1_KfGMT.js"
+        "assets/main-world.ts-DJOL1BHs.js"
       ],
       "matches": [
         "<all_urls>"
@@ -71,10 +71,10 @@
         "<all_urls>"
       ],
       "resources": [
-        "assets/storage-89BE1a4w.js",
-        "assets/messaging-BIPspj2q.js",
-        "assets/index.ts-K5xoLUiY.js",
-        "assets/main-world.ts-D1_KfGMT.js"
+        "assets/storage-nIbvIKhG.js",
+        "assets/messaging-Bxa8IKH6.js",
+        "assets/content.ts-Di3COQbC.js",
+        "assets/main-world.ts-DJOL1BHs.js"
       ]
     }
   ]

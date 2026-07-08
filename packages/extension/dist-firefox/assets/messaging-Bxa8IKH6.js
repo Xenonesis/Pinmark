@@ -1,0 +1,1 @@
+function e(e){return new Promise((t,n)=>{chrome.runtime.sendMessage(e,e=>{chrome.runtime.lastError?n(chrome.runtime.lastError):t(e)})})}export{e as t};

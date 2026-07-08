@@ -12,52 +12,40 @@ export function getStorageKeyForUrl(url: string): string {
 }
 
 export async function getSettings(): Promise<ExtensionSettings> {
-  return new Promise((resolve) => {
-    chrome.storage.local.get([SETTINGS_KEY], (result) => {
-      resolve(result[SETTINGS_KEY] || {
-        markerColor: '#ef4444',
-        outputDetail: 'standard',
-        clearAfterCopy: false,
-        blockInteractions: false,
-        hideUntilRestart: false,
-        theme: 'auto',
-        mcpEndpoint: 'http://localhost:4747',
-        autoSync: true,
-        githubToken: '',
-        githubRepo: '',
-        webhookUrl: '',
-      });
-    });
-  });
+  const result = await chrome.storage.local.get([SETTINGS_KEY]);
+  return (result[SETTINGS_KEY] as ExtensionSettings) || {
+    markerColor: '#ef4444',
+    outputDetail: 'standard',
+    clearAfterCopy: false,
+    blockInteractions: false,
+    hideUntilRestart: false,
+    theme: 'auto',
+    mcpEndpoint: 'http://localhost:4747',
+    autoSync: true,
+    githubToken: '',
+    githubRepo: '',
+    webhookUrl: '',
+  };
 }
 
 export async function saveSettings(settings: Partial<ExtensionSettings>): Promise<void> {
   const current = await getSettings();
   const updated = { ...current, ...settings };
-  return new Promise((resolve) => {
-    chrome.storage.local.set({ [SETTINGS_KEY]: updated }, () => resolve());
-  });
+  await chrome.storage.local.set({ [SETTINGS_KEY]: updated });
 }
 
 export async function getFeedback(url: string): Promise<FeedbackItem[]> {
   const key = getStorageKeyForUrl(url);
-  return new Promise((resolve) => {
-    chrome.storage.local.get([key], (result) => {
-      resolve(result[key] || []);
-    });
-  });
+  const result = await chrome.storage.local.get([key]);
+  return (result[key] as FeedbackItem[]) || [];
 }
 
 export async function saveFeedback(url: string, feedback: FeedbackItem[]): Promise<void> {
   const key = getStorageKeyForUrl(url);
-  return new Promise((resolve) => {
-    chrome.storage.local.set({ [key]: feedback }, () => resolve());
-  });
+  await chrome.storage.local.set({ [key]: feedback });
 }
 
 export async function clearFeedback(url: string): Promise<void> {
   const key = getStorageKeyForUrl(url);
-  return new Promise((resolve) => {
-    chrome.storage.local.remove([key], () => resolve());
-  });
+  await chrome.storage.local.remove([key]);
 }

@@ -23,7 +23,7 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "src/background/index.ts",
+    "service_worker": "src/background/background.ts",
     "type": "module"
   },
   "content_scripts": [
@@ -32,7 +32,7 @@
         "<all_urls>"
       ],
       "js": [
-        "src/content/index.ts"
+        "src/content/content.ts"
       ],
       "run_at": "document_idle"
     },
