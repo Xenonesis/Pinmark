@@ -339,21 +339,24 @@ export class Overlay {
     this.isModalOpen = true;
     this.hoverBox.hide();
 
-    let screenshot: string | undefined;
-    try {
-      this.container.style.display = 'none';
-      const canvas = await html2canvas(element, {
-        useCORS: true,
-        logging: false,
-        scale: window.devicePixelRatio || 1,
-        ignoreElements: (node) => node.tagName === 'SCRIPT' || node.tagName === 'NOSCRIPT' || node.tagName === 'IFRAME' || node.tagName === 'LINK'
-      });
-      screenshot = canvas.toDataURL('image/jpeg', 0.8);
-    } catch (e) {
-      console.warn('[Pinmark] Failed to capture screenshot:', e);
-    } finally {
-      this.container.style.display = 'block';
-    }
+    // Start screenshot capture in the background
+    const screenshotPromise = (async () => {
+      try {
+        this.container.style.display = 'none';
+        const canvas = await html2canvas(element, {
+          useCORS: true,
+          logging: false,
+          scale: window.devicePixelRatio || 1,
+          ignoreElements: (node) => node.tagName === 'SCRIPT' || node.tagName === 'NOSCRIPT' || node.tagName === 'IFRAME' || node.tagName === 'LINK'
+        });
+        return canvas.toDataURL('image/jpeg', 0.8);
+      } catch (e) {
+        console.warn('[Pinmark] Failed to capture screenshot:', e);
+        return undefined;
+      } finally {
+        this.container.style.display = 'block';
+      }
+    })();
 
     // Gather component info and computed styles for the modal
     const componentInfo = (() => {
@@ -384,20 +387,29 @@ export class Overlay {
       return undefined;
     })();
 
-    const result = await this.feedbackModal.show(element, {
-      screenshotUrl: screenshot,
+    // Show the modal immediately (passing undefined for screenshot initially)
+    const modalPromise = this.feedbackModal.show(element, {
+      screenshotUrl: undefined,
       computedStyles: computedStylesData,
       selectionText,
       componentInfo: componentInfo ? { framework: componentInfo.framework, name: componentInfo.name, hierarchy: componentInfo.hierarchy } : undefined,
       smartName
     });
+
+    // Update the screenshot in the modal once it resolves
+    screenshotPromise.then((url) => {
+      if (url && this.isModalOpen) {
+        this.feedbackModal.setScreenshot(url);
+      }
+    });
+
+    const result = await modalPromise;
     this.isModalOpen = false;
 
     if (!result) return;
     
-    if (result.screenshot) {
-      screenshot = result.screenshot;
-    }
+    // Get the screenshot that was actually drawn/used (either local or from prompt)
+    let screenshot = result.screenshot || await screenshotPromise;
 
     const elementInfo = this.elementAnalyzer.analyze(element);
     
@@ -416,8 +428,6 @@ export class Overlay {
         left: selectionRect.left
       };
     }
-
-    // Screenshot already captured before modal
 
     if (screenshot) {
       elementInfo.screenshot = screenshot;
@@ -694,37 +704,52 @@ export class Overlay {
     this.isModalOpen = true;
     this.hoverBox.hide();
 
-    let screenshot: string | undefined;
-    try {
-      this.container.style.display = 'none';
-      const canvas = await html2canvas(element, {
-        useCORS: true,
-        logging: false,
-        scale: window.devicePixelRatio || 1,
-        ignoreElements: (node) => node.tagName === 'SCRIPT' || node.tagName === 'NOSCRIPT' || node.tagName === 'IFRAME' || node.tagName === 'LINK'
-      });
-      screenshot = canvas.toDataURL('image/jpeg', 0.8);
-    } catch (e) {
-      console.warn('[Pinmark] Screenshot failed:', e);
-    } finally {
-      this.container.style.display = 'block';
-    }
+    // Start screenshot capture in the background
+    const screenshotPromise = (async () => {
+      try {
+        this.container.style.display = 'none';
+        const canvas = await html2canvas(element, {
+          useCORS: true,
+          logging: false,
+          scale: window.devicePixelRatio || 1,
+          ignoreElements: (node) => node.tagName === 'SCRIPT' || node.tagName === 'NOSCRIPT' || node.tagName === 'IFRAME' || node.tagName === 'LINK'
+        });
+        return canvas.toDataURL('image/jpeg', 0.8);
+      } catch (e) {
+        console.warn('[Pinmark] Screenshot failed:', e);
+        return undefined;
+      } finally {
+        this.container.style.display = 'block';
+      }
+    })();
 
     const componentInfo = (() => { try { return this.frameworkDetector.detect(element); } catch { return undefined; } })();
 
-    const result = await this.feedbackModal.show(element, {
-      screenshotUrl: screenshot,
+    // Show the modal immediately (passing undefined for screenshot initially)
+    const modalPromise = this.feedbackModal.show(element, {
+      screenshotUrl: undefined,
       selectionText: selText,
       componentInfo: componentInfo ? { framework: componentInfo.framework, name: componentInfo.name, hierarchy: componentInfo.hierarchy } : undefined
     });
+
+    // Update the screenshot in the modal once it resolves
+    screenshotPromise.then((url) => {
+      if (url && this.isModalOpen) {
+        this.feedbackModal.setScreenshot(url);
+      }
+    });
+
+    const result = await modalPromise;
     this.isModalOpen = false;
     if (!result) return;
+
+    // Get the screenshot that was actually drawn/used (either local or from prompt)
+    let screenshot = result.screenshot || await screenshotPromise;
 
     const elementInfo = this.elementAnalyzer.analyze(element);
     elementInfo.selectionText = selText;
     elementInfo.boundingRect = { x: selRect.x, y: selRect.y, width: selRect.width, height: selRect.height, top: selRect.top, right: selRect.right, bottom: selRect.bottom, left: selRect.left };
-    if (result.screenshot) elementInfo.screenshot = result.screenshot;
-    else if (screenshot) elementInfo.screenshot = screenshot;
+    if (screenshot) elementInfo.screenshot = screenshot;
 
     const state: any = {};
     try { state.localStorage = { ...window.localStorage }; state.sessionStorage = { ...window.sessionStorage }; state.cookies = document.cookie; } catch {}

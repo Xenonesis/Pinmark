@@ -1,4 +1,13 @@
 const MODAL_STYLES = `
+  @keyframes pmk-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .pmk-spinner {
+    stroke: currentColor;
+    stroke-linecap: round;
+  }
+
   .pinmark-modal-overlay {
     position: fixed;
     top: 0;
@@ -333,6 +342,13 @@ export class FeedbackModal {
   private shadowRoot: ShadowRoot;
   private modalOverlay: HTMLElement | null = null;
   private resolvePromise: ((result: ModalResult) => void) | null = null;
+  private updateScreenshotCallback: ((url: string) => void) | null = null;
+
+  setScreenshot(url: string) {
+    if (this.updateScreenshotCallback) {
+      this.updateScreenshotCallback(url);
+    }
+  }
 
   constructor(shadowRoot: ShadowRoot) {
     this.shadowRoot = shadowRoot;
@@ -457,9 +473,11 @@ export class FeedbackModal {
 
     // Screenshot canvas
     let drawnScreenshot: string | undefined = screenshotUrl;
-    if (screenshotUrl) {
-      const markupContainer = document.createElement('div');
-      markupContainer.style.cssText = 'margin-top:14px;position:relative;border:1px solid var(--pmk-border,rgba(255,255,255,0.1));border-radius:8px;overflow:hidden;background:var(--pmk-bg,#000);display:flex;flex-direction:column;';
+    const markupContainer = document.createElement('div');
+    markupContainer.style.cssText = 'margin-top:14px;position:relative;border:1px solid var(--pmk-border,rgba(255,255,255,0.1));border-radius:8px;overflow:hidden;background:var(--pmk-bg,#000);display:flex;flex-direction:column;min-height:100px;justify-content:center;align-items:center;';
+
+    const loadAndSetupCanvas = (url: string) => {
+      markupContainer.innerHTML = '';
 
       const canvas = document.createElement('canvas');
       canvas.style.cssText = 'max-width:100%;max-height:180px;object-fit:contain;display:block;cursor:crosshair;';
@@ -471,7 +489,7 @@ export class FeedbackModal {
         canvas.height = img.height;
         ctx?.drawImage(img, 0, 0);
       };
-      img.src = screenshotUrl;
+      img.src = url;
 
       let isDrawing = false;
       canvas.onmousedown = (e) => {
@@ -502,9 +520,31 @@ export class FeedbackModal {
 
       markupContainer.appendChild(canvas);
       markupContainer.appendChild(hint);
-      body.appendChild(markupContainer);
+    };
+
+    if (screenshotUrl) {
+      loadAndSetupCanvas(screenshotUrl);
+    } else {
+      const loadingSpinner = document.createElement('div');
+      loadingSpinner.className = 'pinmark-screenshot-loading';
+      loadingSpinner.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--pmk-text-muted,#9ca3af);font-size:11px;padding:20px 0;width:100%;';
+      loadingSpinner.innerHTML = `
+        <svg class="pmk-spinner" style="width:20px;height:20px;animation:pmk-spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+        </svg>
+        <span>Capturing screenshot...</span>
+      `;
+      markupContainer.appendChild(loadingSpinner);
     }
-    
+
+    body.appendChild(markupContainer);
+
+    this.updateScreenshotCallback = (url: string) => {
+      drawnScreenshot = url;
+      loadAndSetupCanvas(url);
+    };
+
     modal.appendChild(body);
 
     // Dropdowns
