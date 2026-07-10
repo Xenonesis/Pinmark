@@ -502,7 +502,8 @@ export class Overlay {
         existingComment: feedback.comment,
         existingCategory: feedback.category,
         existingIntent: feedback.intent,
-        existingSeverity: feedback.severity
+        existingSeverity: feedback.severity,
+        screenshotUrl: feedback.element?.screenshot
       });
       this.isModalOpen = false;
       this._modalClosedAt = Date.now();
@@ -532,7 +533,8 @@ export class Overlay {
       existingComment: feedback.comment,
       existingCategory: feedback.category,
       existingIntent: feedback.intent,
-      existingSeverity: feedback.severity
+      existingSeverity: feedback.severity,
+      screenshotUrl: feedback.element?.screenshot
     });
     this.isModalOpen = false;
     this._modalClosedAt = Date.now();
