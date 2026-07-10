@@ -106,7 +106,20 @@ async function initializeOverlay() {
 
   try {
     console.log('[Pinmark] Initializing overlay...');
-    overlay = new Overlay(settings, config, feedback);
+
+    // Clean up any existing instance from a previous HMR/reload
+    if ((window as any).__pinmark_overlay_instance) {
+      try {
+        console.log('[Pinmark] Found old overlay instance, deactivating...');
+        (window as any).__pinmark_overlay_instance.deactivate();
+      } catch (e) {
+        console.error('[Pinmark] Error deactivating old overlay:', e);
+      }
+    }
+
+    overlay = new Overlay(settings as any, config, feedback as any);
+    (window as any).__pinmark_overlay_instance = overlay;
+    
     feedbackManager = overlay.getFeedbackManager();
     console.log('[Pinmark] Activating overlay...');
     overlay.activate();

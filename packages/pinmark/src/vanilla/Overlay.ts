@@ -87,6 +87,9 @@ export class Overlay {
   private selectionText: string = '';
   private selectionRect: DOMRect | null = null;
 
+  // Cooldown timestamp to prevent the click that closed the modal from reopening it
+  private _modalClosedAt = 0;
+
   // Track drag state for area selection
   private isDragging = false;
   private dragStartX = 0;
@@ -228,7 +231,8 @@ export class Overlay {
   };
 
   private handleMouseDown = (e: MouseEvent) => {
-    if (!this.isActive || this.isPaused || this.isModalOpen) return;
+    if (!this.isActive || this.isPaused || this.isModalOpen || this.feedbackModal.isOpen()) return;
+    if (Date.now() - this._modalClosedAt < 500) return;
 
     // Only initiate drag selection if area select mode is active
     if (!this.isAreaSelectActive) return;
@@ -243,7 +247,9 @@ export class Overlay {
   };
 
   private handleMouseMove = (e: MouseEvent) => {
-    if (!this.isActive || this.isPaused || this.isModalOpen) return;
+    if (!this.isActive || this.isPaused || this.isModalOpen || this.feedbackModal.isOpen()) return;
+    // Also block hover tracking during post-close cooldown to prevent instant re-trigger
+    if (Date.now() - this._modalClosedAt < 500) return;
 
     if (this.isAreaSelectActive && e.buttons === 1) { // Left mouse button is held down
       const distance = Math.sqrt(Math.pow(e.clientX - this.dragStartX, 2) + Math.pow(e.clientY - this.dragStartY, 2));
@@ -294,7 +300,11 @@ export class Overlay {
   };
 
   private handleClick = (e: MouseEvent) => {
-    if (!this.isActive || this.isPaused || this.isModalOpen) return;
+    if (!this.isActive || this.isPaused || this.isModalOpen || this.feedbackModal.isOpen()) return;
+
+    // Cooldown: ignore clicks for 500ms after modal closes to prevent the same
+    // click event (or any rapid follow-up click) from reopening the modal
+    if (Date.now() - this._modalClosedAt < 500) return;
 
     const target = e.target as HTMLElement;
 
@@ -337,6 +347,7 @@ export class Overlay {
     }
 
     this.isModalOpen = true;
+    this.targetElement = null; // clear so stale element doesn't re-trigger after close
     this.hoverBox.hide();
 
     // Start screenshot capture in the background
@@ -408,6 +419,7 @@ export class Overlay {
 
     const result = await modalPromise;
     this.isModalOpen = false;
+    this._modalClosedAt = Date.now(); // set cooldown timestamp
 
     if (!result) return;
     
@@ -485,6 +497,7 @@ export class Overlay {
         existingSeverity: feedback.severity
       });
       this.isModalOpen = false;
+      this._modalClosedAt = Date.now();
 
       if (result) {
         const updates = { 
@@ -508,6 +521,7 @@ export class Overlay {
       existingSeverity: feedback.severity
     });
     this.isModalOpen = false;
+    this._modalClosedAt = Date.now();
 
     if (result) {
       const updates = { 
@@ -620,7 +634,8 @@ export class Overlay {
     }
 
     // Check for text selection
-    if (!this.isActive || this.isPaused || this.isModalOpen || this.isAreaSelectActive) return;
+    if (!this.isActive || this.isPaused || this.isModalOpen || this.feedbackModal.isOpen() || this.isAreaSelectActive) return;
+    if (Date.now() - this._modalClosedAt < 500) return;
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
       const text = sel.toString().trim();
@@ -705,6 +720,7 @@ export class Overlay {
 
   private async promptForFeedbackWithSelection(element: HTMLElement, selText: string, selRect: DOMRect) {
     this.isModalOpen = true;
+    this.targetElement = null; // clear so stale element doesn't re-trigger after close
     this.hoverBox.hide();
 
     // Start screenshot capture in the background
@@ -747,6 +763,7 @@ export class Overlay {
 
     const result = await modalPromise;
     this.isModalOpen = false;
+    this._modalClosedAt = Date.now();
     if (!result) return;
 
     // Get the screenshot that was actually drawn/used (either local or from prompt)

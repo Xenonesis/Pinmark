@@ -343,6 +343,7 @@ export class FeedbackModal {
   private modalOverlay: HTMLElement | null = null;
   private resolvePromise: ((result: ModalResult) => void) | null = null;
   private updateScreenshotCallback: ((url: string) => void) | null = null;
+  private _isClosing = false;
 
   setScreenshot(url: string) {
     if (this.updateScreenshotCallback) {
@@ -386,7 +387,11 @@ export class FeedbackModal {
     this.modalOverlay = document.createElement('div');
     this.modalOverlay.className = 'pinmark-modal-overlay';
     this.modalOverlay.onclick = (e) => {
-      if (e.target === this.modalOverlay) this.close(null);
+      if (e.target === this.modalOverlay) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.close(null);
+      }
     };
 
     const modal = document.createElement('div');
@@ -610,8 +615,13 @@ export class FeedbackModal {
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'pinmark-modal-btn cancel';
+    cancelBtn.type = 'button';
     cancelBtn.textContent = 'Cancel';
-    cancelBtn.onclick = () => this.close(null);
+    cancelBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.close(null);
+    };
 
     const getResult = (): ModalResult => {
       const comment = input.value.trim();
@@ -627,8 +637,11 @@ export class FeedbackModal {
 
     const submitBtn = document.createElement('button');
     submitBtn.className = 'pinmark-modal-btn submit';
+    submitBtn.type = 'button';
     submitBtn.textContent = existingComment ? 'Save' : 'Add';
-    submitBtn.onclick = () => {
+    submitBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const result = getResult();
       if (result) this.close(result);
     };
@@ -686,27 +699,33 @@ export class FeedbackModal {
   }
 
   private close(result: ModalResult) {
+    if (this._isClosing) return; // prevent double-close
+    this._isClosing = true;
+
+    // Resolve the promise immediately so Overlay.ts gets the result ASAP,
+    // but keep isModalOpen guard alive via _isClosing until animation ends.
+    if (this.resolvePromise) {
+      const resolve = this.resolvePromise;
+      this.resolvePromise = null;
+      // Schedule resolve on next microtask so any synchronous event handlers finish first
+      Promise.resolve().then(() => resolve(result));
+    }
+
     if (this.modalOverlay) {
+      this.modalOverlay.style.pointerEvents = 'none'; // stop receiving any mouse events immediately
       this.modalOverlay.classList.remove('visible');
+      const overlay = this.modalOverlay;
+      this.modalOverlay = null; // null immediately so isOpen() returns false
       setTimeout(() => {
-        if (this.modalOverlay) {
-          this.modalOverlay.remove();
-          this.modalOverlay = null;
-        }
-        if (this.resolvePromise) {
-          this.resolvePromise(result);
-          this.resolvePromise = null;
-        }
-      }, 150);
+        overlay.remove();
+        this._isClosing = false;
+      }, 200);
     } else {
-      if (this.resolvePromise) {
-        this.resolvePromise(result);
-        this.resolvePromise = null;
-      }
+      this._isClosing = false;
     }
   }
 
   isOpen(): boolean {
-    return this.modalOverlay !== null;
+    return this.modalOverlay !== null || this._isClosing;
   }
 }
