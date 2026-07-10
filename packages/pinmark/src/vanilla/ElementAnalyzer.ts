@@ -18,7 +18,20 @@ export class ElementAnalyzer {
     const textContent = this.extractTextContent(element);
     const dataAttributes = this.extractDataAttributes(element);
     const component = this.frameworkDetector.detect(element);
-    const boundingRect = element.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    const boundingRect = {
+      x: rect.x + scrollLeft,
+      y: rect.y + scrollTop,
+      width: rect.width,
+      height: rect.height,
+      top: rect.top + scrollTop,
+      right: rect.right + scrollLeft,
+      bottom: rect.bottom + scrollTop,
+      left: rect.left + scrollLeft,
+    };
     const computedStyles = this.extractComputedStyles(element);
     const accessibility = this.extractAccessibility(element);
     const animations = this.extractAnimations(element);

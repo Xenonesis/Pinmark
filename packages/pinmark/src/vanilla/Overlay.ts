@@ -139,9 +139,10 @@ export class Overlay {
 
   private setupEventListeners() {
     window.addEventListener('message', this.handleWindowMessage);
-    document.addEventListener('mousedown', this.handleMouseDown);
-    document.addEventListener('mousemove', this.handleMouseMove);
-    document.addEventListener('mouseup', this.handleMouseUp);
+    document.addEventListener('pointerdown', this.handlePointerDown as EventListener);
+    document.addEventListener('pointermove', this.handlePointerMove as EventListener);
+    document.addEventListener('pointerup', this.handlePointerUp as EventListener);
+    document.addEventListener('pointercancel', this.handlePointerUp as EventListener);
     document.addEventListener('click', this.handleClick, true);
     document.addEventListener('keydown', this.handleKeydown, true);
     window.addEventListener('resize', this.handleResize);
@@ -150,9 +151,10 @@ export class Overlay {
 
   private removeEventListeners() {
     window.removeEventListener('message', this.handleWindowMessage);
-    document.removeEventListener('mousedown', this.handleMouseDown);
-    document.removeEventListener('mousemove', this.handleMouseMove);
-    document.removeEventListener('mouseup', this.handleMouseUp);
+    document.removeEventListener('pointerdown', this.handlePointerDown as EventListener);
+    document.removeEventListener('pointermove', this.handlePointerMove as EventListener);
+    document.removeEventListener('pointerup', this.handlePointerUp as EventListener);
+    document.removeEventListener('pointercancel', this.handlePointerUp as EventListener);
     document.removeEventListener('click', this.handleClick, true);
     document.removeEventListener('keydown', this.handleKeydown, true);
     window.removeEventListener('resize', this.handleResize);
@@ -230,7 +232,7 @@ export class Overlay {
     }
   };
 
-  private handleMouseDown = (e: MouseEvent) => {
+  private handlePointerDown = (e: PointerEvent) => {
     if (!this.isActive || this.isPaused || this.isModalOpen || this.feedbackModal.isOpen()) return;
     if (Date.now() - this._modalClosedAt < 500) return;
 
@@ -246,7 +248,7 @@ export class Overlay {
     this.dragStartY = e.clientY;
   };
 
-  private handleMouseMove = (e: MouseEvent) => {
+  private handlePointerMove = (e: PointerEvent) => {
     if (!this.isActive || this.isPaused || this.isModalOpen || this.feedbackModal.isOpen()) return;
     // Also block hover tracking during post-close cooldown to prevent instant re-trigger
     if (Date.now() - this._modalClosedAt < 500) return;
@@ -431,16 +433,19 @@ export class Overlay {
     // If there is an active text selection, overwrite the element's bounding rect and text
     // to match exactly what the user highlighted.
     if (selectionText && selectionRect) {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
       elementInfo.selectionText = selectionText;
       elementInfo.boundingRect = {
-        x: selectionRect.x,
-        y: selectionRect.y,
+        x: selectionRect.x + scrollLeft,
+        y: selectionRect.y + scrollTop,
         width: selectionRect.width,
         height: selectionRect.height,
-        top: selectionRect.top,
-        right: selectionRect.right,
-        bottom: selectionRect.bottom,
-        left: selectionRect.left
+        top: selectionRect.top + scrollTop,
+        right: selectionRect.right + scrollLeft,
+        bottom: selectionRect.bottom + scrollTop,
+        left: selectionRect.left + scrollLeft
       };
     }
 
@@ -457,6 +462,9 @@ export class Overlay {
       console.warn('[Pinmark] Could not capture state:', e);
     }
 
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
     const feedback: FeedbackItem = {
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
       index: this.feedbackManager.getAll().length + 1,
@@ -472,7 +480,7 @@ export class Overlay {
       networkRequests: [...this.networkRequests],
       sessionRecording: [...this.rrwebEvents],
       markerType: this.isMultiSelectActive ? 'multi' : (overrideRect ? 'area' : 'single'),
-      ...(overrideRect ? { areaRect: { x: overrideRect.x, y: overrideRect.y, width: overrideRect.width, height: overrideRect.height } } : {})
+      ...(overrideRect ? { areaRect: { x: overrideRect.x + scrollLeft, y: overrideRect.y + scrollTop, width: overrideRect.width, height: overrideRect.height } } : {})
     };
 
     this.feedbackManager.add(feedback);
@@ -500,12 +508,18 @@ export class Overlay {
       this._modalClosedAt = Date.now();
 
       if (result) {
-        const updates = { 
+        const updates: Partial<FeedbackItem> = { 
           comment: result.comment,
           category: result.category,
           intent: result.intent,
-          severity: result.severity
+          severity: result.severity,
+          timestamp: Date.now()
         };
+
+        if (result.screenshot && feedback.element) {
+          updates.element = { ...feedback.element, screenshot: result.screenshot };
+        }
+
         this.feedbackManager.update(id, updates);
         this.markerManager.updateMarkerTooltip(id, result.comment);
         if (this.config.onSync) this.config.onSync({ ...feedback, ...updates });
@@ -524,12 +538,19 @@ export class Overlay {
     this._modalClosedAt = Date.now();
 
     if (result) {
-      const updates = { 
+      const updates: Partial<FeedbackItem> = { 
         comment: result.comment,
         category: result.category,
         intent: result.intent,
-        severity: result.severity
+        severity: result.severity,
+        timestamp: Date.now()
       };
+      
+      // If the user drew on the screenshot during edit, we need to update the nested element info
+      if (result.screenshot && feedback.element) {
+        updates.element = { ...feedback.element, screenshot: result.screenshot };
+      }
+
       this.feedbackManager.update(id, updates);
       this.markerManager.updateMarkerTooltip(id, result.comment);
       if (this.config.onSync) this.config.onSync({ ...feedback, ...updates });
@@ -621,7 +642,7 @@ export class Overlay {
   }
 
   // ── Text-selection floating button ──────────────────────────────────────
-  private handleMouseUp = () => {
+  private handlePointerUp = () => {
     if (this.isDragging) {
       const areaRect = this.areaSelectionBox.end();
       this.isDragging = false;

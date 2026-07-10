@@ -30,15 +30,15 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal {
-    background: var(--pmk-bg-2, #111827);
-    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.08));
-    border-radius: 16px;
+    background: #09090b;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
     width: 460px;
     max-width: 90vw;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
     opacity: 0;
     transform: scale(0.95) translateY(8px);
@@ -81,20 +81,20 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-title {
-    color: var(--pmk-text, #f9fafb);
-    font-size: 14px;
-    font-weight: 500;
-    margin: 0 0 12px 0;
-    letter-spacing: -0.01em;
+    color: #ededed;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    letter-spacing: -0.02em;
   }
 
   .pinmark-modal-input {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.08));
-    border-radius: 6px;
-    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.04));
-    color: var(--pmk-text, #f9fafb);
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    color: #ededed;
     font-size: 13px;
     outline: none;
     transition: border-color 0.15s ease;
@@ -106,7 +106,8 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-input:focus {
-    border-color: var(--pmk-accent, #3b82f6);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.04);
   }
 
   .pinmark-modal-input::placeholder {
@@ -152,20 +153,20 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-btn.submit {
-    background: var(--pmk-accent, #3b82f6);
-    color: #ffffff;
+    background: #ededed;
+    color: #09090b;
   }
 
   .pinmark-modal-btn.submit:hover:not(:disabled) {
-    background: #4f46e5;
+    background: #ffffff;
   }
 
   .pinmark-modal-element-info {
-    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.03));
-    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.06));
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
-    padding: 7px 10px;
-    margin-bottom: 12px;
+    padding: 6px 10px;
+    margin-bottom: 16px;
     font-size: 11px;
     color: var(--pmk-text-muted, #9ca3af);
     font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
@@ -268,10 +269,10 @@ const MODAL_STYLES = `
 
   /* Component tree */
   .pinmark-modal-component-tree {
-    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.03));
-    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.06));
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     margin-bottom: 12px;
     font-size: 11px;
     font-family: 'SF Mono', Monaco, monospace;
@@ -302,15 +303,33 @@ const MODAL_STYLES = `
     font-family: system-ui, sans-serif;
   }
   .pinmark-modal-select {
-    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.04));
-    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.1));
-    color: var(--pmk-text, #f9fafb);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ededed;
     border-radius: 6px;
-    padding: 6px;
+    padding: 8px;
     font-size: 11px;
     font-family: system-ui, sans-serif;
     outline: none;
     width: 100%;
+    cursor: pointer;
+    appearance: none;
+  }
+  .pinmark-modal-select:focus {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  .pinmark-modal-select-wrapper {
+    position: relative;
+  }
+  .pinmark-modal-select-wrapper::after {
+    content: "▼";
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.4);
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
   }
   .pinmark-modal-select option {
     background: var(--pmk-bg-2, #111827);
@@ -393,6 +412,14 @@ export class FeedbackModal {
         this.close(null);
       }
     };
+      
+    this.escapeListener = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.close(null);
+      }
+    };
+    document.addEventListener('keydown', this.escapeListener, true);
 
     const modal = document.createElement('div');
     modal.className = 'pinmark-modal';
@@ -434,10 +461,9 @@ export class FeedbackModal {
       treeEl.className = 'pinmark-modal-component-tree';
       const hierarchy = componentInfo.hierarchy.slice(-5); // last 5 in tree
       treeEl.innerHTML = hierarchy.map((name, i) => {
-        const indent = '&nbsp;&nbsp;'.repeat(i);
         const isLast = i === hierarchy.length - 1;
-        return `<div>${indent}<span class="${isLast ? 'pinmark-modal-component-name' : ''}">${name}</span></div>`;
-      }).join('');
+        return `<span class="${isLast ? 'pinmark-modal-component-name' : ''}">${name}</span>`;
+      }).join(' <span style="opacity:0.3;font-size:10px;margin:0 4px">&gt;</span> ');
       body.appendChild(treeEl);
     }
 
@@ -523,7 +549,7 @@ export class FeedbackModal {
 
       const hint = document.createElement('div');
       hint.textContent = 'Draw to highlight';
-      hint.style.cssText = 'font-size:11px;color:var(--pmk-text,#f9fafb);padding:5px 10px;background:var(--pmk-bg-2,rgba(0,0,0,0.6));backdrop-filter:blur(4px);border-radius:20px;border:1px solid var(--pmk-border,rgba(255,255,255,0.1));position:absolute;top:10px;left:50%;transform:translateX(-50%);pointer-events:none;white-space:nowrap;';
+      hint.style.cssText = 'font-size:10px;font-weight:500;color:#ededed;padding:4px 8px;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);border-radius:4px;border:1px solid rgba(255,255,255,0.15);position:absolute;top:12px;left:50%;transform:translateX(-50%);pointer-events:none;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
 
       markupContainer.appendChild(canvas);
       markupContainer.appendChild(hint);
@@ -534,7 +560,7 @@ export class FeedbackModal {
     } else {
       const loadingSpinner = document.createElement('div');
       loadingSpinner.className = 'pinmark-screenshot-loading';
-      loadingSpinner.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--pmk-text-muted,#9ca3af);font-size:11px;padding:20px 0;width:100%;';
+      loadingSpinner.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#a1a1aa;font-size:11px;padding:32px 0;width:100%;height:100px;';
       loadingSpinner.innerHTML = `
         <svg class="pmk-spinner" style="width:20px;height:20px;animation:pmk-spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
           <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
@@ -580,7 +606,12 @@ export class FeedbackModal {
       });
       if (initialValue) sel.value = initialValue;
       col.appendChild(lbl);
-      col.appendChild(sel);
+      
+      const wrapper = document.createElement('div');
+      wrapper.className = 'pinmark-modal-select-wrapper';
+      wrapper.appendChild(sel);
+      col.appendChild(wrapper);
+
       return { col, sel };
     };
 
@@ -698,9 +729,16 @@ export class FeedbackModal {
     return `<span class="pinmark-modal-element-tag">&lt;${tag}&gt;</span>${id}${classes}${componentHTML}`;
   }
 
+  private escapeListener: ((e: KeyboardEvent) => void) | null = null;
+
   private close(result: ModalResult) {
     if (this._isClosing) return; // prevent double-close
     this._isClosing = true;
+
+    if (this.escapeListener) {
+      document.removeEventListener('keydown', this.escapeListener, true);
+      this.escapeListener = null;
+    }
 
     // Resolve the promise immediately so Overlay.ts gets the result ASAP,
     // but keep isModalOpen guard alive via _isClosing until animation ends.

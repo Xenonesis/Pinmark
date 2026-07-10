@@ -18,6 +18,7 @@ const TOOLBAR_STYLES = `
     pointer-events: all;
     cursor: move;
     user-select: none;
+    touch-action: none;
     transition: box-shadow 0.2s ease, background 0.2s ease;
   }
 
@@ -166,10 +167,10 @@ export class Toolbar {
     let startElLeft = 0;
     let startElTop = 0;
 
-    let dragMoveHandler: (e: MouseEvent) => void;
-    let dragEndHandler: () => void;
+    let dragMoveHandler: (e: PointerEvent) => void;
+    let dragEndHandler: (e: PointerEvent) => void;
 
-    const dragStart = (e: MouseEvent) => {
+    const dragStart = (e: PointerEvent) => {
       if ((e.target as HTMLElement).closest('button')) return;
       if (e.target !== this.element) return;
 
@@ -185,18 +186,22 @@ export class Toolbar {
       this.element.style.left = `${startElLeft}px`;
       this.element.style.top = `${startElTop}px`;
 
-      document.addEventListener('mouseup', dragEndHandler);
-      document.addEventListener('mousemove', dragMoveHandler);
+      this.element.setPointerCapture(e.pointerId);
+      this.element.addEventListener('pointerup', dragEndHandler);
+      this.element.addEventListener('pointercancel', dragEndHandler);
+      this.element.addEventListener('pointermove', dragMoveHandler);
     };
 
-    dragEndHandler = () => {
+    dragEndHandler = (e: PointerEvent) => {
       if (!isDragging) return;
       isDragging = false;
-      document.removeEventListener('mouseup', dragEndHandler);
-      document.removeEventListener('mousemove', dragMoveHandler);
+      this.element.releasePointerCapture(e.pointerId);
+      this.element.removeEventListener('pointerup', dragEndHandler);
+      this.element.removeEventListener('pointercancel', dragEndHandler);
+      this.element.removeEventListener('pointermove', dragMoveHandler);
     };
 
-    dragMoveHandler = (e: MouseEvent) => {
+    dragMoveHandler = (e: PointerEvent) => {
       if (!isDragging) return;
       e.preventDefault();
       const dx = e.clientX - startMouseX;
@@ -207,7 +212,7 @@ export class Toolbar {
       this.element.style.top = `${newTop}px`;
     };
 
-    this.element.addEventListener('mousedown', dragStart);
+    this.element.addEventListener('pointerdown', dragStart);
   }
 
   private createToolbar(): HTMLElement {
