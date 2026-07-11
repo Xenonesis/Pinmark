@@ -211,6 +211,9 @@ async function handleUrlChange() {
       overlay = new Overlay(settings, config, feedback);
       feedbackManager = overlay.getFeedbackManager();
       overlay.activate();
+      if (settings.hideUntilRestart) {
+        overlay.toggleMarkers();
+      }
     }
   } finally {
     isHandlingUrlChange = false;
