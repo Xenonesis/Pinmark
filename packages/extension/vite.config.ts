@@ -11,4 +11,14 @@ export default defineConfig({
     outDir: 'dist',
   },
   publicDir: 'assets',
+  server: {
+    watch: {
+      ignored: [
+        '**/dist/**',
+        '**/dist-firefox/**',
+        '**/.git/**',
+        '**/node_modules/**',
+      ],
+    },
+  },
 });

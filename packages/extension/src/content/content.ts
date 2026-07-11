@@ -11,126 +11,135 @@ let launcher: Launcher | null = null;
 let currentUrl: string = window.location.href;
 const storageAdapter = new ChromeStorageAdapter();
 
+let isInitializing = false;
+
 async function initializeOverlay() {
-  if (overlay) return;
-
-  const settings = await storageAdapter.getSettings();
-  const feedback = await storageAdapter.getFeedback(window.location.href);
-
-  currentUrl = window.location.href;
-  
-  const config = {
-    url: currentUrl,
-    storage: storageAdapter,
-    onSync: (item: any) => {
-      chrome.runtime.sendMessage({
-        type: 'SYNC_MCP',
-        url: currentUrl,
-        item: item
-      }, (response) => {
-        if (response && response.success) {
-          console.log('[Pinmark] Synced annotation to MCP server via background');
-        } else if (response && response.error) {
-          console.warn('[Pinmark] MCP Sync failed in background:', response.error);
-        }
-      });
-    },
-    onGithubCreate: (markdown: string) => {
-      chrome.runtime.sendMessage({
-        type: 'CREATE_GITHUB_ISSUE',
-        url: currentUrl,
-        content: markdown
-      }, (response) => {
-        if (response && response.success) {
-          console.log('[Pinmark] GitHub issue created:', response.issueUrl);
-        } else if (response && response.error) {
-          console.warn('[Pinmark] GitHub issue failed:', response.error);
-          alert('Failed to create GitHub issue: ' + response.error);
-        }
-      });
-    },
-    onToggle: (isActive: boolean) => {
-      sendMessage({ type: 'SET_STATE', state: { isActive } }).catch(console.error);
-    },
-    captureScreenshot: async (element: HTMLElement): Promise<string | undefined> => {
-      const response = await new Promise<{ dataUrl?: string; error?: string }>((resolve) => {
-        chrome.runtime.sendMessage({ type: 'CAPTURE_TAB' }, resolve);
-      });
-
-      if (!response || response.error || !response.dataUrl) {
-        console.warn('[Pinmark] Viewport capture failed, falling back to html2canvas:', response?.error);
-        return undefined; // return undefined to trigger html2canvas fallback
-      }
-
-      const rect = element.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-
-      const img = new Image();
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error('Failed to load viewport image'));
-        img.src = response.dataUrl!;
-      });
-
-      const canvas = document.createElement('canvas');
-      const sourceX = Math.max(0, rect.left * dpr);
-      const sourceY = Math.max(0, rect.top * dpr);
-      const sourceW = Math.min(img.width - sourceX, rect.width * dpr);
-      const sourceH = Math.min(img.height - sourceY, rect.height * dpr);
-
-      if (sourceW <= 0 || sourceH <= 0) {
-        return undefined;
-      }
-
-      canvas.width = sourceW;
-      canvas.height = sourceH;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return undefined;
-
-      ctx.drawImage(
-        img,
-        sourceX,
-        sourceY,
-        sourceW,
-        sourceH,
-        0,
-        0,
-        sourceW,
-        sourceH
-      );
-
-      return canvas.toDataURL('image/jpeg', 0.8);
-    }
-  };
+  if (overlay || isInitializing) return;
+  isInitializing = true;
 
   try {
-    console.log('[Pinmark] Initializing overlay...');
+    const settings = await storageAdapter.getSettings();
+    const feedback = await storageAdapter.getFeedback(window.location.href);
 
-    // Clean up any existing instance from a previous HMR/reload
-    if ((window as any).__pinmark_overlay_instance) {
-      try {
-        console.log('[Pinmark] Found old overlay instance, deactivating...');
-        (window as any).__pinmark_overlay_instance.deactivate();
-      } catch (e) {
-        console.error('[Pinmark] Error deactivating old overlay:', e);
-      }
-    }
+    if (overlay) return;
 
-    overlay = new Overlay(settings as any, config, feedback as any);
-    (window as any).__pinmark_overlay_instance = overlay;
+    currentUrl = window.location.href;
     
-    feedbackManager = overlay.getFeedbackManager();
-    console.log('[Pinmark] Activating overlay...');
-    overlay.activate();
-    // Apply hide-until-restart: markers start hidden if setting is on
-    if (settings.hideUntilRestart) {
-      overlay.toggleMarkers();
+    const config = {
+      url: currentUrl,
+      storage: storageAdapter,
+      onSync: (item: any) => {
+        chrome.runtime.sendMessage({
+          type: 'SYNC_MCP',
+          url: currentUrl,
+          item: item
+        }, (response) => {
+          if (response && response.success) {
+            console.log('[Pinmark] Synced annotation to MCP server via background');
+          } else if (response && response.error) {
+            console.warn('[Pinmark] MCP Sync failed in background:', response.error);
+          }
+        });
+      },
+      onGithubCreate: (markdown: string) => {
+        chrome.runtime.sendMessage({
+          type: 'CREATE_GITHUB_ISSUE',
+          url: currentUrl,
+          content: markdown
+        }, (response) => {
+          if (response && response.success) {
+            console.log('[Pinmark] GitHub issue created:', response.issueUrl);
+          } else if (response && response.error) {
+            console.warn('[Pinmark] GitHub issue failed:', response.error);
+            alert('Failed to create GitHub issue: ' + response.error);
+          }
+        });
+      },
+      onToggle: (isActive: boolean) => {
+        sendMessage({ type: 'SET_STATE', state: { isActive } }).catch(console.error);
+      },
+      captureScreenshot: async (element: HTMLElement): Promise<string | undefined> => {
+        const response = await new Promise<{ dataUrl?: string; error?: string }>((resolve) => {
+          chrome.runtime.sendMessage({ type: 'CAPTURE_TAB' }, resolve);
+        });
+
+        if (!response || response.error || !response.dataUrl) {
+          console.warn('[Pinmark] Viewport capture failed, falling back to html2canvas:', response?.error);
+          return undefined; // return undefined to trigger html2canvas fallback
+        }
+
+        const rect = element.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+
+        const img = new Image();
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error('Failed to load viewport image'));
+          img.src = response.dataUrl!;
+        });
+
+        const canvas = document.createElement('canvas');
+        const sourceX = Math.max(0, rect.left * dpr);
+        const sourceY = Math.max(0, rect.top * dpr);
+        const sourceW = Math.min(img.width - sourceX, rect.width * dpr);
+        const sourceH = Math.min(img.height - sourceY, rect.height * dpr);
+
+        if (sourceW <= 0 || sourceH <= 0) {
+          return undefined;
+        }
+
+        canvas.width = sourceW;
+        canvas.height = sourceH;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return undefined;
+
+        ctx.drawImage(
+          img,
+          sourceX,
+          sourceY,
+          sourceW,
+          sourceH,
+          0,
+          0,
+          sourceW,
+          sourceH
+        );
+
+        return canvas.toDataURL('image/jpeg', 0.8);
+      }
+    };
+
+    try {
+      console.log('[Pinmark] Initializing overlay...');
+
+      // Clean up any existing instance from a previous HMR/reload
+      if ((window as any).__pinmark_overlay_instance) {
+        try {
+          console.log('[Pinmark] Found old overlay instance, deactivating...');
+          (window as any).__pinmark_overlay_instance.deactivate();
+        } catch (e) {
+          console.error('[Pinmark] Error deactivating old overlay:', e);
+        }
+      }
+
+      overlay = new Overlay(settings as any, config, feedback as any);
+      (window as any).__pinmark_overlay_instance = overlay;
+      
+      feedbackManager = overlay.getFeedbackManager();
+      console.log('[Pinmark] Activating overlay...');
+      overlay.activate();
+      // Apply hide-until-restart: markers start hidden if setting is on
+      if (settings.hideUntilRestart) {
+        overlay.toggleMarkers();
+      }
+      if (launcher) launcher.setActive(true);
+      console.log('[Pinmark] Overlay activated.');
+    } catch (e) {
+      console.error('[Pinmark] Error initializing overlay:', e);
     }
-    if (launcher) launcher.setActive(true);
-    console.log('[Pinmark] Overlay activated.');
-  } catch (e) {
-    console.error('[Pinmark] Error initializing overlay:', e);
+  } finally {
+    isInitializing = false;
   }
 }
 
