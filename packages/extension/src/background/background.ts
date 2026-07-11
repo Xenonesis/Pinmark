@@ -8,6 +8,18 @@ interface TabState {
 
 const tabStates = new Map<number, TabState>();
 
+async function postJson(url: string, body: unknown): Promise<void> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    throw new Error(`MCP server returned ${response.status} ${response.statusText}`);
+  }
+}
+
 function getTabState(tabId: number): TabState {
   if (!tabStates.has(tabId)) {
     tabStates.set(tabId, {
@@ -101,22 +113,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
           }
           
-          const mcpEndpoint = settings.mcpEndpoint || 'http://127.0.0.1:4747';
+          const mcpEndpoint = (settings.mcpEndpoint || 'http://127.0.0.1:4747').replace(/\/+$/, '');
           const sessionId = 'session_' + btoa(message.url).replace(/[^a-z0-9]/gi, '').substring(0, 10);
-          await fetch(`${mcpEndpoint}/sessions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: message.url, sessionId })
-          });
-          
-          await fetch(`${mcpEndpoint}/sessions/${sessionId}/annotations`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(message.item)
-          });
+          await postJson(`${mcpEndpoint}/sessions`, { url: message.url, sessionId });
+          await postJson(`${mcpEndpoint}/sessions/${sessionId}/annotations`, message.item);
           sendResponse({ success: true });
         } catch (e) {
-          sendResponse({ success: false, error: (e as Error).message });
+          const error = (e as Error).message;
+          sendResponse(error === 'Failed to fetch' ? { success: false, skipped: true } : { success: false, error });
         }
       })();
       return true;

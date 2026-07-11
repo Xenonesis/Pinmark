@@ -83,7 +83,7 @@ export class Store {
     return annotation;
   }
 
-  async addReply(annotationId: string, author: string, message: string): Promise<PinmarkAnnotation | undefined> {
+  async addReply(annotationId: string, author: string, message: string, role: 'human' | 'agent' = 'agent'): Promise<PinmarkAnnotation | undefined> {
     const annotation = this.getAnnotation(annotationId);
     if (!annotation) return undefined;
 
@@ -92,8 +92,8 @@ export class Store {
     }
 
     annotation.replies.push({
-      id: Math.random().toString(36).substring(2, 15),
-      author: 'agent',
+      id: crypto.randomUUID(),
+      author: role,
       message: `[${author}] ${message}`,
       timestamp: Date.now()
     });

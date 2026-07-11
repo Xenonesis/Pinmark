@@ -40,6 +40,7 @@ export type Message =
   | { type: 'CLEAR_FEEDBACK' }
   | { type: 'TOGGLE_MARKERS' }
   | { type: 'TOGGLE_PAUSE' }
+  | { type: 'SYNC_MCP'; url: string; item: FeedbackItem }
   | { type: 'CREATE_GITHUB_ISSUE'; url: string; content: string }
   | { type: 'UPDATE_SETTINGS'; settings: Partial<ExtensionSettings> };
 
@@ -50,8 +51,8 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   blockInteractions: false,
   hideUntilRestart: false,
   theme: 'auto',
-  mcpEndpoint: 'http://localhost:4747',
-  autoSync: true,
+  mcpEndpoint: 'http://127.0.0.1:4747',
+  autoSync: false,
   githubToken: '',
   githubRepo: '',
   webhookUrl: '',

@@ -24,6 +24,8 @@ const themeToggleBtn = document.getElementById('themeToggleBtn') as HTMLButtonEl
 const swatches = document.querySelectorAll('.swatch[data-color]') as NodeListOf<HTMLButtonElement>;
 
 
+const autoSyncToggle = document.getElementById('autoSync') as HTMLInputElement;
+const mcpEndpointInput = document.getElementById('mcpEndpoint') as HTMLInputElement;
 const webhookUrlInput = document.getElementById('webhookUrl') as HTMLInputElement;
 const githubTokenInput = document.getElementById('githubToken') as HTMLInputElement;
 const githubRepoInput = document.getElementById('githubRepo') as HTMLInputElement;
@@ -81,6 +83,8 @@ function loadSettings(settings: ExtensionSettings) {
   markerColorInput.value = color;
   updateSwatchSelection(color);
 
+  if (autoSyncToggle) autoSyncToggle.checked = settings.autoSync;
+  if (mcpEndpointInput) mcpEndpointInput.value = settings.mcpEndpoint || 'http://127.0.0.1:4747';
   if (webhookUrlInput) webhookUrlInput.value = settings.webhookUrl || '';
   if (githubTokenInput) githubTokenInput.value = settings.githubToken || '';
   if (githubRepoInput) githubRepoInput.value = settings.githubRepo || '';
@@ -250,6 +254,14 @@ closeAdvancedBtn?.addEventListener('click', () => {
 });
 
 // ── Integrations inputs ───────────────────────────────
+autoSyncToggle?.addEventListener('change', async () => {
+  await saveSetting('autoSync', autoSyncToggle.checked);
+});
+
+mcpEndpointInput?.addEventListener('input', async () => {
+  await saveSetting('mcpEndpoint', mcpEndpointInput.value.trim());
+});
+
 webhookUrlInput?.addEventListener('input', async () => {
   await saveSetting('webhookUrl', webhookUrlInput.value);
   if (currentTabId) chrome.tabs.sendMessage(currentTabId, { type: 'UPDATE_SETTINGS', settings: { webhookUrl: webhookUrlInput.value } }).catch(() => {});

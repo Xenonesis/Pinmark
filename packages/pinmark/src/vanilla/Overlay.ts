@@ -178,8 +178,10 @@ export class Overlay {
       return;
     }
 
-    // Don't intercept if user is typing in an input or textarea on the page
-    const activeElement = document.activeElement;
+    // Don't intercept if user is typing in an input or textarea — check both the
+    // page's active element and the one inside our shadow root (e.g. the layout
+    // panel's purpose textarea), since document.activeElement only reports the host.
+    const activeElement = this.shadowRoot.activeElement || document.activeElement;
     if (activeElement) {
       const tag = activeElement.tagName.toLowerCase();
       const isInput = tag === 'input' || tag === 'textarea' || (activeElement as HTMLElement).isContentEditable;
@@ -1076,6 +1078,9 @@ export class Overlay {
       if (!isRearrangeMode || this.isModalOpen) return;
       const target = e.target as HTMLElement;
       if (this.shadowRoot.contains(target) || target === this.container) return;
+      // Stop the overlay's handleClick from also firing a feedback modal for this click.
+      e.preventDefault();
+      e.stopPropagation();
       rearrangeTarget = target;
       rearrangeStartX = e.clientX;
       rearrangeStartY = e.clientY;
@@ -1089,7 +1094,7 @@ export class Overlay {
         rearrangeGhost = document.createElement('div');
         const rect = rearrangeTarget.getBoundingClientRect();
         rearrangeGhost.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;height:${rect.height}px;border:2px dashed #4ade80;background:rgba(34,197,94,0.1);pointer-events:none;z-index:2147483644;transition:all 0.1s;`;
-        document.body.appendChild(rearrangeGhost);
+        this.shadowRoot.appendChild(rearrangeGhost);
       }
       if (rearrangeGhost) {
         rearrangeGhost.style.transform = `translate(${dx}px, ${dy}px)`;
@@ -1131,7 +1136,7 @@ export class Overlay {
     }
   }
 
-  private async addLayoutAnnotation(_kind: string, name: string, clientX: number, clientY: number, purpose?: string) {
+  private addLayoutAnnotation(_kind: string, name: string, clientX: number, clientY: number, purpose?: string) {
     const target = (document.elementFromPoint(clientX, clientY) as HTMLElement) || document.body;
 
     const placeholderRect = {
@@ -1171,7 +1176,7 @@ export class Overlay {
     this.markerManager.addMarker(feedback);
   }
 
-  private async addRearrangeAnnotation(target: HTMLElement, clientX: number, clientY: number, purpose?: string) {
+  private addRearrangeAnnotation(target: HTMLElement, clientX: number, clientY: number, purpose?: string) {
     const elementInfo = this.elementAnalyzer.analyze(target);
     const oldRect = target.getBoundingClientRect();
 
