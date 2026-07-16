@@ -1603,7 +1603,7 @@ Output goes to `packages/extension/dist-firefox/`.
 ### Optional zip for submission
 
 ```bash
-cd packages/extension && zip -r dist-chromium.zip dist
+cd packages/extension/dist && zip -r ../dist-chromium.zip .
 ```
 
 ## Appendix AA: Security Hardening
@@ -1763,13 +1763,13 @@ Available commands:
 ### Chromium archive
 
 ```bash
-zip -r pinmark-chromium.zip packages/extension/dist/
+cd packages/extension/dist && zip -r ../../../pinmark-chromium.zip .
 ```
 
 ### Firefox archive
 
 ```bash
-zip -r pinmark-firefox.zip packages/extension/dist-firefox/
+cd packages/extension/dist-firefox && zip -r ../../../pinmark-firefox.zip .
 ```
 
 ### Verifying artifacts

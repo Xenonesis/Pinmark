@@ -25,6 +25,12 @@ if (Array.isArray(manifest.web_accessible_resources)) {
   }
 }
 
+// Firefox uses background.scripts instead of background.service_worker
+if (manifest.background && manifest.background.service_worker) {
+  manifest.background.scripts = [manifest.background.service_worker];
+  delete manifest.background.service_worker;
+}
+
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 
 console.log('[build-firefox] dist-firefox/ created — manifest cleaned for Firefox');

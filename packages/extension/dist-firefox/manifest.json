@@ -23,13 +23,15 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "service-worker-loader.js",
-    "type": "module"
+    "type": "module",
+    "scripts": [
+      "service-worker-loader.js"
+    ]
   },
   "content_scripts": [
     {
       "js": [
-        "assets/content.ts-loader-CTIiTD4Q.js"
+        "assets/content.ts-loader-DyXZyjjO.js"
       ],
       "matches": [
         "<all_urls>"
@@ -73,7 +75,7 @@
       "resources": [
         "assets/storage-D0vnfStI.js",
         "assets/messaging-Bxa8IKH6.js",
-        "assets/content.ts-9DdZaksn.js",
+        "assets/content.ts-DwpFf9Rx.js",
         "assets/main-world.ts-DJOL1BHs.js"
       ]
     }
