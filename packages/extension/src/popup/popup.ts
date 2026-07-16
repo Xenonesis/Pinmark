@@ -1,6 +1,7 @@
 import type { ExtensionSettings } from '../shared/types';
 import { sendMessage } from '../shared/messaging';
 import { getSettings, saveSettings } from '../shared/storage';
+import { setHTML } from "../../../pinmark/src/vanilla/domUtils";
 
 let currentTabId: number | null = null;
 let isActive = false;
@@ -49,7 +50,7 @@ async function applyTheme(theme: 'light' | 'dark' | 'auto') {
   document.body.classList.toggle('light', !isDark);
   
   if (themeToggleBtn) {
-    themeToggleBtn.innerHTML = THEME_ICONS[theme] || THEME_ICONS.auto;
+    setHTML(themeToggleBtn, THEME_ICONS[theme] || THEME_ICONS.auto);
     themeToggleBtn.title = `Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`;
   }
 }

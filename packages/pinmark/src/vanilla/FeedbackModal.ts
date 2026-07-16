@@ -1,3 +1,5 @@
+import { setHTML } from "./domUtils.js";
+
 const MODAL_STYLES = `
   @keyframes pmk-spin {
     from { transform: rotate(0deg); }
@@ -442,7 +444,7 @@ export class FeedbackModal {
     // Element info row
     const elementInfo = document.createElement('div');
     elementInfo.className = 'pinmark-modal-element-info';
-    elementInfo.innerHTML = this.formatElementInfo(element, smartName, componentInfo);
+    setHTML(elementInfo, this.formatElementInfo(element, smartName, componentInfo));
     header.appendChild(elementInfo);
     
     modal.appendChild(header);
@@ -460,10 +462,10 @@ export class FeedbackModal {
       const treeEl = document.createElement('div');
       treeEl.className = 'pinmark-modal-component-tree';
       const hierarchy = componentInfo.hierarchy.slice(-5); // last 5 in tree
-      treeEl.innerHTML = hierarchy.map((name, i) => {
-        const isLast = i === hierarchy.length - 1;
-        return `<span class="${isLast ? 'pinmark-modal-component-name' : ''}">${name}</span>`;
-      }).join(' <span style="opacity:0.3;font-size:10px;margin:0 4px">&gt;</span> ');
+      setHTML(treeEl, hierarchy.map((name, i) => {
+                const isLast = i === hierarchy.length - 1;
+                return `<span class="${isLast ? 'pinmark-modal-component-name' : ''}">${name}</span>`;
+              }).join(' <span style="opacity:0.3;font-size:10px;margin:0 4px">&gt;</span> '));
       body.appendChild(treeEl);
     }
 
@@ -480,7 +482,7 @@ export class FeedbackModal {
       toggleBtn.className = 'pinmark-modal-styles-toggle';
       toggleBtn.type = 'button';
       const chevronIcon = `<svg class="pinmark-modal-styles-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`;
-      toggleBtn.innerHTML = `${chevronIcon} Computed Styles (${Object.keys(computedStyles).length})`;
+      setHTML(toggleBtn, `${chevronIcon} Computed Styles (${Object.keys(computedStyles).length})`);
 
       const stylesBody = document.createElement('div');
       stylesBody.className = 'pinmark-modal-styles-body';
@@ -488,7 +490,7 @@ export class FeedbackModal {
       for (const [prop, val] of Object.entries(computedStyles)) {
         const row = document.createElement('div');
         row.className = 'pinmark-modal-style-row';
-        row.innerHTML = `<span class="pinmark-modal-style-prop">${prop}:</span><span class="pinmark-modal-style-val">${val};</span>`;
+        setHTML(row, `<span class="pinmark-modal-style-prop">${prop}:</span><span class="pinmark-modal-style-val">${val};</span>`);
         stylesBody.appendChild(row);
       }
 
@@ -508,7 +510,7 @@ export class FeedbackModal {
     markupContainer.style.cssText = 'margin-top:14px;position:relative;border:1px solid var(--pmk-border,rgba(255,255,255,0.1));border-radius:8px;overflow:hidden;background:var(--pmk-bg,#000);display:flex;flex-direction:column;min-height:100px;justify-content:center;align-items:center;';
 
     const loadAndSetupCanvas = (url: string) => {
-      markupContainer.innerHTML = '';
+      setHTML(markupContainer, '');
       markupContainer.style.minHeight = 'unset';
       markupContainer.style.display = 'block';
 
@@ -561,13 +563,13 @@ export class FeedbackModal {
       const loadingSpinner = document.createElement('div');
       loadingSpinner.className = 'pinmark-screenshot-loading';
       loadingSpinner.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#a1a1aa;font-size:11px;padding:32px 0;width:100%;height:100px;';
-      loadingSpinner.innerHTML = `
+      setHTML(loadingSpinner, `
         <svg class="pmk-spinner" style="width:20px;height:20px;animation:pmk-spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
           <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
           <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
         </svg>
         <span>Capturing screenshot...</span>
-      `;
+      `);
       markupContainer.appendChild(loadingSpinner);
     }
 

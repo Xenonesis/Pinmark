@@ -1,5 +1,6 @@
 import type { PinmarkSettings as ExtensionSettings } from '../core/types.js';
 import type { PinmarkAnnotation as FeedbackItem } from '@pinmark/core';
+import { setHTML } from "./domUtils.js";
 
 export interface MarkerCallbacks {
   onEdit: (id: string) => void;
@@ -227,7 +228,7 @@ export class MarkerManager {
 
     const editBtn = document.createElement('button');
     editBtn.className = 'pinmark-marker-btn edit';
-    editBtn.innerHTML = ICONS.edit;
+    setHTML(editBtn, ICONS.edit);
     editBtn.title = 'Edit';
     editBtn.onclick = (e) => {
       e.stopPropagation();
@@ -237,15 +238,15 @@ export class MarkerManager {
 
     const copyBtn = document.createElement('button');
     copyBtn.className = 'pinmark-marker-btn copy';
-    copyBtn.innerHTML = ICONS.copy;
+    setHTML(copyBtn, ICONS.copy);
     copyBtn.title = 'Copy';
     copyBtn.onclick = async (e) => {
       e.stopPropagation();
       e.preventDefault();
-      copyBtn.innerHTML = ICONS.check;
+      setHTML(copyBtn, ICONS.check);
       copyBtn.style.color = '#22c55e';
       setTimeout(() => {
-        copyBtn.innerHTML = ICONS.copy;
+        setHTML(copyBtn, ICONS.copy);
         copyBtn.style.color = '';
       }, 1000);
       this.callbacks.onCopy(feedback.id);
@@ -253,7 +254,7 @@ export class MarkerManager {
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'pinmark-marker-btn delete';
-    deleteBtn.innerHTML = ICONS.delete;
+    setHTML(deleteBtn, ICONS.delete);
     deleteBtn.title = 'Delete';
     deleteBtn.onclick = (e) => {
       e.stopPropagation();

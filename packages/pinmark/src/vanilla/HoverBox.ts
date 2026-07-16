@@ -1,5 +1,5 @@
 import { FrameworkDetector } from './FrameworkDetector.js';
-
+import { setHTML } from "./domUtils.js";
 
 const HOVER_BOX_STYLES = `
   .pinmark-hover-box {
@@ -141,7 +141,7 @@ export class HoverBox {
     });
 
     // Build label content
-    this.label.innerHTML = this.buildLabelHTML(target, rect);
+    setHTML(this.label, this.buildLabelHTML(target, rect));
 
     // Prevent top cutoff
     if (rect.top < 30) {
@@ -241,7 +241,7 @@ export class HoverBox {
     setTimeout(() => {
       if (!this.currentElement) {
         this.element.style.display = 'none';
-        this.label.innerHTML = '';
+        setHTML(this.label, '');
       }
     }, 120);
   }

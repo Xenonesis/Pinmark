@@ -1,3 +1,5 @@
+import { setHTML } from "./domUtils.js";
+
 export const LAUNCHER_STYLES = `
   :host {
     all: initial;
@@ -143,16 +145,16 @@ export class Launcher {
     // Hamburger / X icon
     const icon = document.createElement('div');
     icon.className = 'pinmark-launcher-icon';
-    icon.innerHTML = `
+    setHTML(icon, `
       <span class="pinmark-launcher-line"></span>
       <span class="pinmark-launcher-line"></span>
       <span class="pinmark-launcher-line"></span>
-    `;
+    `);
 
     // Sparkle badge replaced by Pinmark logo (top-right of button)
     this.badgeEl = document.createElement('div');
     this.badgeEl.className = 'pinmark-launcher-badge';
-    this.badgeEl.innerHTML = `<svg viewBox="0 0 128 128" aria-hidden="true"><path d="M64 118 C64 118 102 82 102 50 C102 26 86 8 64 8 C42 8 26 26 26 50 C26 82 64 118 64 118 Z" fill="#E11D48"/><circle cx="64" cy="48" r="14" fill="#FFFFFF"/><circle cx="64" cy="48" r="6" fill="#4338CA"/></svg>`;
+    setHTML(this.badgeEl, `<svg viewBox="0 0 128 128" aria-hidden="true"><path d="M64 118 C64 118 102 82 102 50 C102 26 86 8 64 8 C42 8 26 26 26 50 C26 82 64 118 64 118 Z" fill="#E11D48"/><circle cx="64" cy="48" r="14" fill="#FFFFFF"/><circle cx="64" cy="48" r="6" fill="#4338CA"/></svg>`);
 
     // Tooltip
     const tooltip = document.createElement('div');

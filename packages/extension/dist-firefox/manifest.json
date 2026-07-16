@@ -6,7 +6,12 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "pinmark@agentation.com",
-      "strict_min_version": "128.0"
+      "strict_min_version": "128.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   },
   "icons": {
@@ -31,7 +36,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/content.ts-loader-DyXZyjjO.js"
+        "assets/content.ts-loader-DwG3zm_h.js"
       ],
       "matches": [
         "<all_urls>"
@@ -75,7 +80,7 @@
       "resources": [
         "assets/storage-D0vnfStI.js",
         "assets/messaging-Bxa8IKH6.js",
-        "assets/content.ts-DwpFf9Rx.js",
+        "assets/content.ts-BE2jWAAH.js",
         "assets/main-world.ts-DJOL1BHs.js"
       ]
     }

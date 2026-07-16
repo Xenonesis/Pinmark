@@ -11,6 +11,7 @@ import type { PinmarkSettings, PinmarkConfig } from '../core/types.js';
 import type { PinmarkAnnotation as FeedbackItem } from '@pinmark/core';
 import html2canvas from 'html2canvas';
 import * as rrweb from 'rrweb';
+import { setHTML } from "./domUtils.js";
 
 const OVERLAY_STYLES = `
   :host {
@@ -684,7 +685,7 @@ export class Overlay {
 
     const btn = document.createElement('div');
     btn.className = 'pinmark-selection-btn';
-    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Add Annotation`;
+    setHTML(btn, `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Add Annotation`);
     
     btn.style.cssText = `
       position: fixed;
@@ -941,10 +942,10 @@ export class Overlay {
 
     const header = document.createElement('div');
     header.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08);';
-    header.innerHTML = `
+    setHTML(header, `
       <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.9);">Layout Mode</span>
       <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:auto;">Press L to close</span>
-    `;
+    `);
     panel.appendChild(header);
 
     // ── Rearrange mode ──────────────────────────────────────
@@ -956,7 +957,7 @@ export class Overlay {
 
     const rearrangeBtn = document.createElement('button');
     rearrangeBtn.style.cssText = 'width:100%;padding:7px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;margin-bottom:6px;font-family:inherit;transition:all 0.15s;display:flex;align-items:center;gap:6px;';
-    rearrangeBtn.innerHTML = '↕️ Rearrange Sections';
+    setHTML(rearrangeBtn, '↕️ Rearrange Sections');
     rearrangeBtn.title = 'Click any page element to drag it to a new position';
     rearrangeBtn.onclick = () => {
       isRearrangeMode = !isRearrangeMode;
@@ -979,7 +980,7 @@ export class Overlay {
 
     const wireBtn = document.createElement('button');
     wireBtn.style.cssText = 'width:100%;padding:7px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;margin-bottom:4px;font-family:inherit;transition:all 0.15s;display:flex;align-items:center;gap:6px;';
-    wireBtn.innerHTML = '🔲 Wireframe Mode';
+    setHTML(wireBtn, '🔲 Wireframe Mode');
     wireBtn.onclick = () => {
       wireframeActive = !wireframeActive;
       wireframeOverlay.style.display = wireframeActive ? 'block' : 'none';
@@ -1037,7 +1038,7 @@ export class Overlay {
     for (const comp of COMPONENTS) {
       const item = document.createElement('div');
       item.style.cssText = 'padding:8px 6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:7px;cursor:grab;text-align:center;font-size:11px;color:rgba(255,255,255,0.6);transition:all 0.15s;user-select:none;';
-      item.innerHTML = `<div style="font-size:18px;margin-bottom:3px;">${comp.icon}</div>${comp.name}`;
+      setHTML(item, `<div style="font-size:18px;margin-bottom:3px;">${comp.icon}</div>${comp.name}`);
       item.title = `Drag to place ${comp.name}`;
       item.draggable = true;
 

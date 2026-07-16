@@ -1,4 +1,4 @@
-
+import { setHTML } from "./domUtils.js";
 
 const TOOLBAR_STYLES = `
   .pinmark-toolbar {
@@ -375,7 +375,7 @@ export class Toolbar {
   private setButtonIcon(btn: HTMLButtonElement, iconHtml: string) {
     const iconContainer = btn.querySelector('.pinmark-toolbar-icon');
     if (iconContainer) {
-      iconContainer.innerHTML = iconHtml;
+      setHTML(iconContainer, iconHtml);
     }
   }
 
@@ -395,9 +395,9 @@ export class Toolbar {
     
     const svgContent = ICONS[iconKey];
     if (svgContent) {
-      iconContainer.innerHTML = svgContent;
+      setHTML(iconContainer, svgContent);
     } else {
-      iconContainer.innerHTML = '';
+      setHTML(iconContainer, '');
     }
     
     btn.appendChild(iconContainer);
@@ -408,7 +408,7 @@ export class Toolbar {
     tooltip.className = 'pinmark-tooltip';
     if (title.includes('[')) {
       const parts = title.split('[');
-      tooltip.innerHTML = `${parts[0].trim()} <span style="opacity:0.6;font-size:10px;margin-left:4px">${parts[1].replace(']', '')}</span>`;
+      setHTML(tooltip, `${parts[0].trim()} <span style="opacity:0.6;font-size:10px;margin-left:4px">${parts[1].replace(']', '')}</span>`);
     } else {
       tooltip.textContent = title;
     }
