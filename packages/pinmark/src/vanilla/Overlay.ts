@@ -96,6 +96,13 @@ export class Overlay {
   private dragStartX = 0;
   private dragStartY = 0;
 
+  // Layout mode state
+  private isRearrangeMode = false;
+  private rearrangeTarget: HTMLElement | null = null;
+  private rearrangeGhost: HTMLElement | null = null;
+  private rearrangeStartX = 0;
+  private rearrangeStartY = 0;
+
   private consoleLogs: any[] = [];
   private networkRequests: any[] = [];
   
@@ -317,6 +324,9 @@ export class Overlay {
     // Cooldown: ignore clicks for 500ms after modal closes to prevent the same
     // click event (or any rapid follow-up click) from reopening the modal
     if (Date.now() - this._modalClosedAt < 500) return;
+
+    // Ignore clicks if we're in rearrange mode, avoiding interference with layout interactions
+    if (this.isRearrangeMode) return;
 
     const target = e.target as HTMLElement;
 
@@ -977,22 +987,22 @@ export class Overlay {
     panel.appendChild(header);
 
     // ── Rearrange mode ──────────────────────────────────────
-    let isRearrangeMode = false;
-    let rearrangeTarget: HTMLElement | null = null;
-    let rearrangeGhost: HTMLElement | null = null;
-    let rearrangeStartX = 0;
-    let rearrangeStartY = 0;
+    this.isRearrangeMode = false;
+    this.rearrangeTarget = null;
+    this.rearrangeGhost = null;
+    this.rearrangeStartX = 0;
+    this.rearrangeStartY = 0;
 
     const rearrangeBtn = document.createElement('button');
     rearrangeBtn.style.cssText = 'width:100%;padding:7px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;margin-bottom:6px;font-family:inherit;transition:all 0.15s;display:flex;align-items:center;gap:6px;';
     setHTML(rearrangeBtn, '↕️ Rearrange Sections');
     rearrangeBtn.title = 'Click any page element to drag it to a new position';
     rearrangeBtn.onclick = () => {
-      isRearrangeMode = !isRearrangeMode;
-      rearrangeBtn.style.background = isRearrangeMode ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)';
-      rearrangeBtn.style.borderColor = isRearrangeMode ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.1)';
-      rearrangeBtn.style.color = isRearrangeMode ? '#4ade80' : 'rgba(255,255,255,0.7)';
-      if (isRearrangeMode) {
+      this.isRearrangeMode = !this.isRearrangeMode;
+      rearrangeBtn.style.background = this.isRearrangeMode ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)';
+      rearrangeBtn.style.borderColor = this.isRearrangeMode ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.1)';
+      rearrangeBtn.style.color = this.isRearrangeMode ? '#4ade80' : 'rgba(255,255,255,0.7)';
+      if (this.isRearrangeMode) {
         this.showToast('↕️ Rearrange mode ON — click any element to drag it');
       } else {
         this.showToast('Rearrange mode OFF');
@@ -1016,6 +1026,34 @@ export class Overlay {
       wireBtn.style.borderColor = wireframeActive ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.1)';
       wireBtn.style.color = wireframeActive ? '#60a5fa' : 'rgba(255,255,255,0.7)';
       opacityRow.style.display = wireframeActive ? 'flex' : 'none';
+
+      // Toggle body class for wireframe styling
+      if (wireframeActive) {
+        document.body.classList.add('pinmark-wireframe-active');
+        if (!document.getElementById('pinmark-wireframe-style')) {
+          const style = document.createElement('style');
+          style.id = 'pinmark-wireframe-style';
+          style.textContent = `
+            body.pinmark-wireframe-active *:not(pinmark-overlay) {
+              background-color: transparent !important;
+              color: transparent !important;
+              box-shadow: none !important;
+              border: 1px solid rgba(150, 150, 150, 0.2) !important;
+              background-image: none !important;
+            }
+            body.pinmark-wireframe-active img, 
+            body.pinmark-wireframe-active svg, 
+            body.pinmark-wireframe-active video, 
+            body.pinmark-wireframe-active iframe {
+              opacity: 0.5 !important;
+              filter: grayscale(100%) !important;
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      } else {
+        document.body.classList.remove('pinmark-wireframe-active');
+      }
     };
     panel.appendChild(wireBtn);
 
@@ -1089,6 +1127,7 @@ export class Overlay {
     panel.appendChild(grid);
 
     // Drop handler on document
+    const onDragEnter = (e: DragEvent) => { e.preventDefault(); };
     const onDragOver = (e: DragEvent) => { e.preventDefault(); };
     const onDrop = (e: DragEvent) => {
       e.preventDefault();
@@ -1099,56 +1138,59 @@ export class Overlay {
         }
       } catch {}
     };
+    document.addEventListener('dragenter', onDragEnter);
     document.addEventListener('dragover', onDragOver);
     document.addEventListener('drop', onDrop);
 
     // Rearrange mode event handlers
     const onRearrangeMouseDown = (e: MouseEvent) => {
-      if (!isRearrangeMode || this.isModalOpen) return;
+      if (!this.isRearrangeMode || this.isModalOpen) return;
       const target = e.target as HTMLElement;
       if (this.shadowRoot.contains(target) || target === this.container) return;
       // Stop the overlay's handleClick from also firing a feedback modal for this click.
       e.preventDefault();
       e.stopPropagation();
-      rearrangeTarget = target;
-      rearrangeStartX = e.clientX;
-      rearrangeStartY = e.clientY;
+      this.rearrangeTarget = target;
+      this.rearrangeStartX = e.clientX;
+      this.rearrangeStartY = e.clientY;
     };
     const onRearrangeMouseMove = (e: MouseEvent) => {
-      if (!isRearrangeMode || !rearrangeTarget) return;
-      const dx = e.clientX - rearrangeStartX;
-      const dy = e.clientY - rearrangeStartY;
-      if (!rearrangeGhost && Math.abs(dx) + Math.abs(dy) > 5) {
+      if (!this.isRearrangeMode || !this.rearrangeTarget) return;
+      const dx = e.clientX - this.rearrangeStartX;
+      const dy = e.clientY - this.rearrangeStartY;
+      if (!this.rearrangeGhost && Math.abs(dx) + Math.abs(dy) > 5) {
         // Create ghost overlay on the target
-        rearrangeGhost = document.createElement('div');
-        const rect = rearrangeTarget.getBoundingClientRect();
-        rearrangeGhost.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;height:${rect.height}px;border:2px dashed #4ade80;background:rgba(34,197,94,0.1);pointer-events:none;z-index:2147483644;transition:all 0.1s;`;
-        this.shadowRoot.appendChild(rearrangeGhost);
+        this.rearrangeGhost = document.createElement('div');
+        const rect = this.rearrangeTarget.getBoundingClientRect();
+        this.rearrangeGhost.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;height:${rect.height}px;border:2px dashed #4ade80;background:rgba(34,197,94,0.1);pointer-events:none;z-index:2147483644;transition:all 0.1s;`;
+        this.shadowRoot.appendChild(this.rearrangeGhost);
       }
-      if (rearrangeGhost) {
-        rearrangeGhost.style.transform = `translate(${dx}px, ${dy}px)`;
+      if (this.rearrangeGhost) {
+        this.rearrangeGhost.style.transform = `translate(${dx}px, ${dy}px)`;
       }
     };
     const onRearrangeMouseUp = (e: MouseEvent) => {
-      if (!isRearrangeMode || !rearrangeTarget) return;
-      if (rearrangeGhost) {
-        rearrangeGhost.remove();
-        rearrangeGhost = null;
+      if (!this.isRearrangeMode || !this.rearrangeTarget) return;
+      if (this.rearrangeGhost) {
+        this.rearrangeGhost.remove();
+        this.rearrangeGhost = null;
         // Create a rearrange annotation
-        this.addRearrangeAnnotation(rearrangeTarget, e.clientX, e.clientY, purposeInput.value.trim());
+        this.addRearrangeAnnotation(this.rearrangeTarget, e.clientX, e.clientY, purposeInput.value.trim());
       }
-      rearrangeTarget = null;
+      this.rearrangeTarget = null;
     };
     document.addEventListener('mousedown', onRearrangeMouseDown);
     document.addEventListener('mousemove', onRearrangeMouseMove);
     document.addEventListener('mouseup', onRearrangeMouseUp);
 
     (panel as any)._cleanup = () => {
+      document.removeEventListener('dragenter', onDragEnter);
       document.removeEventListener('dragover', onDragOver);
       document.removeEventListener('drop', onDrop);
       document.removeEventListener('mousedown', onRearrangeMouseDown);
       document.removeEventListener('mousemove', onRearrangeMouseMove);
       document.removeEventListener('mouseup', onRearrangeMouseUp);
+      document.body.classList.remove('pinmark-wireframe-active');
       wireframeOverlay.remove();
     };
 
