@@ -389,26 +389,58 @@ export class Overlay {
     };
   }
 
-  private highlightLayoutShift(el: HTMLElement) {
+  private highlightLayoutShift(el: HTMLElement, score: number) {
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
+    
     const box = document.createElement('div');
     box.style.cssText = `
       position: fixed;
       top: ${rect.top}px; left: ${rect.left}px;
       width: ${rect.width}px; height: ${rect.height}px;
-      border: 2px dashed var(--pmk-danger, #ef4444);
-      background: rgba(239, 68, 68, 0.15);
+      border: 2px solid #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), inset 0 0 10px rgba(245, 158, 11, 0.15);
       pointer-events: none;
       z-index: 2147483647;
-      transition: opacity 1.5s ease-out;
+      border-radius: 4px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      transition: opacity 1.2s cubic-bezier(0.4, 0, 1, 1);
+      overflow: hidden;
     `;
+
+    const badge = document.createElement('div');
+    badge.textContent = `Shift: ${score.toFixed(3)}`;
+    badge.style.cssText = `
+      background: #f59e0b;
+      color: #fff;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      padding: 3px 6px;
+      border-bottom-left-radius: 4px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    `;
+
+    box.appendChild(badge);
     this.shadowRoot.appendChild(box);
-    void box.offsetWidth;
+
+    // Pulse animation
+    if (typeof box.animate === 'function') {
+      box.animate([
+        { transform: 'scale(0.98)', opacity: 0.5 },
+        { transform: 'scale(1.01)', opacity: 1, boxShadow: '0 0 30px rgba(245, 158, 11, 0.6), inset 0 0 15px rgba(245, 158, 11, 0.3)' },
+        { transform: 'scale(1)', opacity: 1 }
+      ], { duration: 400, easing: 'ease-out' });
+    }
+
     setTimeout(() => {
       box.style.opacity = '0';
-      setTimeout(() => box.remove(), 1500);
-    }, 500);
+      setTimeout(() => box.remove(), 1200);
+    }, 1800);
   }
 
   private async promptForFeedback(element: HTMLElement, overrideRect?: DOMRect) {
@@ -1447,9 +1479,10 @@ export class Overlay {
               this.perfMetrics.push(entry.toJSON());
               if (entry.entryType === 'layout-shift') {
                 const sources = (entry as any).sources || [];
+                const shiftScore = (entry as any).value || 0;
                 for (const src of sources) {
                   if (src.node && src.node.nodeType === 1) {
-                    this.highlightLayoutShift(src.node as HTMLElement);
+                    this.highlightLayoutShift(src.node as HTMLElement, shiftScore);
                   }
                 }
               }
