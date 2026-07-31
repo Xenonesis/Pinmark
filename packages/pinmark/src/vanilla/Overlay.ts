@@ -99,6 +99,8 @@ export class Overlay {
   // Layout mode state
   private isRearrangeMode = false;
   private rearrangeTarget: HTMLElement | null = null;
+  private isWireframeActive = false;
+  private wireframeOpacity = 70;
   private rearrangeGhost: HTMLElement | null = null;
   private rearrangeStartX = 0;
   private rearrangeStartY = 0;
@@ -1013,24 +1015,29 @@ export class Overlay {
     panel.appendChild(rearrangeBtn);
 
     // Wireframe toggle with opacity slider
-    let wireframeActive = false;
     const wireframeOverlay = document.createElement('div');
-    wireframeOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);pointer-events:none;z-index:2147483640;display:none;transition:opacity 0.2s;';
+    wireframeOverlay.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,${this.wireframeOpacity / 100});pointer-events:none;z-index:2147483640;transition:opacity 0.2s;`;
+    wireframeOverlay.style.display = this.isWireframeActive ? 'block' : 'none';
     this.shadowRoot.appendChild(wireframeOverlay);
 
     const wireBtn = document.createElement('button');
     wireBtn.style.cssText = 'width:100%;padding:7px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;margin-bottom:4px;font-family:inherit;transition:all 0.15s;display:flex;align-items:center;gap:6px;';
     setHTML(wireBtn, '🔲 Wireframe Mode');
-    wireBtn.onclick = () => {
-      wireframeActive = !wireframeActive;
-      wireframeOverlay.style.display = wireframeActive ? 'block' : 'none';
-      wireBtn.style.background = wireframeActive ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)';
-      wireBtn.style.borderColor = wireframeActive ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.1)';
-      wireBtn.style.color = wireframeActive ? '#60a5fa' : 'rgba(255,255,255,0.7)';
-      opacityRow.style.display = wireframeActive ? 'flex' : 'none';
+    
+    const updateWireBtnStyle = () => {
+      wireBtn.style.background = this.isWireframeActive ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)';
+      wireBtn.style.borderColor = this.isWireframeActive ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.1)';
+      wireBtn.style.color = this.isWireframeActive ? '#60a5fa' : 'rgba(255,255,255,0.7)';
+    };
+    updateWireBtnStyle();
 
+    wireBtn.onclick = () => {
+      this.isWireframeActive = !this.isWireframeActive;
+      wireframeOverlay.style.display = this.isWireframeActive ? 'block' : 'none';
+      updateWireBtnStyle();
+      opacityRow.style.display = this.isWireframeActive ? 'flex' : 'none';
       // Toggle body class for wireframe styling
-      if (wireframeActive) {
+      if (this.isWireframeActive) {
         document.body.classList.add('pinmark-wireframe-active');
         if (!document.getElementById('pinmark-wireframe-style')) {
           const style = document.createElement('style');
@@ -1059,9 +1066,8 @@ export class Overlay {
     };
     panel.appendChild(wireBtn);
 
-    // Opacity slider row
     const opacityRow = document.createElement('div');
-    opacityRow.style.cssText = 'display:none;align-items:center;gap:6px;padding:4px 6px 8px 6px;';
+    opacityRow.style.cssText = `display:${this.isWireframeActive ? 'flex' : 'none'};align-items:center;gap:6px;padding:4px 6px 8px 6px;`;
     const opacityLabel = document.createElement('span');
     opacityLabel.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);white-space:nowrap;';
     opacityLabel.textContent = 'Opacity';
@@ -1069,15 +1075,15 @@ export class Overlay {
     opacitySlider.type = 'range';
     opacitySlider.min = '0';
     opacitySlider.max = '100';
-    opacitySlider.value = '70';
+    opacitySlider.value = this.wireframeOpacity.toString();
     opacitySlider.style.cssText = 'flex:1;height:4px;accent-color:#3b82f6;cursor:pointer;';
     const opacityVal = document.createElement('span');
     opacityVal.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.4);min-width:28px;text-align:right;';
-    opacityVal.textContent = '70%';
+    opacityVal.textContent = this.wireframeOpacity + '%';
     opacitySlider.oninput = () => {
-      const pct = parseInt(opacitySlider.value, 10);
-      opacityVal.textContent = pct + '%';
-      wireframeOverlay.style.background = `rgba(0,0,0,${pct / 100})`;
+      this.wireframeOpacity = parseInt(opacitySlider.value, 10);
+      opacityVal.textContent = this.wireframeOpacity + '%';
+      wireframeOverlay.style.background = `rgba(0,0,0,${this.wireframeOpacity / 100})`;
     };
     opacityRow.appendChild(opacityLabel);
     opacityRow.appendChild(opacitySlider);
@@ -1194,8 +1200,8 @@ export class Overlay {
       document.removeEventListener('mouseup', onRearrangeMouseUp);
       document.body.classList.remove('pinmark-wireframe-active');
       wireframeOverlay.remove();
+      this.isRearrangeMode = false;
     };
-
     this.shadowRoot.appendChild(panel);
     this.layoutPanel = panel;
   }
@@ -1538,8 +1544,10 @@ export class Overlay {
   }
 
   clearAll() {
+    if (this.feedbackManager.getAll().length === 0) return;
     this.feedbackManager.clearAll();
     this.markerManager.clearAll();
+    this.showToast('Cleared all annotations');
   }
 
   clearAllMarkers() {
