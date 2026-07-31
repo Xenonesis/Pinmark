@@ -2,7 +2,11 @@
 
 <div align="center">
 
-  <img src="packages/extension/assets/logo.png" alt="Pinmark" width="320">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="packages/extension/assets/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="packages/extension/assets/logo-light.png">
+    <img alt="Pinmark" src="packages/extension/assets/logo-dark.png" width="320">
+  </picture>
 
   **Visual feedback annotation tool for developers with native AI-Agent Parity & MCP Server**
 
