@@ -22,3 +22,14 @@ npm-debug.log*
 # Temp scripts
 *.ps1
 nul
+
+# Scratch / test artifacts
+.mcp.json
+mcp.json
+.omp.json
+clones/
+generated-tests/
+out/
+test-*.js
+test-*.html
+test-*.mjs

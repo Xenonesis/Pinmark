@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "pinmark": {
-      "command": "node",
-      "args": ["packages/mcp/dist/cli.js", "server"]
-    }
-  }
-}
