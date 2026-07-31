@@ -365,6 +365,51 @@ export class Overlay {
     // Default behavior for non-target clicks when blocking is disabled
     // (do nothing, let event propagate)
   };
+  private getDomAndMemoryMetrics(element?: HTMLElement) {
+    let elementDepth = 0;
+    if (element) {
+      let curr: HTMLElement | null = element;
+      while (curr) { elementDepth++; curr = curr.parentElement; }
+    }
+    const totalNodes = document.getElementsByTagName('*').length;
+    
+    let memoryMetrics = undefined;
+    const perf = performance as any;
+    if (perf && perf.memory) {
+      memoryMetrics = {
+        jsHeapSizeLimit: perf.memory.jsHeapSizeLimit,
+        totalJSHeapSize: perf.memory.totalJSHeapSize,
+        usedJSHeapSize: perf.memory.usedJSHeapSize
+      };
+    }
+    
+    return {
+      domMetrics: { totalNodes, elementDepth },
+      ...(memoryMetrics ? { memoryMetrics } : {})
+    };
+  }
+
+  private highlightLayoutShift(el: HTMLElement) {
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const box = document.createElement('div');
+    box.style.cssText = `
+      position: fixed;
+      top: ${rect.top}px; left: ${rect.left}px;
+      width: ${rect.width}px; height: ${rect.height}px;
+      border: 2px dashed var(--pmk-danger, #ef4444);
+      background: rgba(239, 68, 68, 0.15);
+      pointer-events: none;
+      z-index: 2147483647;
+      transition: opacity 1.5s ease-out;
+    `;
+    this.shadowRoot.appendChild(box);
+    void box.offsetWidth;
+    setTimeout(() => {
+      box.style.opacity = '0';
+      setTimeout(() => box.remove(), 1500);
+    }, 500);
+  }
 
   private async promptForFeedback(element: HTMLElement, overrideRect?: DOMRect) {
     const selection = window.getSelection();
@@ -513,7 +558,7 @@ export class Overlay {
       sessionReplayEvents: [...this.rrwebEvents],
       performanceMetrics: [...this.perfMetrics],
       fpsMetrics: [...this.fpsHistory],
-      markerType: this.isMultiSelectActive ? 'multi' : (overrideRect ? 'area' : 'single'),
+      ...this.getDomAndMemoryMetrics(element),
       ...(overrideRect ? { areaRect: { x: overrideRect.x + scrollLeft, y: overrideRect.y + scrollTop, width: overrideRect.width, height: overrideRect.height } } : {})
     };
 
@@ -869,6 +914,7 @@ export class Overlay {
       sessionReplayEvents: [...this.rrwebEvents],
       performanceMetrics: [...this.perfMetrics],
       fpsMetrics: [...this.fpsHistory],
+      ...this.getDomAndMemoryMetrics(element),
     };
 
     this.feedbackManager.add(feedback);
@@ -1261,6 +1307,7 @@ export class Overlay {
       sessionRecording: [],
       performanceMetrics: [...this.perfMetrics],
       fpsMetrics: [...this.fpsHistory],
+      ...this.getDomAndMemoryMetrics(target),
       markerType: 'area',
       areaRect: { x: placeholderRect.x, y: placeholderRect.y, width: placeholderRect.width, height: placeholderRect.height },
       kind: 'placement'
@@ -1302,6 +1349,7 @@ export class Overlay {
       sessionRecording: [],
       performanceMetrics: [...this.perfMetrics],
       fpsMetrics: [...this.fpsHistory],
+      ...this.getDomAndMemoryMetrics(target),
       markerType: 'area',
       areaRect: { x: placeholderRect.x, y: placeholderRect.y, width: placeholderRect.width, height: placeholderRect.height },
       kind: 'rearrange'
@@ -1397,6 +1445,14 @@ export class Overlay {
           const obs = new PerformanceObserver((list) => {
             for (const entry of list.getEntries()) {
               this.perfMetrics.push(entry.toJSON());
+              if (entry.entryType === 'layout-shift') {
+                const sources = (entry as any).sources || [];
+                for (const src of sources) {
+                  if (src.node && src.node.nodeType === 1) {
+                    this.highlightLayoutShift(src.node as HTMLElement);
+                  }
+                }
+              }
             }
             const cutoff = performance.now() - 15000;
             this.perfMetrics = this.perfMetrics.filter(e => e.startTime >= cutoff);

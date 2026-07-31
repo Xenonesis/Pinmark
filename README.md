@@ -196,6 +196,7 @@ When you annotate, Pinmark snapshots the surrounding developer context:
 - **Console capture** — Grabs `console.error` and `console.warn` entries from the browser console.
 - **State snapshot** — Optional capture of `localStorage`, `sessionStorage`, and cookies.
 - **Session recording** — Uses `rrweb` to record DOM mutations and replay them if needed.
+- **FPS metrics** — Captures frames-per-second samples during annotation to flag jank or animation stalls.
 
 ### Keyboard Shortcuts
 
@@ -749,6 +750,8 @@ element         Object    ElementInfoSchema (see above)
 consoleLogs     []?       Console entries captured during annotation window
 networkRequests []?       XHR / Fetch requests captured during annotation window
 sessionRecording[]?      rrweb events up to the annotation moment
+  performanceMetrics[]?    PerformanceObserver entries captured during annotation
+  fpsMetrics       []?    Frames-per-second samples captured during annotation
 areaRect        Object?   Bounding rect of drag selection (x, y, w, h)
 state           Object?   Storage snapshot
   localStorage  {}?
@@ -1139,6 +1142,11 @@ Query and hash are not separated.
 
 - XHR / Fetch hooks are installed once on `initializeOverlay` and re-attached after SPA navigation because the overlay is recreated.
 - On long-lived pages, captured request arrays can grow unbounded. Recommend discarding entries older than a configurable window.
+
+### FPS capture
+
+- A `requestAnimationFrame` loop samples frames per second every 1s and keeps a 15s rolling window.
+- Samples are attached to annotations as `fpsMetrics` so agents can correlate visual jank with DOM changes.
 
 ### Bundle size targets
 

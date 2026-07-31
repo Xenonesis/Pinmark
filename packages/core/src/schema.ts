@@ -58,6 +58,15 @@ export const PinmarkAnnotationSchema = z.object({
     timestamp: z.number(),
     fps: z.number()
   })).optional(),
+  domMetrics: z.object({
+    totalNodes: z.number(),
+    elementDepth: z.number()
+  }).optional(),
+  memoryMetrics: z.object({
+    jsHeapSizeLimit: z.number(),
+    totalJSHeapSize: z.number(),
+    usedJSHeapSize: z.number()
+  }).optional(),
   areaRect: z.object({
     x: z.number(),
     y: z.number(),

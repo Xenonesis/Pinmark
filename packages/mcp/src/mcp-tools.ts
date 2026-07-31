@@ -196,6 +196,17 @@ export function registerMcpTools(server: Server) {
             },
             required: ["annotationId"]
           }
+        },
+        {
+          name: "pinmark_suggest_perf_fix",
+          description: "Generates instructions for fixing a performance issue in a specific component. Takes the annotation ID, analyzes DOM and React/Vue component data, and returns a suggested fix strategy for the AI to implement.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              annotationId: { type: "string" }
+            },
+            required: ["annotationId"]
+          }
         }
       ],
     };
@@ -434,8 +445,10 @@ export function registerMcpTools(server: Server) {
         const metrics = annotation.performanceMetrics || [];
         const fpsMetrics = annotation.fpsMetrics || [];
         const networkRequests = annotation.networkRequests || [];
+        const domMetrics = annotation.domMetrics;
+        const memMetrics = annotation.memoryMetrics;
         
-        if (metrics.length === 0 && fpsMetrics.length === 0) {
+        if (metrics.length === 0 && fpsMetrics.length === 0 && !domMetrics && !memMetrics) {
           return {
             content: [{ type: "text", text: `No performance metrics captured for annotation ${annotationId}.` }]
           };
@@ -453,6 +466,20 @@ export function registerMcpTools(server: Server) {
         });
 
         let report = `## Performance Metrics for Annotation ${annotationId}\n\n`;
+
+        if (domMetrics) {
+          report += `### DOM Complexity\n`;
+          report += `- Total DOM Nodes: ${domMetrics.totalNodes}\n`;
+          report += `- Pinned Element Depth: ${domMetrics.elementDepth}\n\n`;
+        }
+
+        if (memMetrics) {
+          const toMB = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
+          report += `### JS Memory (Heap)\n`;
+          report += `- Used Heap Size: ${toMB(memMetrics.usedJSHeapSize)} MB\n`;
+          report += `- Total Heap Limit: ${toMB(memMetrics.jsHeapSizeLimit)} MB\n\n`;
+        }
+
         report += `**Total Blocking Time (TBT):** ${tbt.toFixed(2)}ms\n\n`;
         if (fpsMetrics.length > 0) {
           const avgFps = fpsMetrics.reduce((sum: number, f: any) => sum + f.fps, 0) / fpsMetrics.length;
@@ -501,6 +528,7 @@ export function registerMcpTools(server: Server) {
           report += `- Paint ${i + 1}: ${lcp.startTime.toFixed(2)}ms\n`;
         });
 
+
         return {
           content: [
             {
@@ -508,6 +536,47 @@ export function registerMcpTools(server: Server) {
               text: report,
             },
           ],
+        };
+      }
+
+      case "pinmark_suggest_perf_fix": {
+        const annotationId = String(request.params.arguments?.annotationId);
+        const annotation = store.getAnnotation(annotationId);
+        if (!annotation) {
+          throw new McpError(ErrorCode.InvalidParams, `Annotation ${annotationId} not found`);
+        }
+
+        const el = annotation.element;
+        const comp = el.component;
+        const dom = annotation.domMetrics;
+        const hasHeavyDOM = dom && dom.totalNodes > 1500;
+        const hasDeepNesting = dom && dom.elementDepth > 20;
+
+        let prompt = `Analyze the following performance and component data for Annotation ${annotationId}, and output a suggested code fix to the user.\n\n`;
+        if (comp) {
+          prompt += `**Component Detected:** ${comp.name} (${comp.framework})\n`;
+          if (comp.filePath) prompt += `**File:** ${comp.filePath}\n`;
+        } else {
+          prompt += `**Target Element:** <${el.tagName.toLowerCase()}> with classes: ${el.classes.join(', ')}\n`;
+        }
+
+        prompt += `\n**Performance Issues Detected:**\n`;
+        if (hasHeavyDOM) prompt += `- The DOM is extremely large (${dom.totalNodes} nodes). Suggest virtualization, pagination, or lazy-loading off-screen elements.\n`;
+        if (hasDeepNesting) prompt += `- The element is deeply nested (Depth: ${dom.elementDepth}). Suggest flattening the DOM structure to speed up Layout Recalculation.\n`;
+        
+        const longTasks = (annotation.performanceMetrics || []).filter((m: any) => m.entryType === 'longtask');
+        if (longTasks.length > 0) {
+           prompt += `- ${longTasks.length} Long Task(s) detected blocking the main thread. Suggest wrapping expensive calculations in \`useMemo\`, breaking up work with \`requestIdleCallback\`/promises, or using \`React.memo\` to prevent wasteful re-renders.\n`;
+        }
+
+        if (annotation.memoryMetrics && annotation.memoryMetrics.usedJSHeapSize > 100 * 1024 * 1024) {
+           prompt += `- Memory usage is unusually high (${(annotation.memoryMetrics.usedJSHeapSize/1024/1024).toFixed(1)} MB). Suggest looking for un-cleared event listeners, setIntervals, or large un-memoized objects causing a memory leak.\n`;
+        }
+
+        return {
+          content: [
+            { type: "text", text: prompt }
+          ]
         };
       }
 
