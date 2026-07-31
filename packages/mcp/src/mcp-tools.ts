@@ -432,15 +432,21 @@ export function registerMcpTools(server: Server) {
         }
 
         const metrics = annotation.performanceMetrics || [];
-        if (metrics.length === 0) {
+        const fpsMetrics = annotation.fpsMetrics || [];
+        const networkRequests = annotation.networkRequests || [];
+        
+        if (metrics.length === 0 && fpsMetrics.length === 0) {
           return {
             content: [{ type: "text", text: `No performance metrics captured for annotation ${annotationId}.` }]
           };
         }
 
+
         const longTasks = metrics.filter((m: any) => m.entryType === 'longtask');
         const layoutShifts = metrics.filter((m: any) => m.entryType === 'layout-shift');
         const lcps = metrics.filter((m: any) => m.entryType === 'largest-contentful-paint');
+        const events = metrics.filter((m: any) => m.entryType === 'event' && m.duration > 50);
+        const measures = metrics.filter((m: any) => m.entryType === 'measure');
         let tbt = 0;
         longTasks.forEach((m: any) => {
           if (m.duration > 50) tbt += (m.duration - 50);
@@ -448,11 +454,43 @@ export function registerMcpTools(server: Server) {
 
         let report = `## Performance Metrics for Annotation ${annotationId}\n\n`;
         report += `**Total Blocking Time (TBT):** ${tbt.toFixed(2)}ms\n\n`;
+        if (fpsMetrics.length > 0) {
+          const avgFps = fpsMetrics.reduce((sum: number, f: any) => sum + f.fps, 0) / fpsMetrics.length;
+          const drops = fpsMetrics.filter((f: any) => f.fps < 30).length;
+          report += `### Framerate (FPS)\n`;
+          report += `- Average: ${avgFps.toFixed(1)} FPS\n`;
+          if (drops > 0) report += `- **Severe drops detected** (<30 FPS): ${drops} seconds\n`;
+          report += `\n`;
+        }
+
         report += `### Long Tasks (${longTasks.length})\n`;
         longTasks.forEach((lt: any, i: number) => {
           report += `- Task ${i + 1}: ${lt.duration.toFixed(2)}ms (Start: ${lt.startTime.toFixed(2)}ms)\n`;
+          const correlatedNet = networkRequests.filter((nr: any) => {
+              const reqEnd = nr.responseEnd || (nr.startTime && nr.duration ? nr.startTime + nr.duration : null) || nr.timestamp;
+              if (!reqEnd) return false;
+              return reqEnd >= lt.startTime - 100 && reqEnd <= lt.startTime + lt.duration;
+          });
+          if (correlatedNet.length > 0) {
+              report += `  - *Correlated Network Activity:* ${correlatedNet.map((n: any) => {
+                  try { return new URL(n.name || n.url).pathname.split('/').pop() || (n.name || n.url); } catch(e) { return (n.name || n.url); }
+              }).join(', ')}\n`;
+          }
         });
 
+        if (events.length > 0) {
+          report += `\n### Slow Events (INP Potential)\n`;
+          events.forEach((ev: any, i: number) => {
+            report += `- Event ${i + 1}: '${ev.name || ev.type}' took ${ev.duration.toFixed(2)}ms\n`;
+          });
+        }
+
+        if (measures.length > 0) {
+          report += `\n### Component/User Timings\n`;
+          measures.forEach((m: any) => {
+            if (m.duration > 10) report += `- ${m.name}: ${m.duration.toFixed(2)}ms\n`;
+          });
+        }
         report += `\n### Layout Shifts (${layoutShifts.length})\n`;
         layoutShifts.forEach((ls: any, i: number) => {
           report += `- Shift ${i + 1}: score ${ls.value?.toFixed(4) || 0}\n`;

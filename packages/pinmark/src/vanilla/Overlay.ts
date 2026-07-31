@@ -112,6 +112,11 @@ export class Overlay {
   private stopRecording: (() => void) | null = null;
   private perfMetrics: any[] = [];
   private perfObservers: PerformanceObserver[] = [];
+  private fpsHistory: { timestamp: number, fps: number }[] = [];
+  private fpsRafId: number | null = null;
+  private framesCount = 0;
+  private lastFpsTime = 0;
+
 
   constructor(settings: PinmarkSettings, config: PinmarkConfig, initialFeedback: FeedbackItem[] = []) {
     this.settings = settings;
@@ -507,6 +512,7 @@ export class Overlay {
       sessionRecording: [...this.rrwebEvents],
       sessionReplayEvents: [...this.rrwebEvents],
       performanceMetrics: [...this.perfMetrics],
+      fpsMetrics: [...this.fpsHistory],
       markerType: this.isMultiSelectActive ? 'multi' : (overrideRect ? 'area' : 'single'),
       ...(overrideRect ? { areaRect: { x: overrideRect.x + scrollLeft, y: overrideRect.y + scrollTop, width: overrideRect.width, height: overrideRect.height } } : {})
     };
@@ -862,6 +868,7 @@ export class Overlay {
       sessionRecording: [...this.rrwebEvents],
       sessionReplayEvents: [...this.rrwebEvents],
       performanceMetrics: [...this.perfMetrics],
+      fpsMetrics: [...this.fpsHistory],
     };
 
     this.feedbackManager.add(feedback);
@@ -1253,6 +1260,7 @@ export class Overlay {
       networkRequests: [],
       sessionRecording: [],
       performanceMetrics: [...this.perfMetrics],
+      fpsMetrics: [...this.fpsHistory],
       markerType: 'area',
       areaRect: { x: placeholderRect.x, y: placeholderRect.y, width: placeholderRect.width, height: placeholderRect.height },
       kind: 'placement'
@@ -1293,6 +1301,7 @@ export class Overlay {
       networkRequests: [],
       sessionRecording: [],
       performanceMetrics: [...this.perfMetrics],
+      fpsMetrics: [...this.fpsHistory],
       markerType: 'area',
       areaRect: { x: placeholderRect.x, y: placeholderRect.y, width: placeholderRect.width, height: placeholderRect.height },
       kind: 'rearrange'
@@ -1382,7 +1391,7 @@ export class Overlay {
 
     // Start Performance Observers
     if (typeof PerformanceObserver !== 'undefined') {
-      const perfTypes = ['longtask', 'layout-shift', 'largest-contentful-paint'];
+      const perfTypes = ['longtask', 'layout-shift', 'largest-contentful-paint', 'event', 'mark', 'measure'];
       for (const type of perfTypes) {
         try {
           const obs = new PerformanceObserver((list) => {
@@ -1399,6 +1408,20 @@ export class Overlay {
         }
       }
     }
+    const loop = (now: number) => {
+      if (!this.lastFpsTime) this.lastFpsTime = now;
+      this.framesCount++;
+      if (now - this.lastFpsTime >= 1000) {
+        this.fpsHistory.push({ timestamp: Date.now(), fps: this.framesCount });
+        const cutoff = Date.now() - 15000;
+        this.fpsHistory = this.fpsHistory.filter(f => f.timestamp >= cutoff);
+        this.framesCount = 0;
+        this.lastFpsTime = now;
+      }
+      this.fpsRafId = requestAnimationFrame(loop);
+    };
+    this.fpsRafId = requestAnimationFrame(loop);
+
 
     // Initial update to fix position if layout changed since save
     requestAnimationFrame(() => {
@@ -1426,12 +1449,20 @@ export class Overlay {
       this.stopRecording = null;
     }
 
+    if (this.fpsRafId !== null) {
+      cancelAnimationFrame(this.fpsRafId);
+      this.fpsRafId = null;
+    }
+
     for (const obs of this.perfObservers) {
       obs.disconnect();
     }
     this.perfObservers = [];
 
     // Clear stale session data
+    this.fpsHistory = [];
+    this.framesCount = 0;
+    this.lastFpsTime = 0;
     this.rrwebEvents = [];
     this.consoleLogs = [];
     this.networkRequests = [];
