@@ -186,6 +186,7 @@ Press `L` to open the layout panel.
 - **Rearrange sections** — Grab existing page elements and reposition them to sketch new layouts.
 - **Purpose field** — Attach intent / context strings to every placement.
 - **Wireframe overlay** — Fade the current page to a structural wireframe (transparent fills, gray borders, grayscale media via an injected stylesheet) and sketch a new layout from scratch.
+- **Layout-shift highlighting** — Amber badge with CLS score on shifted elements, plus pulse animation.
 - **Agent-readable output** — Annotations in layout mode include `kind: "placement"` or `kind: "rearrange"` for structured agent consumption.
 
 ### State & Log Capture
