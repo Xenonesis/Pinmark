@@ -147,6 +147,24 @@ export function registerMcpTools(server: Server) {
           },
         },
         {
+          name: "pinmark_clone_website",
+          description: "Clones a target website by capturing its raw HTML and a full rrweb DOM snapshot.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              url: {
+                type: "string",
+                description: "The URL of the website to clone.",
+              },
+              outputDir: {
+                type: "string",
+                description: "Local directory to save the clone files.",
+              },
+            },
+            required: ["url", "outputDir"],
+          },
+        },
+        {
           name: "pinmark_ask_question",
           description: "Ask the user a clarifying question about an annotation. The question appears as a reply in the annotation thread.",
           inputSchema: {
@@ -342,6 +360,58 @@ export function registerMcpTools(server: Server) {
           throw new McpError(ErrorCode.InternalError, `Failed to generate test: ${(e as Error).message}`);
         }
       }
+      case "pinmark_clone_website": {
+        const url = String(request.params.arguments?.url);
+        const outputDir = String(request.params.arguments?.outputDir);
+        
+        try {
+          const puppeteer = await import('puppeteer');
+          const fs = await import('fs/promises');
+          const path = await import('path');
+          
+          const browser = await puppeteer.default.launch();
+          const page = await browser.newPage();
+          await page.goto(url, { waitUntil: 'networkidle2' });
+          // Inject local UMD bundle for rrweb-snapshot
+          await page.addScriptTag({ path: path.resolve(process.cwd(), 'node_modules/rrweb-snapshot/dist/rrweb-snapshot.umd.min.cjs') });
+          
+          const snapshot = await page.evaluate(() => {
+            // @ts-ignore - injected via script tag
+            return window.rrwebSnapshot.snapshot(document);
+          });
+          
+          // Capture raw HTML and inject a <base> tag to fix relative CSS/image links
+          let html = await page.content();
+          if (!html.includes('<base ')) {
+            html = html.replace('<head>', `<head>\n<base href="${new URL(url).origin}">`);
+          }
+          
+          // Capture MHTML (bundled HTML + CSS + Images in one file)
+          const cdp = await page.target().createCDPSession();
+          const { data: mhtml } = await cdp.send('Page.captureSnapshot', { format: 'mhtml' });
+          
+          await browser.close();
+          
+          await fs.mkdir(outputDir, { recursive: true });
+          const safeName = url.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+          
+          await fs.writeFile(path.join(outputDir, `${safeName}_snapshot.json`), JSON.stringify(snapshot, null, 2));
+          await fs.writeFile(path.join(outputDir, `${safeName}.html`), html);
+          await fs.writeFile(path.join(outputDir, `${safeName}.mhtml`), mhtml);
+          
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Successfully cloned ${url} into ${outputDir}.\nFiles created:\n- ${safeName}.html (Raw HTML with <base> tag)\n- ${safeName}.mhtml (Self-contained Web Archive with all CSS/images)\n- ${safeName}_snapshot.json (rrweb DOM snapshot)`,
+              },
+            ],
+          };
+        } catch (e) {
+          throw new McpError(ErrorCode.InternalError, `Failed to clone website: ${(e as Error).message}`);
+        }
+      }
+
 
       case "pinmark_ask_question": {
         const annotationId = String(request.params.arguments?.annotationId);
