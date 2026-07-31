@@ -185,6 +185,17 @@ export function registerMcpTools(server: Server) {
             },
             required: ["annotationId", "question", "agentName"],
           },
+        },
+        {
+          name: "pinmark_analyze_performance",
+          description: "Analyzes the performance metrics (long tasks, layout shifts) captured when the pin was dropped.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              annotationId: { type: "string" }
+            },
+            required: ["annotationId"]
+          }
         }
       ],
     };
@@ -412,6 +423,55 @@ export function registerMcpTools(server: Server) {
         }
       }
 
+
+      case "pinmark_analyze_performance": {
+        const annotationId = String(request.params.arguments?.annotationId);
+        const annotation = store.getAnnotation(annotationId);
+        if (!annotation) {
+          throw new McpError(ErrorCode.InvalidParams, `Annotation ${annotationId} not found`);
+        }
+
+        const metrics = annotation.performanceMetrics || [];
+        if (metrics.length === 0) {
+          return {
+            content: [{ type: "text", text: `No performance metrics captured for annotation ${annotationId}.` }]
+          };
+        }
+
+        const longTasks = metrics.filter((m: any) => m.entryType === 'longtask');
+        const layoutShifts = metrics.filter((m: any) => m.entryType === 'layout-shift');
+        const lcps = metrics.filter((m: any) => m.entryType === 'largest-contentful-paint');
+        let tbt = 0;
+        longTasks.forEach((m: any) => {
+          if (m.duration > 50) tbt += (m.duration - 50);
+        });
+
+        let report = `## Performance Metrics for Annotation ${annotationId}\n\n`;
+        report += `**Total Blocking Time (TBT):** ${tbt.toFixed(2)}ms\n\n`;
+        report += `### Long Tasks (${longTasks.length})\n`;
+        longTasks.forEach((lt: any, i: number) => {
+          report += `- Task ${i + 1}: ${lt.duration.toFixed(2)}ms (Start: ${lt.startTime.toFixed(2)}ms)\n`;
+        });
+
+        report += `\n### Layout Shifts (${layoutShifts.length})\n`;
+        layoutShifts.forEach((ls: any, i: number) => {
+          report += `- Shift ${i + 1}: score ${ls.value?.toFixed(4) || 0}\n`;
+        });
+
+        report += `\n### LCP (${lcps.length})\n`;
+        lcps.forEach((lcp: any, i: number) => {
+          report += `- Paint ${i + 1}: ${lcp.startTime.toFixed(2)}ms\n`;
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: report,
+            },
+          ],
+        };
+      }
 
       case "pinmark_ask_question": {
         const annotationId = String(request.params.arguments?.annotationId);

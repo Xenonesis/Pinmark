@@ -33,3 +33,7 @@ out/
 test-*.js
 test-*.html
 test-*.mjs
+
+# Puppeteer artifacts
+.puppeteer-profile-*/
+pnpm-lock.yaml

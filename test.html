@@ -20,6 +20,7 @@
         <h2>Interactive Elements</h2>
         <button id="btn-submit">Submit Form</button>
         <button id="btn-cancel" style="background: #ef4444;">Cancel</button>
+        <button id="btn-lag" style="background: #eab308; margin-top: 10px;">Trigger 500ms Lag</button>
     </div>
 
     <div class="card" id="card-2" style="display: flex; flex-direction: column; gap: 10px; align-items: start;">
@@ -41,29 +42,15 @@
             }
         };
     </script>
-
-    <!-- Import and Initialize Pinmark -->
-    <script type="module">
-        import { Overlay, FeedbackManager } from './packages/pinmark/dist/index.js';
-        
-        class MockStorage {
-            async getSettings() {
-                return { theme: 'dark', autoSync: false, blockInteractions: false };
+    <script>
+        document.getElementById('btn-lag').addEventListener('click', () => {
+            const start = performance.now();
+            while (performance.now() - start < 500) {
+                // heavy loop
             }
-            async getFeedback() { return []; }
-        }
-
-        const config = {
-            url: window.location.href,
-            storage: new MockStorage(),
-            onToggle: (isActive) => console.log('Toggled:', isActive)
-        };
-
-        const overlay = new Overlay({ theme: 'dark', autoSync: false }, config, []);
-        overlay.activate();
-        
-        // Expose to window for testing
-        window.pinmarkOverlay = overlay;
+            console.log('Lag finished');
+        });
     </script>
+    <script src="./test-web.bundle.js"></script>
 </body>
 </html>

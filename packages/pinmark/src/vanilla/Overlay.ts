@@ -110,6 +110,8 @@ export class Overlay {
   
   private rrwebEvents: any[] = [];
   private stopRecording: (() => void) | null = null;
+  private perfMetrics: any[] = [];
+  private perfObservers: PerformanceObserver[] = [];
 
   constructor(settings: PinmarkSettings, config: PinmarkConfig, initialFeedback: FeedbackItem[] = []) {
     this.settings = settings;
@@ -504,6 +506,7 @@ export class Overlay {
       networkRequests: [...this.networkRequests],
       sessionRecording: [...this.rrwebEvents],
       sessionReplayEvents: [...this.rrwebEvents],
+      performanceMetrics: [...this.perfMetrics],
       markerType: this.isMultiSelectActive ? 'multi' : (overrideRect ? 'area' : 'single'),
       ...(overrideRect ? { areaRect: { x: overrideRect.x + scrollLeft, y: overrideRect.y + scrollTop, width: overrideRect.width, height: overrideRect.height } } : {})
     };
@@ -858,6 +861,7 @@ export class Overlay {
       networkRequests: [...this.networkRequests],
       sessionRecording: [...this.rrwebEvents],
       sessionReplayEvents: [...this.rrwebEvents],
+      performanceMetrics: [...this.perfMetrics],
     };
 
     this.feedbackManager.add(feedback);
@@ -1248,6 +1252,7 @@ export class Overlay {
       consoleLogs: [],
       networkRequests: [],
       sessionRecording: [],
+      performanceMetrics: [...this.perfMetrics],
       markerType: 'area',
       areaRect: { x: placeholderRect.x, y: placeholderRect.y, width: placeholderRect.width, height: placeholderRect.height },
       kind: 'placement'
@@ -1287,6 +1292,7 @@ export class Overlay {
       consoleLogs: [],
       networkRequests: [],
       sessionRecording: [],
+      performanceMetrics: [...this.perfMetrics],
       markerType: 'area',
       areaRect: { x: placeholderRect.x, y: placeholderRect.y, width: placeholderRect.width, height: placeholderRect.height },
       kind: 'rearrange'
@@ -1374,6 +1380,26 @@ export class Overlay {
       console.warn('[Pinmark] Failed to start rrweb recording:', e);
     }
 
+    // Start Performance Observers
+    if (typeof PerformanceObserver !== 'undefined') {
+      const perfTypes = ['longtask', 'layout-shift', 'largest-contentful-paint'];
+      for (const type of perfTypes) {
+        try {
+          const obs = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+              this.perfMetrics.push(entry.toJSON());
+            }
+            const cutoff = performance.now() - 15000;
+            this.perfMetrics = this.perfMetrics.filter(e => e.startTime >= cutoff);
+          });
+          obs.observe({ type, buffered: true });
+          this.perfObservers.push(obs);
+        } catch (e) {
+          // Feature unsupported, ignore silently.
+        }
+      }
+    }
+
     // Initial update to fix position if layout changed since save
     requestAnimationFrame(() => {
       try {
@@ -1400,10 +1426,16 @@ export class Overlay {
       this.stopRecording = null;
     }
 
+    for (const obs of this.perfObservers) {
+      obs.disconnect();
+    }
+    this.perfObservers = [];
+
     // Clear stale session data
     this.rrwebEvents = [];
     this.consoleLogs = [];
     this.networkRequests = [];
+    this.perfMetrics = [];
 
     if (this.config.onToggle) this.config.onToggle(false);
   }
