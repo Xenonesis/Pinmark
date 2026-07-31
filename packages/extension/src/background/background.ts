@@ -1,5 +1,62 @@
 import { getSettings, saveSettings, getFeedback, saveFeedback } from '../shared/storage';
 
+let mcpEventSource: EventSource | null = null;
+
+async function setupEventSource() {
+  const settings = await getSettings();
+  if (!settings.autoSync || !settings.mcpEndpoint) {
+    if (mcpEventSource) {
+      mcpEventSource.close();
+      mcpEventSource = null;
+    }
+    return;
+  }
+  
+  const mcpEndpoint = (settings.mcpEndpoint || 'http://127.0.0.1:4747').replace(/\/+$/, '');
+  const sseUrl = `${mcpEndpoint}/events`;
+  
+  // Avoid reconnecting if already connected to same URL
+  if (mcpEventSource && mcpEventSource.url === sseUrl && mcpEventSource.readyState !== EventSource.CLOSED) {
+    return;
+  }
+  
+  if (mcpEventSource) {
+    mcpEventSource.close();
+  }
+  
+  try {
+    mcpEventSource = new EventSource(sseUrl);
+    mcpEventSource.addEventListener('pinmark:highlight', (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs[0] && tabs[0].id) {
+            chrome.tabs.sendMessage(tabs[0].id, {
+              type: 'PINMARK_HIGHLIGHT',
+              selector: data.selector,
+              durationMs: data.durationMs
+            });
+          }
+        });
+      } catch (e) {
+        console.error('Failed to parse highlight event', e);
+      }
+    });
+    
+    mcpEventSource.addEventListener('error', () => {
+      // Basic retry fallback
+      if (mcpEventSource && mcpEventSource.readyState === EventSource.CLOSED) {
+        setTimeout(setupEventSource, 5000);
+      }
+    });
+  } catch(e) {
+    console.warn('Failed to setup SSE in background', e);
+  }
+}
+
+// Initialize on startup
+setupEventSource();
+
 async function postJson(url: string, body: unknown): Promise<void> {
   const response = await fetch(url, {
     method: 'POST',
@@ -78,7 +135,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
 
     case 'SAVE_SETTINGS':
-      saveSettings(message.settings).then(() => sendResponse({ success: true }));
+      saveSettings(message.settings).then(() => {
+        setupEventSource();
+        sendResponse({ success: true });
+      });
       return true;
 
     case 'GET_FEEDBACK':

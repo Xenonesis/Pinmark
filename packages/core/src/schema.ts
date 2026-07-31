@@ -51,6 +51,7 @@ export const PinmarkAnnotationSchema = z.object({
   // Advanced Diagnostics
   consoleLogs: z.array(z.any()).optional(),
   networkRequests: z.array(z.any()).optional(),
+  sessionReplayEvents: z.array(z.record(z.string(), z.any())).optional(),
   sessionRecording: z.array(z.any()).optional(),
   areaRect: z.object({
     x: z.number(),

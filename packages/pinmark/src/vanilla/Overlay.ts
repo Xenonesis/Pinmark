@@ -499,6 +499,7 @@ export class Overlay {
       consoleLogs: [...this.consoleLogs],
       networkRequests: [...this.networkRequests],
       sessionRecording: [...this.rrwebEvents],
+      sessionReplayEvents: [...this.rrwebEvents],
       markerType: this.isMultiSelectActive ? 'multi' : (overrideRect ? 'area' : 'single'),
       ...(overrideRect ? { areaRect: { x: overrideRect.x + scrollLeft, y: overrideRect.y + scrollTop, width: overrideRect.width, height: overrideRect.height } } : {})
     };
@@ -852,6 +853,7 @@ export class Overlay {
       consoleLogs: [...this.consoleLogs],
       networkRequests: [...this.networkRequests],
       sessionRecording: [...this.rrwebEvents],
+      sessionReplayEvents: [...this.rrwebEvents],
     };
 
     this.feedbackManager.add(feedback);
@@ -1350,8 +1352,9 @@ export class Overlay {
       const stopFn = rrweb.record({
         emit: (event) => {
           this.rrwebEvents.push(event);
-          if (this.rrwebEvents.length > 2000) {
-            this.rrwebEvents = this.rrwebEvents.slice(-1000);
+          const cutoff = Date.now() - 15000;
+          while (this.rrwebEvents.length > 0 && this.rrwebEvents[0].timestamp < cutoff) {
+            this.rrwebEvents.shift();
           }
         },
       });

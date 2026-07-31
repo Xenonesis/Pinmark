@@ -29,6 +29,10 @@ class SseManager {
   notifyAnnotationUpdate(annotation: PinmarkAnnotation) {
     this.broadcast('annotation:update', annotation);
   }
+
+  notifyHighlight(selector: string, durationMs: number = 3000) {
+    this.broadcast('pinmark:highlight', { selector, durationMs });
+  }
 }
 
 export const sseManager = new SseManager();

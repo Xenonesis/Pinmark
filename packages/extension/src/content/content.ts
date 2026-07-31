@@ -293,6 +293,47 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       initializeOverlay();
       sendResponse({ success: true });
       break;
+    case 'PINMARK_HIGHLIGHT':
+      {
+        const el = document.querySelector(message.selector);
+        if (el) {
+          // Scroll into view first so it's visible
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          const highlight = document.createElement('div');
+          const rect = el.getBoundingClientRect();
+          highlight.style.position = 'absolute';
+          highlight.style.top = `${rect.top + window.scrollY}px`;
+          highlight.style.left = `${rect.left + window.scrollX}px`;
+          highlight.style.width = `${rect.width}px`;
+          highlight.style.height = `${rect.height}px`;
+          highlight.style.border = '6px solid #ef4444';
+          highlight.style.boxShadow = '0 0 20px 10px rgba(239, 68, 68, 0.6)';
+          highlight.style.zIndex = '2147483647';
+          highlight.style.pointerEvents = 'none';
+          highlight.style.transition = 'opacity 0.2s ease-in-out';
+          highlight.style.boxSizing = 'border-box';
+          document.body.appendChild(highlight);
+          
+          // flashing effect
+          let visible = true;
+          const interval = setInterval(() => {
+            visible = !visible;
+            highlight.style.opacity = visible ? '1' : '0.2';
+          }, 300);
+          
+          setTimeout(() => {
+            clearInterval(interval);
+            highlight.remove();
+          }, message.durationMs || 3000);
+          
+          sendResponse({ success: true });
+        } else {
+          console.warn(`[Pinmark] Highlight target not found: ${message.selector}`);
+          sendResponse({ success: false, error: 'Element not found' });
+        }
+      }
+      break;
     case 'DEACTIVATE_OVERLAY':
       deactivateOverlay();
       // Also destroy launcher so nothing shows on page when disabled
