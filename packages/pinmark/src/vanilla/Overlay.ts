@@ -6,6 +6,7 @@ import { FeedbackModal } from './FeedbackModal.js';
 import { ElementAnalyzer } from './ElementAnalyzer.js';
 import { FrameworkDetector } from './FrameworkDetector.js';
 import { MarkdownFormatter } from './MarkdownFormatter.js';
+import { NetworkInterceptor } from './NetworkInterceptor.js';
 import { FeedbackManager } from '../core/FeedbackManager.js';
 import type { PinmarkSettings, PinmarkConfig } from '../core/types.js';
 import type { PinmarkAnnotation as FeedbackItem } from '@pinmark/core';
@@ -106,7 +107,6 @@ export class Overlay {
   private rearrangeStartY = 0;
 
   private consoleLogs: any[] = [];
-  private networkRequests: any[] = [];
   
   private rrwebEvents: any[] = [];
   private stopRecording: (() => void) | null = null;
@@ -118,6 +118,7 @@ export class Overlay {
   private lastFpsTime = 0;
 
 
+  private networkInterceptor = new NetworkInterceptor();
   constructor(settings: PinmarkSettings, config: PinmarkConfig, initialFeedback: FeedbackItem[] = []) {
     this.settings = settings;
     this.config = config;
@@ -247,12 +248,10 @@ export class Overlay {
         this.consoleLogs.push({ time: Date.now(), ...e.data.data });
         if (this.consoleLogs.length > 50) this.consoleLogs.shift();
       } else if (e.data.type === 'network') {
-        this.networkRequests.push({ time: Date.now(), ...e.data.data });
-        if (this.networkRequests.length > 50) this.networkRequests.shift();
+        // Ignore legacy postMessage network events, we intercept directly now.
       }
     }
   };
-
   private handlePointerDown = (e: PointerEvent) => {
     if (!this.isActive || this.isPaused || this.isModalOpen || this.feedbackModal.isOpen()) return;
     if (Date.now() - this._modalClosedAt < 500) return;
@@ -585,8 +584,7 @@ export class Overlay {
       element: elementInfo,
       state,
       consoleLogs: [...this.consoleLogs],
-      networkRequests: [...this.networkRequests],
-      sessionRecording: [...this.rrwebEvents],
+      networkRequests: this.networkInterceptor.getRequests(),
       sessionReplayEvents: [...this.rrwebEvents],
       performanceMetrics: [...this.perfMetrics],
       fpsMetrics: [...this.fpsHistory],
@@ -941,8 +939,7 @@ export class Overlay {
       element: elementInfo,
       state,
       consoleLogs: [...this.consoleLogs],
-      networkRequests: [...this.networkRequests],
-      sessionRecording: [...this.rrwebEvents],
+      networkRequests: this.networkInterceptor.getRequests(),
       sessionReplayEvents: [...this.rrwebEvents],
       performanceMetrics: [...this.perfMetrics],
       fpsMetrics: [...this.fpsHistory],
@@ -1335,8 +1332,7 @@ export class Overlay {
       element: elementInfo,
       state,
       consoleLogs: [],
-      networkRequests: [],
-      sessionRecording: [],
+      networkRequests: this.networkInterceptor.getRequests(),
       performanceMetrics: [...this.perfMetrics],
       fpsMetrics: [...this.fpsHistory],
       ...this.getDomAndMemoryMetrics(target),
@@ -1377,8 +1373,7 @@ export class Overlay {
       element: elementInfo,
       state,
       consoleLogs: [],
-      networkRequests: [],
-      sessionRecording: [],
+      networkRequests: this.networkInterceptor.getRequests(),
       performanceMetrics: [...this.perfMetrics],
       fpsMetrics: [...this.fpsHistory],
       ...this.getDomAndMemoryMetrics(target),
@@ -1449,6 +1444,7 @@ export class Overlay {
     this._isActive = true;
     document.body.appendChild(this.container);
     this.setupEventListeners();
+    this.networkInterceptor.enable();
     if (this.config.onToggle) this.config.onToggle(true);
     
     try {
@@ -1473,6 +1469,7 @@ export class Overlay {
     if (typeof PerformanceObserver !== 'undefined') {
       const perfTypes = ['longtask', 'layout-shift', 'largest-contentful-paint', 'event', 'mark', 'measure'];
       for (const type of perfTypes) {
+
         try {
           const obs = new PerformanceObserver((list) => {
             for (const entry of list.getEntries()) {
@@ -1526,6 +1523,7 @@ export class Overlay {
     this._isActive = false;
     this.removeEventListeners();
     this.container.remove();
+    this.networkInterceptor.disable();
     this.setAreaSelectActive(false);
     this.toolbar.toggleAreaSelect(false);
     this.isFrozen = false;
@@ -1554,8 +1552,8 @@ export class Overlay {
     this.lastFpsTime = 0;
     this.rrwebEvents = [];
     this.consoleLogs = [];
-    this.networkRequests = [];
     this.perfMetrics = [];
+    this.networkInterceptor.clear();
 
     if (this.config.onToggle) this.config.onToggle(false);
   }

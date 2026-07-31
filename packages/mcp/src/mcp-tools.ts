@@ -505,6 +505,17 @@ export function registerMcpTools(server: Server) {
           }
         });
 
+
+        const failingRequests = networkRequests.filter((nr: any) => nr.isError || nr.status >= 400);
+        if (failingRequests.length > 0) {
+          report += `\n### Failing Network Requests\n`;
+          failingRequests.forEach((nr: any, i: number) => {
+            report += `- **Request ${i + 1}:** \`${nr.method} ${nr.url}\` (Status: ${nr.status || 'Failed'})\n`;
+            const body = (b: any) => typeof b === 'string' ? b : JSON.stringify(b);
+            if (nr.requestBody) report += `  - *Req Body:* \`${body(nr.requestBody).slice(0, 200)}...\`\n`;
+            if (nr.responseBody) report += `  - *Res Body:* \`${body(nr.responseBody).slice(0, 300)}...\`\n`;
+          });
+        }
         if (events.length > 0) {
           report += `\n### Slow Events (INP Potential)\n`;
           events.forEach((ev: any, i: number) => {
