@@ -249,6 +249,9 @@ export class Overlay {
     this.isDragging = false;
     this.dragStartX = e.clientX;
     this.dragStartY = e.clientY;
+
+    // Prevent default to disable native text selection while dragging for area selection
+    e.preventDefault();
   };
 
   private handlePointerMove = (e: PointerEvent) => {
@@ -264,6 +267,10 @@ export class Overlay {
           this.areaSelectionBox.start(this.dragStartX, this.dragStartY);
           this.hoverBox.hide();
         }
+        
+        // Clear any native text selection that might occur despite preventDefault
+        window.getSelection()?.removeAllRanges();
+        
         this.areaSelectionBox.update(e.clientX, e.clientY);
         return;
       }
@@ -599,11 +606,32 @@ export class Overlay {
     });
   }
 
+  private setAreaSelectActive(active: boolean) {
+    this.isAreaSelectActive = active;
+    if (active) {
+      document.body.classList.add('pinmark-area-select-active');
+      let style = document.getElementById('pinmark-host-styles');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'pinmark-host-styles';
+        style.textContent = `
+          body.pinmark-area-select-active * {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    } else {
+      document.body.classList.remove('pinmark-area-select-active');
+    }
+  }
+
   private setupToolbarListeners() {
     this.toolbar.onPauseToggle = () => this.togglePause();
     this.toolbar.onMarkersToggle = () => this.toggleMarkers();
     this.toolbar.onAreaSelectToggle = () => {
-      this.isAreaSelectActive = !this.isAreaSelectActive;
+      this.setAreaSelectActive(!this.isAreaSelectActive);
       if (this.isAreaSelectActive) {
         this.hoverBox.hide();
         this.targetElement = null;
@@ -617,7 +645,7 @@ export class Overlay {
       this.isMultiSelectActive = !this.isMultiSelectActive;
       if (this.isMultiSelectActive) {
         if (this.isAreaSelectActive) {
-          this.isAreaSelectActive = false;
+          this.setAreaSelectActive(false);
         }
         if (this.isLayoutMode) this.toggleLayoutMode(false);
       }
@@ -1307,7 +1335,7 @@ export class Overlay {
     this._isActive = false;
     this.removeEventListeners();
     this.container.remove();
-    this.isAreaSelectActive = false;
+    this.setAreaSelectActive(false);
     this.toolbar.toggleAreaSelect(false);
     this.isFrozen = false;
     this.frozenStyleEl?.remove();

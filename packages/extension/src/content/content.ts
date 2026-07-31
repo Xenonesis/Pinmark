@@ -262,9 +262,12 @@ async function startupInit() {
     const storage = await chrome.storage.local.get('extensionActive');
     const isActive = storage?.extensionActive ?? false;
 
+    // Always initialize the launcher so that background TOGGLE_EXTENSION
+    // broadcasts can activate the overlay on this tab without a page reload.
+    initializeLauncher();
+
     if (isActive) {
-      // Extension was previously active — restore launcher + overlay
-      initializeLauncher();
+      // Extension was previously active — restore overlay
       await initializeOverlay();
     }
   } catch (e) {

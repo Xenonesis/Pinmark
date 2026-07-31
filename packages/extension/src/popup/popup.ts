@@ -309,7 +309,7 @@ async function init() {
     return;
   }
 
-  const response = await sendMessage({ type: 'GET_STATE', tabId: currentTabId }) as { isActive: boolean };
+  const response = await sendMessage({ type: 'GET_STATE' }) as { isActive: boolean };
   isActive = response?.isActive || false;
   updateToggleButton();
 

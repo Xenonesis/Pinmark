@@ -1,13 +1,5 @@
 import { getSettings, saveSettings, getFeedback, saveFeedback } from '../shared/storage';
 
-interface TabState {
-  isActive: boolean;
-  isPaused: boolean;
-  markersVisible: boolean;
-}
-
-const tabStates = new Map<number, TabState>();
-
 async function postJson(url: string, body: unknown): Promise<void> {
   const response = await fetch(url, {
     method: 'POST',
@@ -20,17 +12,6 @@ async function postJson(url: string, body: unknown): Promise<void> {
   }
 }
 
-function getTabState(tabId: number): TabState {
-  if (!tabStates.has(tabId)) {
-    tabStates.set(tabId, {
-      isActive: false,
-      isPaused: false,
-      markersVisible: true,
-    });
-  }
-  return tabStates.get(tabId)!;
-}
-
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   switch (message.type) {
@@ -38,10 +19,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       (async () => {
         try {
           const storage = await chrome.storage.local.get('extensionActive');
-          const nextActive = !storage.extensionActive;
+          // Respect explicit isActive payload (sent by popup); fall back to a
+          // blind toggle only when no explicit value is provided (legacy callers).
+          const nextActive = (message.isActive !== undefined)
+            ? message.isActive
+            : !storage.extensionActive;
           await chrome.storage.local.set({ extensionActive: nextActive });
 
-          // Send message to all tabs to update their state
+          // Broadcast new state to all tabs
           const tabs = await chrome.tabs.query({});
           for (const tab of tabs) {
             if (tab.id !== undefined) {
@@ -185,16 +170,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
-chrome.tabs.onRemoved.addListener((tabId) => {
-  tabStates.delete(tabId);
-});
 
-chrome.commands.onCommand.addListener((command, tab) => {
+chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command === 'toggle-pinmark' && tab && tab.id) {
-    const state = getTabState(tab.id);
-    state.isActive = !state.isActive;
-    chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_EXTENSION', isActive: state.isActive }).catch(() => {
-      // Content script might not be loaded yet, we can ignore this
-    });
+    try {
+      // Use chrome.storage.local — consistent with the popup toggle flow
+      const storage = await chrome.storage.local.get('extensionActive');
+      const nextActive = !storage.extensionActive;
+      await chrome.storage.local.set({ extensionActive: nextActive });
+
+      // Broadcast to all tabs
+      const tabs = await chrome.tabs.query({});
+      for (const t of tabs) {
+        if (t.id !== undefined) {
+          chrome.tabs.sendMessage(t.id, {
+            type: 'TOGGLE_EXTENSION',
+            isActive: nextActive
+          }).catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.error('[Pinmark] keyboard toggle failed:', e);
+    }
   }
 });
