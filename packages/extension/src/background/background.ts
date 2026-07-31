@@ -130,6 +130,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       })();
       return true;
 
+    case 'SET_PAUSE_STATE':
+      (async () => {
+        try {
+          const isPaused = message.isPaused;
+          await chrome.storage.local.set({ extensionPaused: isPaused });
+
+          // Broadcast pause state to all other tabs
+          const tabs = await chrome.tabs.query({});
+          for (const tab of tabs) {
+            if (tab.id !== undefined && tab.id !== sender.tab?.id) {
+              chrome.tabs.sendMessage(tab.id, {
+                type: 'SET_PAUSE_STATE',
+                isPaused: isPaused
+              }).catch(() => {});
+            }
+          }
+          sendResponse({ success: true });
+        } catch (e) {
+          sendResponse({ error: (e as Error).message });
+        }
+      })();
+      return true;
+
     case 'GET_SETTINGS':
       getSettings().then(sendResponse);
       return true;

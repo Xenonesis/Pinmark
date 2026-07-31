@@ -114,6 +114,7 @@ export class Overlay {
   constructor(settings: PinmarkSettings, config: PinmarkConfig, initialFeedback: FeedbackItem[] = []) {
     this.settings = settings;
     this.config = config;
+    this.isPaused = config.isPaused ?? false;
     this.feedbackManager = new FeedbackManager(config, initialFeedback);
 
     this.container = document.createElement('pinmark-overlay');
@@ -136,6 +137,7 @@ export class Overlay {
     this.elementAnalyzer = new ElementAnalyzer();
     this.frameworkDetector = new FrameworkDetector();
     this.toolbar = new Toolbar(this.shadowRoot);
+    this.toolbar.setPaused(this.isPaused);
     this.feedbackModal = new FeedbackModal(this.shadowRoot);
 
     this.setupToolbarListeners();
@@ -1406,11 +1408,19 @@ export class Overlay {
     if (this.config.onToggle) this.config.onToggle(false);
   }
 
-  togglePause() {
-    this.isPaused = !this.isPaused;
+  setPaused(isPaused: boolean) {
+    this.isPaused = isPaused;
     this.toolbar.setPaused(this.isPaused);
     if (this.isPaused) {
       this.hoverBox.hide();
+    }
+  }
+
+  togglePause() {
+    const newState = !this.isPaused;
+    this.setPaused(newState);
+    if (this.config.onPauseToggle) {
+      this.config.onPauseToggle(newState);
     }
   }
 

@@ -35,4 +35,8 @@ export interface PinmarkConfig {
   captureScreenshot?: (element: HTMLElement) => Promise<string | undefined>;
   /** Whether the overlay is active */
   isActive?: boolean;
+  /** Whether the overlay starts in a paused state */
+  isPaused?: boolean;
+  /** Callback fired when the pause state is toggled */
+  onPauseToggle?: (isPaused: boolean) => void;
 }

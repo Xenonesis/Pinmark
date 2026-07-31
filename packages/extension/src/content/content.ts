@@ -20,6 +20,8 @@ async function initializeOverlay() {
   try {
     const settings = await storageAdapter.getSettings();
     const feedback = await storageAdapter.getFeedback(window.location.href);
+    const storage = await chrome.storage.local.get(['extensionPaused']);
+    const isPaused = (storage?.extensionPaused as boolean) ?? false;
 
     if (overlay) return;
 
@@ -28,6 +30,10 @@ async function initializeOverlay() {
     const config = {
       url: currentUrl,
       storage: storageAdapter,
+      isPaused,
+      onPauseToggle: (isPaused: boolean) => {
+        sendMessage({ type: 'SET_PAUSE_STATE', isPaused }).catch(console.error);
+      },
       onSync: (item: any) => {
         chrome.runtime.sendMessage({
           type: 'SYNC_MCP',
@@ -173,12 +179,18 @@ async function handleUrlChange() {
       
       const settings = await storageAdapter.getSettings();
       const feedback = await storageAdapter.getFeedback(newUrl);
+      const storage = await chrome.storage.local.get(['extensionPaused']);
+      const isPaused = (storage?.extensionPaused as boolean) ?? false;
       
       if (!overlay) return;
 
       const config = {
         url: currentUrl,
         storage: storageAdapter,
+        isPaused,
+        onPauseToggle: (isPaused: boolean) => {
+          sendMessage({ type: 'SET_PAUSE_STATE', isPaused }).catch(console.error);
+        },
         onSync: (item: any) => {
           chrome.runtime.sendMessage({
             type: 'SYNC_MCP',
@@ -348,6 +360,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       break;
     case 'TOGGLE_PAUSE':
       overlay?.togglePause();
+      break;
+    case 'SET_PAUSE_STATE':
+      overlay?.setPaused(message.isPaused);
       break;
     case 'CLEAR_FEEDBACK':
       feedbackManager?.clearAll();

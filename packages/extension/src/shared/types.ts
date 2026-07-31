@@ -40,6 +40,7 @@ export type Message =
   | { type: 'CLEAR_FEEDBACK' }
   | { type: 'TOGGLE_MARKERS' }
   | { type: 'TOGGLE_PAUSE' }
+  | { type: 'SET_PAUSE_STATE'; isPaused: boolean }
   | { type: 'SYNC_MCP'; url: string; item: FeedbackItem }
   | { type: 'CREATE_GITHUB_ISSUE'; url: string; content: string }
   | { type: 'UPDATE_SETTINGS'; settings: Partial<ExtensionSettings> };
