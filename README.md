@@ -181,7 +181,7 @@ Press `L` to open the layout panel.
 - **65+ Component palette** — Drag-and-drop building blocks (navbar, hero, card, form, modal, table, footer, etc.) onto any page.
 - **Rearrange sections** — Grab existing page elements and reposition them to sketch new layouts.
 - **Purpose field** — Attach intent / context strings to every placement.
-- **Wireframe overlay** — Fade the current page to a configurable opacity and sketch a new layout from scratch.
+- **Wireframe overlay** — Fade the current page to a structural wireframe (transparent fills, gray borders, grayscale media via an injected stylesheet) and sketch a new layout from scratch.
 - **Agent-readable output** — Annotations in layout mode include `kind: "placement"` or `kind: "rearrange"` for structured agent consumption.
 
 ### State & Log Capture
@@ -389,8 +389,7 @@ FeedbackManager → StorageAdapter (chrome.storage.local)
 
 The overlay is mounted in a **Shadow Root** so that page styles cannot leak into the annotation UI, and vice versa.
 
-- All marker elements, the drawing canvas, and the feedback modal live inside the shadow boundary.
-- Exceptions: the rearrange "ghost" element was historically appended to `document.body` and has been flagged for migration into the shadow root.
+- All marker elements, the drawing canvas, the feedback modal, and the rearrange "ghost" element live inside the shadow boundary.
 
 ---
 
@@ -498,8 +497,7 @@ Not configured out of the box. Recommended baseline:
 - CORS is enabled on all origins for localhost; proxies or VPNs may interfere.
 
 **Markers disappear after SPA navigation**
-- This is a known issue tracked in internal bug audit; `hideUntilRestart` is not currently reapplied after internal overlay recreation.
-- Workaround: toggle Pinmark off and back on (`Ctrl+Shift+F` twice).
+- Fixed: `hideUntilRestart` is now re-applied when the overlay is recreated on URL change (`handleUrlChange` calls `overlay.toggleMarkers()` on the new instance).
 
 **Pressing `x` inside a layout text field clears all annotations**
 - Same internal bug audit; single-letter shortcuts are not currently blocked when focus is inside shadow-root inputs.
@@ -646,7 +644,7 @@ const sessionId = 'session_' + btoa(message.url)
 
 ### Content Script Lifecycle
 
-On startup, the content script asks background for tab state and only initializes the overlay if active. On URL change, the overlay is deactivated and recreated with feedback loaded from `chrome.storage.local`. This avoids mutating live config inside the existing instance.
+On startup, the content script asks background for tab state and only initializes the overlay if active. On URL change, the overlay is deactivated and recreated with feedback loaded from `chrome.storage.local`, and `hideUntilRestart` is re-applied on the new instance. This avoids mutating live config inside the existing instance.
 
 ### Message Types
 
@@ -1063,9 +1061,7 @@ await fetch(`https://api.github.com/repos/${settings.githubRepo}/issues`, {
 
 | Issue | Location | Root cause | Workaround | Fix path |
 |-------|----------|------------|------------|----------|
-| Markers disappear after SPA navigation | `background/index.ts` + `content/index.ts` | `handleUrlChange` destroys/recreates `Overlay` but `hideUntilRestart` toggle is not reapplied on the new instance | Toggle extension off/on | Re-apply `overlay.toggleMarkers()` after `overlay.activate()` in `handleUrlChange` |
 | Single-letter shortcuts fire inside layout inputs | `content/index.ts` | Shadow-root inputs do not stop propagation to global keydown listener | Click outside layout before pressing shortcuts | Add `e.stopPropagation()` on layout input keydown |
-| Rearrange ghost appended to `document.body` | Overlay architecture | Not migrated to shadow root | None | Move ghost element into shadow root |
 | MCP session ID collision risk | `background/index.ts` | `btoa(url)` truncation + alphanumeric filter can collide on similar URLs | None | Use a shorter deterministic hash or full base64 |
 | No persistence on MCP server restart | `store.ts` | Store is `Map` in process memory only | None until restart | Add SQLite / JSON file persistence |
 | Service worker fetch uses no credentials / auth | `background/index.ts` | Not implemented | None | Add `credentials: 'include'` or bearer token if needed |
