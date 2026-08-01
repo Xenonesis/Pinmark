@@ -412,6 +412,7 @@ export class Overlay {
   }
 
   private highlightLayoutShift(el: HTMLElement, score: number) {
+    if (this.isPaused) return;
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
     
@@ -1510,34 +1511,7 @@ export class Overlay {
     }
 
     // Start Performance Observers
-    if (typeof PerformanceObserver !== 'undefined') {
-      const perfTypes = ['longtask', 'layout-shift', 'largest-contentful-paint', 'event', 'mark', 'measure'];
-      for (const type of perfTypes) {
-
-        try {
-          const obs = new PerformanceObserver((list) => {
-            for (const entry of list.getEntries()) {
-              this.perfMetrics.push(entry.toJSON());
-              if (entry.entryType === 'layout-shift') {
-                const sources = (entry as any).sources || [];
-                const shiftScore = (entry as any).value || 0;
-                for (const src of sources) {
-                  if (src.node && src.node.nodeType === 1) {
-                    this.highlightLayoutShift(src.node as HTMLElement, shiftScore);
-                  }
-                }
-              }
-            }
-            const cutoff = performance.now() - 15000;
-            this.perfMetrics = this.perfMetrics.filter(e => e.startTime >= cutoff);
-          });
-          obs.observe({ type, buffered: true });
-          this.perfObservers.push(obs);
-        } catch (e) {
-          // Feature unsupported, ignore silently.
-        }
-      }
-    }
+    this.startPerfObservers();
     const loop = (now: number) => {
       if (!this.lastFpsTime) this.lastFpsTime = now;
       this.framesCount++;
@@ -1602,6 +1576,41 @@ export class Overlay {
     this.errorTracer.clear();
 
     if (this.config.onToggle) this.config.onToggle(false);
+  }
+
+  private startPerfObservers() {
+    if (typeof PerformanceObserver === 'undefined') return;
+    // Clear any existing observers first
+    for (const obs of this.perfObservers) {
+      obs.disconnect();
+    }
+    this.perfObservers = [];
+
+    const perfTypes = ['longtask', 'layout-shift', 'largest-contentful-paint', 'event', 'mark', 'measure'];
+    for (const type of perfTypes) {
+      try {
+        const obs = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            this.perfMetrics.push(entry.toJSON());
+            if (entry.entryType === 'layout-shift') {
+              const sources = (entry as any).sources || [];
+              const shiftScore = (entry as any).value || 0;
+              for (const src of sources) {
+                if (src.node && src.node.nodeType === 1) {
+                  this.highlightLayoutShift(src.node as HTMLElement, shiftScore);
+                }
+              }
+            }
+          }
+          const cutoff = performance.now() - 15000;
+          this.perfMetrics = this.perfMetrics.filter(e => e.startTime >= cutoff);
+        });
+        obs.observe({ type, buffered: true });
+        this.perfObservers.push(obs);
+      } catch (e) {
+        // Feature unsupported, ignore silently.
+      }
+    }
   }
 
   setPaused(isPaused: boolean) {
