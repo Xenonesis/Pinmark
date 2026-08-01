@@ -30,6 +30,22 @@
         </div>
     </div>
 
+    <div class="card" id="card-a11y" style="display: flex; flex-direction: column; gap: 10px; align-items: start;">
+        <h3>A11y Test Card</h3>
+        <p id="low-contrast-text" style="color: #c8c8c8;">Low contrast text (should fail WCAG 4.5:1 on white)</p>
+        <img id="img-no-alt" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" width="32" height="32" />
+        <button id="btn-empty" style="width: 40px; height: 40px; background: #eee; border: 1px solid #999;"></button>
+        <input id="input-no-label" />
+        <div id="tabindex-pos" tabindex="5">tabindex 5 element</div>
+    </div>
+
+    <div class="card" id="card-errors" style="display: flex; flex-direction: column; gap: 10px; align-items: start;">
+        <h3>Error Trace Card</h3>
+        <p>Click the buttons to generate a real TypeError and an unhandled rejection with stack frames for ErrorStackTracer.</p>
+        <button id="btn-throw" style="width: 160px; height: 36px;">Throw TypeError</button>
+        <button id="btn-reject" style="width: 160px; height: 36px;">Reject Promise</button>
+    </div>
+
     <!-- Load React component mocked info for testing -->
     <script>
         // Mock React detection by adding a property
@@ -49,6 +65,43 @@
                 // heavy loop
             }
             console.log('Lag finished');
+        });
+    </script>
+    <script>
+        // Fake global stores for StateSniffer verification (like dev apps expose)
+        // 1. Plain Redux store on window (circular ref to prove circular-safety)
+        const circular = { tag: 'cycle' };
+        circular.self = circular;
+        window.store = {
+            getState: () => ({ user: { id: 42, name: 'Acer Dev', role: 'admin' }, cart: { items: [1, 2, 3], total: 99.5 }, circular }),
+            dispatch: (a) => a
+        };
+        // 2. Redux DevTools extension hook presence
+        window.__REDUX_DEVTOOLS_EXTENSION__ = function () { return { init() {}, send() {} }; };
+        // 3. React DevTools hook with a Provider fiber (fiber-walk path)
+        const providerStore = { getState: () => ({ fromProvider: true, list: ['a', 'b', 'c'], n: 7 }) };
+        const fiber = (depth) => depth > 4 ? { memoizedProps: {}, child: null } : { memoizedProps: depth === 3 ? { store: providerStore } : {}, child: fiber(depth + 1) };
+        fiber(0).child.sibling = null;
+        window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+            renderers: new Map([[1, {}]]),
+            getFiberRoots: (id) => id === 1 ? new Set([{ current: fiber(0) }]) : new Set()
+        };
+        // 4. Vue devtools hook with Vuex state
+        window.__VUE_DEVTOOLS_GLOBAL_HOOK__ = { store: { state: { auth: { loggedIn: true, token: 'abc123' } } } };
+        // 5. Zustand store exposed on window
+        window.zustand = { getState: () => ({ count: 3, items: ['x', 'y'] }) };
+    </script>
+    <script>
+        // Named function chain so the captured stack has readable frames.
+        window.pinmarkThrowChain = function () {
+            function innermost() { throw new TypeError("pinmark e2e: cannot read 'x' of undefined"); }
+            function middleLayer() { innermost(); }
+            function outerLayer() { middleLayer(); }
+            outerLayer();
+        };
+        document.getElementById('btn-throw').addEventListener('click', () => window.pinmarkThrowChain());
+        document.getElementById('btn-reject').addEventListener('click', () => {
+            Promise.reject(new RangeError('pinmark e2e: value 999 out of range'));
         });
     </script>
     <script src="./test-web.bundle.js"></script>

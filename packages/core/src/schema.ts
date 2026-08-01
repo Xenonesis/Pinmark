@@ -54,6 +54,16 @@ export const PinmarkAnnotationSchema = z.object({
   sessionReplayEvents: z.array(z.record(z.string(), z.any())).optional(),
   sessionRecording: z.array(z.any()).optional(),
   performanceMetrics: z.array(z.any()).optional(),
+  stateSnapshot: z.any().optional(),
+  a11yIssues: z.array(z.any()).optional(),
+  errorTrace: z.array(z.any()).optional(),
+  triage: z.object({
+    category: z.enum(['bug', 'improvement', 'question', 'design']),
+    intent: z.enum(['fix', 'change', 'question', 'approve']),
+    severity: z.enum(['blocking', 'important', 'suggestion']),
+    summary: z.string(),
+    reasons: z.array(z.string())
+  }).optional(),
   fpsMetrics: z.array(z.object({
     timestamp: z.number(),
     fps: z.number()

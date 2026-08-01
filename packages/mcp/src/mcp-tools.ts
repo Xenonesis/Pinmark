@@ -199,7 +199,51 @@ export function registerMcpTools(server: Server) {
         },
         {
           name: "pinmark_suggest_perf_fix",
-          description: "Generates instructions for fixing a performance issue in a specific component. Takes the annotation ID, analyzes DOM and React/Vue component data, and returns a suggested fix strategy for the AI to implement.",
+          description: "Generates a prioritized fix strategy for the pinned issue using ALL captured diagnostics (performance metrics, failing network requests, state snapshot, WCAG a11y issues, runtime error traces) plus DOM/component data, for the AI to implement.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              annotationId: { type: "string" }
+            },
+            required: ["annotationId"]
+          }
+        },
+        {
+          name: "pinmark_get_state_snapshot",
+          description: "Returns the application state snapshot (Redux/Vuex/Zustand stores) captured at the moment the pin was dropped, so the AI can inspect the exact state that produced the issue.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              annotationId: { type: "string" }
+            },
+            required: ["annotationId"]
+          }
+        },
+        {
+          name: "pinmark_audit_a11y",
+          description: "Returns the WCAG 2.1 accessibility issues (contrast, missing alt/aria labels, tabindex) detected on the pinned element at capture time, with fix suggestions for the AI.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              annotationId: { type: "string" }
+            },
+            required: ["annotationId"]
+          }
+        },
+        {
+          name: "pinmark_trace_errors",
+          description: "Returns runtime errors (window errors + unhandled promise rejections) with parsed stack frames captured near pin time, correlated to the pinned element's context for AI stack-tracing.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              annotationId: { type: "string" }
+            },
+            required: ["annotationId"]
+          }
+        },
+        {
+          name: "pinmark_triage",
+          description: "Returns the automatic triage classification (category/intent/severity) computed for the pin from all captured diagnostics, with the evidence reasons and a one-line summary.",
           inputSchema: {
             type: "object",
             properties: {
@@ -563,32 +607,199 @@ export function registerMcpTools(server: Server) {
         const hasHeavyDOM = dom && dom.totalNodes > 1500;
         const hasDeepNesting = dom && dom.elementDepth > 20;
 
-        let prompt = `Analyze the following performance and component data for Annotation ${annotationId}, and output a suggested code fix to the user.\n\n`;
+        let prompt = `Analyze the following diagnostic data for Annotation ${annotationId} and output a prioritized code fix: root cause first, then secondary issues (network/a11y/state).\n\n`;
         if (comp) {
           prompt += `**Component Detected:** ${comp.name} (${comp.framework})\n`;
           if (comp.filePath) prompt += `**File:** ${comp.filePath}\n`;
         } else {
-          prompt += `**Target Element:** <${el.tagName.toLowerCase()}> with classes: ${el.classes.join(', ')}\n`;
+          prompt += `**Target Element:** <${(el.tagName || 'element').toLowerCase()}> with classes: ${(el.classes || []).join(', ')}\n`;
         }
 
-        prompt += `\n**Performance Issues Detected:**\n`;
+        // ── 1. Performance
+        const longTasks = (annotation.performanceMetrics || []).filter((m: any) => m.entryType === 'longtask');
+        const mem = annotation.memoryMetrics;
+        const memoryHigh = !!mem && mem.usedJSHeapSize > 100 * 1024 * 1024;
+        prompt += `\n**Performance Diagnostics:**\n`;
         if (hasHeavyDOM) prompt += `- The DOM is extremely large (${dom.totalNodes} nodes). Suggest virtualization, pagination, or lazy-loading off-screen elements.\n`;
         if (hasDeepNesting) prompt += `- The element is deeply nested (Depth: ${dom.elementDepth}). Suggest flattening the DOM structure to speed up Layout Recalculation.\n`;
-        
-        const longTasks = (annotation.performanceMetrics || []).filter((m: any) => m.entryType === 'longtask');
-        if (longTasks.length > 0) {
-           prompt += `- ${longTasks.length} Long Task(s) detected blocking the main thread. Suggest wrapping expensive calculations in \`useMemo\`, breaking up work with \`requestIdleCallback\`/promises, or using \`React.memo\` to prevent wasteful re-renders.\n`;
+        if (longTasks.length > 0) prompt += `- ${longTasks.length} Long Task(s) detected blocking the main thread. Suggest wrapping expensive calculations in \`useMemo\`, breaking up work with \`requestIdleCallback\`/promises, or using \`React.memo\` to prevent wasteful re-renders.\n`;
+        if (mem && memoryHigh) prompt += `- Memory usage is unusually high (${(mem.usedJSHeapSize/1024/1024).toFixed(1)} MB). Suggest looking for un-cleared event listeners, setIntervals, or large un-memoized objects causing a memory leak.\n`;
+        if (!hasHeavyDOM && !hasDeepNesting && longTasks.length === 0 && !memoryHigh) {
+          prompt += `- No significant performance problems detected.\n`;
         }
 
-        if (annotation.memoryMetrics && annotation.memoryMetrics.usedJSHeapSize > 100 * 1024 * 1024) {
-           prompt += `- Memory usage is unusually high (${(annotation.memoryMetrics.usedJSHeapSize/1024/1024).toFixed(1)} MB). Suggest looking for un-cleared event listeners, setIntervals, or large un-memoized objects causing a memory leak.\n`;
+        // ── 2. Network failures
+        const failing = (annotation.networkRequests || []).filter((r: any) => r.isError || (r.status && r.status >= 400));
+        if (failing.length > 0) {
+          prompt += `\n**Network Failures (${failing.length}):**\n`;
+          failing.forEach((r: any) => {
+            const body = r.responseBody ? String(r.responseBody).slice(0, 120) : '';
+            prompt += `- ${r.method} ${r.url} → ${r.status ?? 'failed'}${body ? ` (body: ${body})` : ''}\n`;
+          });
+          prompt += `- Suggest adding error handling/retries for these failing requests, and verify the API contract matches the client expectation.\n`;
         }
+
+        // ── 3. State snapshot
+        const snap = annotation.stateSnapshot as any;
+        if (snap && snap.detected && snap.detected.length > 0) {
+          prompt += `\n**State Snapshot (${snap.detected.join(', ')}):**\n`;
+          prompt += `- Review the captured store state (below) for undefined/null values, missing keys, or stale data that may cause the reported issue.\n\n`;
+          prompt += `\`\`\`json\n${JSON.stringify(snap.snapshot, null, 2).slice(0, 2000)}\n\`\`\`\n`;
+        }
+
+        // ── 4. Accessibility
+        const issues: any[] = annotation.a11yIssues || [];
+        if (issues.length > 0) {
+          prompt += `\n**Accessibility Issues (${issues.length}):**\n`;
+          issues.forEach((i: any) => prompt += `- [${i.severity}] ${i.type} (WCAG ${i.wcag}): ${i.message}\n`);
+          prompt += `- Fix these WCAG violations while you are in the component; they are cheap to address together.\n`;
+        }
+
+        // ── 5. Runtime error trace
+        const errors: any[] = annotation.errorTrace || [];
+        if (errors.length > 0) {
+          prompt += `\n**Runtime Errors (${errors.length}):**\n`;
+          errors.forEach((e: any) => {
+            const first = (e.stack || [])[0];
+            const loc = first ? `${first.fn}() at ${first.file}:${first.line}:${first.col}` : e.location;
+            prompt += `- [${e.type}] ${e.name}: ${e.message} — first frame \`${loc}\`\n`;
+          });
+          prompt += `- Trace the stack frames above to the throwing module; fix the root cause, not just the symptom.\n`;
+        }
+
+        prompt += `\n**Output:** a concise markdown fix plan with: 1) Root cause, 2) Primary code fix, 3) Secondary fixes (if any), 4) How to verify the fix.`;
 
         return {
           content: [
             { type: "text", text: prompt }
           ]
         };
+      }
+
+      case "pinmark_get_state_snapshot": {
+        const annotationId = String(request.params.arguments?.annotationId);
+        const annotation = store.getAnnotation(annotationId);
+        if (!annotation) {
+          throw new McpError(ErrorCode.InvalidParams, `Annotation ${annotationId} not found`);
+        }
+        const snap = annotation.stateSnapshot as any;
+        if (!snap || !snap.detected || snap.detected.length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Annotation ${annotationId} has no state snapshot (no Redux/Vuex/Zustand store detected at pin time).`,
+              },
+            ],
+          };
+        }
+        const pretty = JSON.stringify(snap.snapshot, null, 2);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `## State Snapshot for Annotation ${annotationId}\n\n**Detected stores:** ${snap.detected.join(', ')}\n\`\`\`json\n${pretty.slice(0, 8000)}\n\`\`\``,
+            },
+          ],
+        };
+      }
+
+      case "pinmark_audit_a11y": {
+        const annotationId = String(request.params.arguments?.annotationId);
+        const annotation = store.getAnnotation(annotationId);
+        if (!annotation) {
+          throw new McpError(ErrorCode.InvalidParams, `Annotation ${annotationId} not found`);
+        }
+        const issues: any[] = annotation.a11yIssues || [];
+        if (issues.length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `No WCAG 2.1 accessibility issues detected on the pinned element for Annotation ${annotationId}.`,
+              },
+            ],
+          };
+        }
+        const FIX_HINTS: Record<string, string> = {
+          contrast: "Increase the text/background contrast ratio (adjust color or font-weight/size).",
+          "image-alt": "Add a descriptive alt attribute; use alt=\"\" for decorative images.",
+          "button-name": "Add aria-label, title, or visible text content to the control.",
+          label: "Associate a <label for=\"…\"> with the input, or add aria-label/aria-labelledby.",
+          tabindex: "Replace positive tabindex with natural DOM order (or tabindex=\"0\").",
+        };
+        let out = `## WCAG 2.1 Accessibility Audit for Annotation ${annotationId}\n\n`;
+        out += `**${issues.length} issue(s) found**\n\n`;
+        issues.forEach((issue: any, i: number) => {
+          out += `${i + 1}. **[${issue.severity}] ${issue.type}** (WCAG ${issue.wcag}): ${issue.message}\n`;
+          if (issue.detail) out += `   - Detail: \`${issue.detail}\`\n`;
+          const hint = FIX_HINTS[issue.type];
+          if (hint) out += `   - Fix: ${hint}\n`;
+        });
+        return { content: [{ type: "text", text: out }] };
+      }
+
+      case "pinmark_trace_errors": {
+        const annotationId = String(request.params.arguments?.annotationId);
+        const annotation = store.getAnnotation(annotationId);
+        if (!annotation) {
+          throw new McpError(ErrorCode.InvalidParams, `Annotation ${annotationId} not found`);
+        }
+        const errors: any[] = annotation.errorTrace || [];
+        if (errors.length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `No runtime errors (window errors or unhandled rejections) were captured in the window around Annotation ${annotationId}.`,
+              },
+            ],
+          };
+        }
+        const pinTime = annotation.timestamp || Date.now();
+        let out = `## Runtime Error Trace for Annotation ${annotationId}\n\n`;
+        out += `**${errors.length} error(s) captured near pin time**\n\n`;
+        errors.forEach((err: any, i: number) => {
+          const ageSec = ((pinTime - err.timestamp) / 1000).toFixed(1);
+          const frameHints = (err.stack || [])
+            .filter((f: any) => f.fn && f.fn !== '<anonymous>' && (!f.file || !f.file.startsWith('pinmark')))
+            .slice(0, 4)
+            .map((f: any) => `   - \`${f.fn}()\` at \`${f.file}:${f.line}:${f.col}\``)
+            .join('\n');
+          out += `${i + 1}. **[${err.type}] ${err.name}**: ${err.message}\n`;
+          out += `   - Source: \`${err.location}\` (${ageSec}s before pin)\n`;
+          if (frameHints) out += `   - Stack frames:\n${frameHints}\n`;
+        });
+        out += `\n**Trace hint:** locate the first non-library frame above to find the module that threw; correlate with the pinned element's comment for the failing interaction.`;
+        return { content: [{ type: "text", text: out }] };
+      }
+
+      case "pinmark_triage": {
+        const annotationId = String(request.params.arguments?.annotationId);
+        const annotation = store.getAnnotation(annotationId);
+        if (!annotation) {
+          throw new McpError(ErrorCode.InvalidParams, `Annotation ${annotationId} not found`);
+        }
+        const triage: any = annotation.triage;
+        if (!triage) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Annotation ${annotationId} has no auto-triage (computed at pin time from captured diagnostics).`,
+              },
+            ],
+          };
+        }
+        let out = `## Auto-Triage for Annotation ${annotationId}\n\n`;
+        out += `**Classification:** ${triage.category} / ${triage.intent} / ${triage.severity}\n\n`;
+        out += `**Summary:** ${triage.summary}\n`;
+        if (triage.reasons && triage.reasons.length > 0) {
+          out += `\n**Evidence:**\n`;
+          triage.reasons.forEach((r: string) => out += `- ${r}\n`);
+        }
+        out += `\n**Action:** ${triage.severity === 'blocking' ? 'prioritize immediately; the pinned element is failing at runtime.' : triage.severity === 'important' ? 'schedule a fix this sprint; the pinned element degrades the experience.' : 'nice-to-have improvement; low risk to address alongside other fixes.'}`;
+        return { content: [{ type: "text", text: out }] };
       }
 
       case "pinmark_ask_question": {

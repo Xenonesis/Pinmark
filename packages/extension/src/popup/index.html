@@ -128,6 +128,14 @@
         <polyline points="6,4 10,8 6,12"/>
       </svg>
     </button>
+
+    <!-- Review Annotations → nav row -->
+    <button class="nav-row" id="openReview">
+      <span class="setting-label">Review Annotations</span>
+      <svg class="nav-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <polyline points="6,4 10,8 6,12"/>
+      </svg>
+    </button>
   </div>
 
   <!-- Advanced Panel (hidden by default) -->
@@ -168,6 +176,21 @@
     </div>
 
     <button id="copyJsonBtn" class="action-btn">Copy JSON</button>
+  </div>
+
+  <!-- Review Panel (hidden by default) -->
+  <div class="card advanced-panel" id="reviewPanel" style="display:none">
+    <div class="header">
+      <button class="back-btn" id="closeReview">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="10,4 6,8 10,12"/>
+        </svg>
+        Back
+      </button>
+      <span class="panel-title">Review</span>
+    </div>
+    <div id="reviewMeta" class="review-meta"></div>
+    <div id="reviewList" class="review-list"></div>
   </div>
 
   <script type="module" src="popup.ts"></script>

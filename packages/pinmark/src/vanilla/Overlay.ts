@@ -7,6 +7,10 @@ import { ElementAnalyzer } from './ElementAnalyzer.js';
 import { FrameworkDetector } from './FrameworkDetector.js';
 import { MarkdownFormatter } from './MarkdownFormatter.js';
 import { NetworkInterceptor } from './NetworkInterceptor.js';
+import { getGlobalStateSnapshot } from './StateSniffer.js';
+import { auditA11y } from './A11yAuditor.js';
+import { ErrorStackTracer } from './ErrorStackTracer.js';
+import { autoTriage, type TriageResult } from './AutoTriage.js';
 import { FeedbackManager } from '../core/FeedbackManager.js';
 import type { PinmarkSettings, PinmarkConfig } from '../core/types.js';
 import type { PinmarkAnnotation as FeedbackItem } from '@pinmark/core';
@@ -119,6 +123,7 @@ export class Overlay {
 
 
   private networkInterceptor = new NetworkInterceptor();
+  private errorTracer = new ErrorStackTracer();
   constructor(settings: PinmarkSettings, config: PinmarkConfig, initialFeedback: FeedbackItem[] = []) {
     this.settings = settings;
     this.config = config;
@@ -364,6 +369,24 @@ export class Overlay {
     // Default behavior for non-target clicks when blocking is disabled
     // (do nothing, let event propagate)
   };
+  /** Assemble the current diagnostics bundle and classify the pin (never throws). */
+  private buildTriage(element?: HTMLElement): TriageResult {
+    try {
+      const mem = (performance as any).memory;
+      return autoTriage({
+        performanceMetrics: [...this.perfMetrics],
+        networkRequests: this.networkInterceptor.getRequests(),
+        a11yIssues: element ? auditA11y(element) : undefined,
+        errorTrace: this.errorTracer.getErrors(),
+        fpsMetrics: [...this.fpsHistory],
+        memoryMetrics: mem ? { usedJSHeapSize: mem.usedJSHeapSize, totalJSHeapSize: mem.totalJSHeapSize } : undefined,
+        domMetrics: this.getDomAndMemoryMetrics().domMetrics
+      });
+    } catch (e) {
+      return { category: 'question', intent: 'approve', severity: 'suggestion', summary: 'Triage failed to run.', reasons: [] };
+    }
+  }
+
   private getDomAndMemoryMetrics(element?: HTMLElement) {
     let elementDepth = 0;
     if (element) {
@@ -511,12 +534,16 @@ export class Overlay {
     })();
 
     // Show the modal immediately (passing undefined for screenshot initially)
+    const triage = this.buildTriage(element);
     const modalPromise = this.feedbackModal.show(element, {
       screenshotUrl: undefined,
       computedStyles: computedStylesData,
       selectionText,
       componentInfo: componentInfo ? { framework: componentInfo.framework, name: componentInfo.name, hierarchy: componentInfo.hierarchy } : undefined,
-      smartName
+      smartName,
+      existingCategory: triage.category,
+      existingIntent: triage.intent,
+      existingSeverity: triage.severity
     });
 
     // Update the screenshot in the modal once it resolves
@@ -587,6 +614,10 @@ export class Overlay {
       networkRequests: this.networkInterceptor.getRequests(),
       sessionReplayEvents: [...this.rrwebEvents],
       performanceMetrics: [...this.perfMetrics],
+      stateSnapshot: getGlobalStateSnapshot(),
+      a11yIssues: auditA11y(element),
+      errorTrace: this.errorTracer.getErrors(),
+      triage: this.buildTriage(element),
       fpsMetrics: [...this.fpsHistory],
       ...this.getDomAndMemoryMetrics(element),
       ...(overrideRect ? { areaRect: { x: overrideRect.x + scrollLeft, y: overrideRect.y + scrollTop, width: overrideRect.width, height: overrideRect.height } } : {})
@@ -942,6 +973,10 @@ export class Overlay {
       networkRequests: this.networkInterceptor.getRequests(),
       sessionReplayEvents: [...this.rrwebEvents],
       performanceMetrics: [...this.perfMetrics],
+      stateSnapshot: getGlobalStateSnapshot(),
+      a11yIssues: auditA11y(element),
+      errorTrace: this.errorTracer.getErrors(),
+      triage: this.buildTriage(element),
       fpsMetrics: [...this.fpsHistory],
       ...this.getDomAndMemoryMetrics(element),
     };
@@ -1334,6 +1369,10 @@ export class Overlay {
       consoleLogs: [],
       networkRequests: this.networkInterceptor.getRequests(),
       performanceMetrics: [...this.perfMetrics],
+      stateSnapshot: getGlobalStateSnapshot(),
+      a11yIssues: auditA11y(target),
+      errorTrace: this.errorTracer.getErrors(),
+      triage: this.buildTriage(target),
       fpsMetrics: [...this.fpsHistory],
       ...this.getDomAndMemoryMetrics(target),
       markerType: 'area',
@@ -1375,6 +1414,10 @@ export class Overlay {
       consoleLogs: [],
       networkRequests: this.networkInterceptor.getRequests(),
       performanceMetrics: [...this.perfMetrics],
+      stateSnapshot: getGlobalStateSnapshot(),
+      a11yIssues: auditA11y(target),
+      errorTrace: this.errorTracer.getErrors(),
+      triage: this.buildTriage(target),
       fpsMetrics: [...this.fpsHistory],
       ...this.getDomAndMemoryMetrics(target),
       markerType: 'area',
@@ -1445,6 +1488,7 @@ export class Overlay {
     document.body.appendChild(this.container);
     this.setupEventListeners();
     this.networkInterceptor.enable();
+    this.errorTracer.enable();
     if (this.config.onToggle) this.config.onToggle(true);
     
     try {
@@ -1524,6 +1568,7 @@ export class Overlay {
     this.removeEventListeners();
     this.container.remove();
     this.networkInterceptor.disable();
+    this.errorTracer.disable();
     this.setAreaSelectActive(false);
     this.toolbar.toggleAreaSelect(false);
     this.isFrozen = false;
@@ -1554,6 +1599,7 @@ export class Overlay {
     this.consoleLogs = [];
     this.perfMetrics = [];
     this.networkInterceptor.clear();
+    this.errorTracer.clear();
 
     if (this.config.onToggle) this.config.onToggle(false);
   }

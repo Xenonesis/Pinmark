@@ -1,10 +1,13 @@
-import type { ExtensionSettings } from '../shared/types';
+import type { ExtensionSettings, FeedbackItem } from '../shared/types';
 import { sendMessage } from '../shared/messaging';
-import { getSettings, saveSettings } from '../shared/storage';
+import { getSettings, saveSettings, getFeedback } from '../shared/storage';
 import { setHTML } from "../../../pinmark/src/vanilla/domUtils";
+import { MarkdownFormatter } from "../../../pinmark/src/vanilla/MarkdownFormatter";
 
 let currentTabId: number | null = null;
+let currentTabUrl: string = '';
 let isActive = false;
+const formatter = new MarkdownFormatter();
 
 // ── DOM refs ──────────────────────────────────────────
 const toggleBtnCheckbox = document.getElementById('toggleBtnCheckbox') as HTMLInputElement;
@@ -254,6 +257,167 @@ closeAdvancedBtn?.addEventListener('click', () => {
   }, 150);
 });
 
+// ── Review Panel ─────────────────────────────────────
+const openReviewBtn = document.getElementById('openReview') as HTMLButtonElement;
+const closeReviewBtn = document.getElementById('closeReview') as HTMLButtonElement;
+const reviewPanel = document.getElementById('reviewPanel') as HTMLElement;
+const reviewMeta = document.getElementById('reviewMeta') as HTMLElement;
+const reviewList = document.getElementById('reviewList') as HTMLElement;
+
+function slideToPanel(panel: HTMLElement) {
+  mainCard.classList.add('slide-out');
+  setTimeout(() => {
+    mainCard.style.display = 'none';
+    mainCard.classList.remove('slide-out');
+    panel.style.display = '';
+    panel.classList.add('slide-in');
+    panel.addEventListener('animationend', () => panel.classList.remove('slide-in'), { once: true });
+  }, 150);
+}
+
+function slideBackFromPanel(panel: HTMLElement) {
+  panel.classList.add('slide-out');
+  setTimeout(() => {
+    panel.style.display = 'none';
+    panel.classList.remove('slide-out');
+    mainCard.style.display = '';
+    mainCard.classList.add('slide-in');
+    mainCard.addEventListener('animationend', () => mainCard.classList.remove('slide-in'), { once: true });
+  }, 150);
+}
+
+openReviewBtn?.addEventListener('click', () => {
+  renderReview();
+  slideToPanel(reviewPanel);
+});
+
+closeReviewBtn?.addEventListener('click', () => slideBackFromPanel(reviewPanel));
+
+// ── Review rendering ─────────────────────────────────
+function triageChip(item: FeedbackItem): string {
+  const t: any = item.triage;
+  const sev = t?.severity || item.severity || 'suggestion';
+  const cat = t?.category || item.category || 'question';
+  return `<span class="triage-chip sev-${sev}">${cat} · ${sev}</span>`;
+}
+
+function diagnosticBadges(item: FeedbackItem): string {
+  const perf = (item.performanceMetrics || []).filter((m: any) => m.entryType === 'longtask').length;
+  const failing = (item.networkRequests || []).filter((r: any) => r.isError || (r.status && r.status >= 400)).length;
+  const stores = ((item.stateSnapshot as any)?.detected || []).length;
+  const a11y = (item.a11yIssues || []).length;
+  const errors = (item.errorTrace || []).length;
+  const badges: string[] = [];
+  if (perf > 0) badges.push(`<span class="diag-badge">⏱ ${perf}</span>`);
+  if (failing > 0) badges.push(`<span class="diag-badge badge-warn">✗ ${failing}</span>`);
+  if (stores > 0) badges.push(`<span class="diag-badge">◈ ${stores}</span>`);
+  if (a11y > 0) badges.push(`<span class="diag-badge badge-warn">♿ ${a11y}</span>`);
+  if (errors > 0) badges.push(`<span class="diag-badge badge-warn">⚠ ${errors}</span>`);
+  return badges.length ? `<div class="review-row">${badges.join('')}</div>` : '';
+}
+
+function detailSections(item: FeedbackItem): string {
+  const sections: string[] = [];
+  const t: any = item.triage;
+  if (t?.summary) {
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Auto-Triage</div>${t.summary}${t.reasons?.length ? ` <span style="opacity:.7">(${t.reasons.join('; ')})</span>` : ''}</div>`);
+  }
+
+  const longTasks = (item.performanceMetrics || []).filter((m: any) => m.entryType === 'longtask');
+  const tbt = longTasks.reduce((s: number, lt: any) => s + Math.max(0, (lt.duration || 0) - 50), 0);
+  const shifts = (item.performanceMetrics || []).filter((m: any) => m.entryType === 'layout-shift');
+  if (longTasks.length > 0 || shifts.length > 0) {
+    const parts: string[] = [];
+    if (longTasks.length > 0) parts.push(`${longTasks.length} long task(s), TBT ${Math.round(tbt)}ms`);
+    if (shifts.length > 0) parts.push(`${shifts.length} layout shift(s)`);
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Performance</div>${parts.join(' · ')}</div>`);
+  }
+
+  const failing = (item.networkRequests || []).filter((r: any) => r.isError || (r.status && r.status >= 400));
+  if (failing.length > 0) {
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Network Failures</div>${failing.map((r: any) => `<code>${r.method} ${r.url}</code> → ${r.status ?? 'ERR'}`).join('<br>')}</div>`);
+  }
+
+  const issues: any[] = item.a11yIssues || [];
+  if (issues.length > 0) {
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">A11y (WCAG)</div>${issues.slice(0, 4).map((i: any) => `${i.type} (${i.wcag})`).join(', ')}${issues.length > 4 ? ` +${issues.length - 4}` : ''}</div>`);
+  }
+
+  const errors: any[] = item.errorTrace || [];
+  if (errors.length > 0) {
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Runtime Errors</div>${errors.map((e: any) => {
+      const first = (e.stack || [])[0];
+      return `<code>${e.name}</code>: ${e.message}${first ? ` @ ${first.fn} ${first.file}:${first.line}` : ''}`;
+    }).join('<br>')}</div>`);
+  }
+
+  const ss: any = item.stateSnapshot;
+  if (ss?.detected?.length) {
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">State</div>${ss.detected.join(', ')}<br><code>${JSON.stringify(ss.snapshot).slice(0, 180)}</code></div>`);
+  }
+
+  return sections.join('');
+}
+
+async function renderReview() {
+  if (!currentTabUrl) {
+    setHTML(reviewMeta, 'Open a webpage, then click the Pinmark icon.');
+    setHTML(reviewList, '');
+    return;
+  }
+  const items = await getFeedback(currentTabUrl);
+  const host = (() => { try { return new URL(currentTabUrl).hostname; } catch { return currentTabUrl; } })();
+  setHTML(reviewMeta, `${host} · ${items.length} annotation(s)`);
+
+  if (!items.length) {
+    setHTML(reviewList, `<div class="review-empty">No annotations yet.<br>Enable Pinmark and pin something on this page — diagnostics will show up here.</div>`);
+    return;
+  }
+
+  const sorted = [...items].sort((a, b) => (a.index || 0) - (b.index || 0));
+  const html = sorted.map((item) => {
+    const selector = item.element?.id ? `#${item.element.id}` : (item.element?.classes?.[0] ? `.${item.element.classes[0]}` : `<${item.element?.tagName || '?'}>`);
+    const detailId = `review-detail-${item.id}`;
+    const md = formatter.formatItem(item).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    return `<div class="review-item">
+      <div class="review-item-head" data-detail="${detailId}">
+        <div class="review-item-top">
+          <span class="review-idx">#${item.index ?? '?'}</span>
+          <span class="review-comment">${item.comment || '(no comment)'}</span>
+          ${triageChip(item)}
+        </div>
+        <span class="review-selector">${selector}</span>
+        ${diagnosticBadges(item)}
+      </div>
+      <div class="review-detail" id="${detailId}" style="display:none">
+        ${detailSections(item) || '<span style="opacity:.7">No diagnostics captured for this pin.</span>'}
+        <button class="review-copy" data-md="${md}">Copy AI Markdown</button>
+      </div>
+    </div>`;
+  }).join('');
+  setHTML(reviewList, html);
+
+  reviewList.querySelectorAll('.review-item-head').forEach((head) => {
+    head.addEventListener('click', () => {
+      const detail = document.getElementById(head.getAttribute('data-detail') || '') as HTMLElement;
+      if (detail) detail.style.display = detail.style.display === 'none' ? '' : 'none';
+    });
+  });
+  reviewList.querySelectorAll('.review-copy').forEach((el) => {
+    const btn = el as HTMLButtonElement;
+    btn.addEventListener('click', async () => {
+      const md = btn.getAttribute('data-md') || '';
+      try {
+        await navigator.clipboard.writeText(md);
+        btn.textContent = 'Copied!'; btn.style.color = '#4ade80';
+        setTimeout(() => { btn.textContent = 'Copy AI Markdown'; btn.style.color = ''; }, 1200);
+      } catch (e) {
+        btn.textContent = 'Copy failed'; btn.style.color = '#f87171';
+      }
+    });
+  });
+}
+
 // ── Integrations inputs ───────────────────────────────
 autoSyncToggle?.addEventListener('change', async () => {
   await saveSetting('autoSync', autoSyncToggle.checked);
@@ -303,6 +467,7 @@ async function init() {
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTabId = tab?.id || null;
+  currentTabUrl = tab?.url || '';
 
   if (currentTabId === null) {
     showStatus('Open a webpage, then click the Pinmark icon.');
