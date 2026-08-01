@@ -37,3 +37,6 @@ test-*.mjs
 # Puppeteer artifacts
 .puppeteer-profile-*/
 pnpm-lock.yaml
+# Build artifacts
+*.zip
+packages/pinmark-extension-*.zip
