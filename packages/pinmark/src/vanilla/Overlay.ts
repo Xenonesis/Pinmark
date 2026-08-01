@@ -1586,10 +1586,17 @@ export class Overlay {
     }
     this.perfObservers = [];
 
+    // Types that typically have FEW buffered entries — safe to replay on start.
+    const bufferedTypes = new Set(['longtask', 'layout-shift', 'largest-contentful-paint']);
+    // 'mark', 'measure', 'event' can have THOUSANDS of buffered entries (rrweb
+    // internal marks, user interactions, etc.) — replaying them all synchronously
+    // can hang the content script and cause Chrome to restart it.
     const perfTypes = ['longtask', 'layout-shift', 'largest-contentful-paint', 'event', 'mark', 'measure'];
     for (const type of perfTypes) {
       try {
         const obs = new PerformanceObserver((list) => {
+          // If the overlay has been deactivated, skip processing entirely.
+          if (!this.isActive) return;
           for (const entry of list.getEntries()) {
             this.perfMetrics.push(entry.toJSON());
             if (entry.entryType === 'layout-shift') {
@@ -1605,13 +1612,14 @@ export class Overlay {
           const cutoff = performance.now() - 15000;
           this.perfMetrics = this.perfMetrics.filter(e => e.startTime >= cutoff);
         });
-        obs.observe({ type, buffered: true });
+        obs.observe({ type, buffered: bufferedTypes.has(type) });
         this.perfObservers.push(obs);
       } catch (e) {
         // Feature unsupported, ignore silently.
       }
     }
   }
+
 
   setPaused(isPaused: boolean) {
     this.isPaused = isPaused;
