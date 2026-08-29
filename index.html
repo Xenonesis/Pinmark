@@ -3010,7 +3010,7 @@ footer a:hover { color: var(--ink); }
         <circle cx="64" cy="48" r="14" fill="var(--bg)"/>
         <circle cx="64" cy="48" r="6" fill="var(--accent)"/>
       </svg>
-      Pinmark <span class="brand-version">v1.5.0</span>
+      Pinmark <span class="brand-version">v1.5.1</span>
     </div>
     <nav class="topbar-nav" aria-label="Sections navigation">
       <a href="#main" class="nav-link active">Home</a>
@@ -3515,6 +3515,36 @@ footer a:hover { color: var(--ink); }
           <li>✨ <strong>Model Context Protocol (MCP) server</strong> for AI agents</li>
           <li>✨ <strong>Dual-browser package</strong> (Chrome MV3 + Firefox)</li>
           <li>✨ <strong>Metadata tags</strong> (Intent, Severity, and Categories)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Patch timeline — keeps landing page in sync with extension builds -->
+    <div style="margin-top: 40px; display: grid; gap: 16px;">
+      <div style="border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; background: var(--bg-elev);">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--bg-elev); background: var(--ink); padding: 3px 8px; border-radius: 999px;">v1.5.1</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted);">29 Aug 2026 — patch</span>
+          <span style="font-size: 12px; color: var(--good); background: var(--good-soft); padding: 2px 8px; border-radius: 999px; font-weight: 600;">● live</span>
+        </div>
+        <ul style="margin: 14px 0 0 18px; line-height: 1.9; color: var(--ink-mid); font-size: 13.5px;">
+          <li><strong>Modal action buttons — full redesign:</strong> fixed missing <code>.pinmark-modal-actions</code> selector that caused browser-default bevel buttons; now flex-aligned with hover/active/disabled states (<code>#ef4444 → #dc2626</code>) and click micro-interaction.</li>
+          <li><strong>Cross-platform pointer drawing:</strong> screenshot markup now uses <code>pointerdown / pointermove / pointerup / pointercancel + setPointerCapture</code> with <code>touch-action: none</code> — pen, touch and mouse all work reliably.</li>
+          <li><strong>Marker popup — smart collisions:</strong> auto-flip (<code>.flip-down</code>) when marker is within 160px of viewport top + horizontal edge alignment (<code>.align-left / .align-right</code>) and click-to-lock.</li>
+          <li><strong>Shadow DOM hit-testing fix:</strong> overlay now scopes interactive targets (<code>.pinmark-marker, .pinmark-toolbar, .pinmark-modal</code> etc.) so only real UI blocks hover — free canvas clicks work.</li>
+          <li><strong>Smart validation in FeedbackModal:</strong> empty-comment shake hint + keyboard shortcuts (<code>Ctrl+Enter / Escape</code>) and computed-styles accordion polish.</li>
+        </ul>
+      </div>
+      <div style="border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; background: var(--bg-elev); opacity: 0.92;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--ink); border: 1px solid var(--line-strong); padding: 3px 8px; border-radius: 999px;">v1.5.0</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted);">26 Aug 2026 — feature release</span>
+        </div>
+        <ul style="margin: 14px 0 0 18px; line-height: 1.9; color: var(--ink-mid); font-size: 13.5px;">
+          <li>Instant viewport screenshot (&lt;100ms) with canvas crop + drawing markup</li>
+          <li>MCP server — <code>pinmark_watch_annotations</code> blocking watcher + <code>pinmark init / doctor</code> CLI wizard</li>
+          <li>Dual-browser package (Chrome MV3 + Firefox) + React embed <code>&lt;Pinmark /&gt;</code> + marquee multi-selection</li>
+          <li>Metadata tags (Intent / Severity / Category) + voice memo + resilient selectors + user breadcrumbs</li>
         </ul>
       </div>
     </div>

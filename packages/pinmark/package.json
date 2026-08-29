@@ -1,6 +1,6 @@
 {
   "name": "@pinmark/pinmark",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Visual feedback annotation component for developers",
   "type": "module",
   "main": "dist/index.js",
