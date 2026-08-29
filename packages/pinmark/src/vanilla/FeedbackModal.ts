@@ -153,21 +153,36 @@ const MODAL_STYLES = `
   .pinmark-modal-input::placeholder {
     color: var(--pmk-text-muted, #6b7280);
   }
+  .pinmark-modal-actions {
     display: flex;
+    align-items: center;
     justify-content: flex-end;
-    gap: 6px;
-    margin-top: 14px;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.08));
   }
 
   .pinmark-modal-btn {
-    padding: 6.4px 16px;
-    border: none;
-    border-radius: 14px;
-    font-size: 12px;
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 500;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     cursor: pointer;
-    transition: opacity 0.15s ease, background 0.15s ease, transform 0.1s ease;
-    font-family: inherit;
+    outline: none;
+    border: none;
+    box-sizing: border-box;
+    user-select: none;
+    white-space: nowrap;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .pinmark-modal-btn:active {
@@ -175,30 +190,40 @@ const MODAL_STYLES = `
   }
 
   .pinmark-modal-btn:disabled {
-    opacity: 0.35;
+    opacity: 0.4;
     cursor: not-allowed;
+    pointer-events: none;
   }
 
   .pinmark-modal-btn.cancel {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.05);
     color: var(--pmk-text-muted, #9ca3af);
-    border: 1px solid var(--pmk-border, rgba(255,255,255,0.07));
+    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.1));
   }
 
   .pinmark-modal-btn.cancel:hover:not(:disabled) {
-    background: var(--pmk-bg-3, rgba(255, 255, 255, 0.06));
+    background: rgba(255, 255, 255, 0.1);
     color: var(--pmk-text, #f9fafb);
+    border-color: rgba(255, 255, 255, 0.18);
   }
 
   .pinmark-modal-btn.submit {
-    background: #ededed;
-    color: #09090b;
+    background: #ef4444;
+    color: #ffffff;
+    border: 1px solid rgba(239, 68, 68, 0.9);
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 
   .pinmark-modal-btn.submit:hover:not(:disabled) {
-    background: #ffffff;
+    background: #dc2626;
+    border-color: #dc2626;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
 
+  .pinmark-modal-btn.submit:active {
+    background: #b91c1c;
+    transform: scale(0.97);
+  }
   .pinmark-modal-element-info {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
