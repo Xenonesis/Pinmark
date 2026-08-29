@@ -104,7 +104,16 @@ export class MarkdownFormatter {
       md += `**Feedback:** ${item.comment}\n`;
     }
 
+    // ── Triage Intent & Severity ────────────────────────────────
+    if (item.triage) {
+      md += `**Triage:** ${item.triage.intent || 'feedback'} · ${item.triage.severity || 'normal'}${item.triage.category ? ` (${item.triage.category})` : ''}\n`;
+    }
+
     if (detail === 'compact') {
+      if (elem.component?.filePath) {
+        let src = `\`${elem.component.filePath}${elem.component.lineNumber ? `:${elem.component.lineNumber}` : ''}\``;
+        md += `**Source:** ${src}\n`;
+      }
       return md;
     }
 
@@ -112,8 +121,6 @@ export class MarkdownFormatter {
     if (elem.selector) {
       md += `**Location:** \`${elem.selector}\`\n`;
     }
-
-    // ── Source file (from component detection) ─────────────────
     if (elem.component?.filePath) {
       let source = `\`${elem.component.filePath}`;
       if (elem.component.lineNumber) {
@@ -162,11 +169,18 @@ export class MarkdownFormatter {
       md += `**Selected:** "${sel}"\n`;
     }
 
-    // ── Area Rect ────────────────────────────────────────────────
+    // ── Area Rect & Enclosed Elements ────────────────────────────
     if (item.areaRect) {
       md += `**Area:** x=${Math.round(item.areaRect.x)}, y=${Math.round(item.areaRect.y)}, w=${Math.round(item.areaRect.width)}, h=${Math.round(item.areaRect.height)}\n`;
+      if (item.selectedElements && item.selectedElements.length > 0) {
+        md += `**Enclosed Elements (${item.selectedElements.length}):**\n`;
+        for (const sub of item.selectedElements) {
+          const subTag = sub.tagName || 'el';
+          const subName = sub.component?.name ? `<${sub.component.name}>` : (sub.classes.length > 0 ? `.${sub.classes[0]}` : '');
+          md += `- \`${sub.selector}\` (${subTag}${subName ? ` ${subName}` : ''})\n`;
+        }
+      }
     }
-
     if (detail === 'detailed') {
       return md;
     }

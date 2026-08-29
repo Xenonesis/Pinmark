@@ -39,4 +39,14 @@ export interface PinmarkConfig {
   isPaused?: boolean;
   /** Callback fired when the pause state is toggled */
   onPauseToggle?: (isPaused: boolean) => void;
+  /** Direct MCP bridge endpoint URL (e.g. http://localhost:4747) */
+  endpoint?: string;
+  /** Explicit session ID to join or sync */
+  sessionId?: string;
+  /** Callback fired when an annotation is added */
+  onAnnotationAdd?: (item: PinmarkAnnotation) => void;
+  /** Callback fired when an annotation is deleted */
+  onAnnotationDelete?: (id: string) => void;
+  /** Callback fired when markdown is copied */
+  onCopy?: (markdown: string) => void;
 }

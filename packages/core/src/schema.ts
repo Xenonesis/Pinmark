@@ -83,7 +83,7 @@ export const PinmarkAnnotationSchema = z.object({
     width: z.number(),
     height: z.number()
   }).optional(),
-  
+  selectedElements: z.array(ElementInfoSchema).optional(),
   // State Capture
   state: z.object({
     localStorage: z.record(z.string(), z.string()).optional(),

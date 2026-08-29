@@ -1,8 +1,9 @@
+import { EventEmitter } from 'node:events';
 import type { Session, PinmarkAnnotation } from '@pinmark/core';
+import { sseManager } from './sse.js';
 
-export class Store {
+export class Store extends EventEmitter {
   private sessions: Map<string, Session> = new Map();
-
   createSession(url: string, sessionId?: string): Session {
     const id = sessionId || Math.random().toString(36).substring(2, 9);
     // Return existing session to avoid losing annotations
@@ -39,12 +40,12 @@ export class Store {
     session.annotations.push(annotation);
     session.updatedAt = Date.now();
     
-    // Broadcast via SSE
+    // Broadcast via SSE and emit internal event
     try {
-      const { sseManager } = await import('./sse.js');
       sseManager.notifyAnnotationUpdate(annotation);
     } catch(e) {}
     
+    this.emit('annotation_added', { sessionId, annotation });
     return annotation;
   }
 
@@ -76,7 +77,6 @@ export class Store {
     }
 
     try {
-      const { sseManager } = await import('./sse.js');
       sseManager.notifyAnnotationUpdate(annotation);
     } catch(e) {}
 
@@ -106,7 +106,6 @@ export class Store {
     }
 
     try {
-      const { sseManager } = await import('./sse.js');
       sseManager.notifyAnnotationUpdate(annotation);
     } catch(e) {}
 
@@ -123,6 +122,67 @@ export class Store {
       pending.push(...session.annotations.filter(a => a.status === 'pending' || a.status === 'acknowledged'));
     }
     return pending;
+  }
+
+  async waitForAnnotations(options: {
+    sessionId?: string;
+    batchWindowSeconds?: number;
+    timeoutSeconds?: number;
+    sinceTimestamp?: number;
+  } = {}): Promise<{ count: number; annotations: PinmarkAnnotation[]; timedOut: boolean }> {
+    const batchWindowMs = Math.min(Math.max(options.batchWindowSeconds ?? 10, 1), 60) * 1000;
+    const timeoutMs = Math.min(Math.max(options.timeoutSeconds ?? 120, 5), 600) * 1000;
+    const startTime = options.sinceTimestamp ?? (Date.now() - 5000);
+
+    // Check if there are already pending annotations added recently or pending
+    const existing = this.getPendingAnnotations(options.sessionId).filter(
+      a => (a.timestamp || 0) >= startTime || a.status === 'pending'
+    );
+    if (existing.length > 0) {
+      return { count: existing.length, annotations: existing, timedOut: false };
+    }
+
+    let resolve!: (value: { count: number; annotations: PinmarkAnnotation[]; timedOut: boolean }) => void;
+    const promise = new Promise<{ count: number; annotations: PinmarkAnnotation[]; timedOut: boolean }>((res) => {
+      resolve = res;
+    });
+    const collected: PinmarkAnnotation[] = [];
+    let batchTimer: NodeJS.Timeout | undefined;
+    let overallTimer: NodeJS.Timeout | undefined;
+
+    const finish = (timedOut: boolean) => {
+      clearTimeout(batchTimer);
+      clearTimeout(overallTimer);
+      this.off('annotation_added', onAnnotation);
+      resolve({
+        count: collected.length,
+        annotations: collected,
+        timedOut,
+      });
+    };
+
+    const onAnnotation = (data: { sessionId: string; annotation: PinmarkAnnotation }) => {
+      if (options.sessionId && data.sessionId !== options.sessionId) {
+        return;
+      }
+      if (!collected.some(a => a.id === data.annotation.id)) {
+        collected.push(data.annotation);
+      }
+
+      // Reset or start batch timer
+      clearTimeout(batchTimer);
+      batchTimer = setTimeout(() => {
+        finish(false);
+      }, batchWindowMs);
+    };
+
+    this.on('annotation_added', onAnnotation);
+
+    overallTimer = setTimeout(() => {
+      finish(collected.length === 0);
+    }, timeoutMs);
+
+    return promise;
   }
 }
 

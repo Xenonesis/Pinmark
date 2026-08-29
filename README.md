@@ -126,25 +126,35 @@ npm run build
 
 > **Tip:** After loading, pin the Pinmark icon to your toolbar for 1-click access.
 
-### Start MCP Server
+### Start MCP Server & Auto-Config
 
 ```bash
-# From repo root
-npm run start -w @pinmark/mcp
+# 1. Auto-configure all installed AI coding agents (Claude Desktop, Claude Code, Cursor, Windsurf, Cline)
+npx @pinmark/mcp init
 
-# Or directly
-node packages/mcp/dist/cli.js server --port 4747
+# 2. Verify environment and connectivity
+npx @pinmark/mcp doctor
+
+# 3. Launch the MCP Stdio & HTTP Bridge Server
+npx @pinmark/mcp server --port 4747
 ```
 
-Add the server to your AI client:
+### In-App React Component (No extension needed)
 
-| Client | How to connect |
-|--------|----------------|
-| **Cursor** | Settings → MCP → Add → `http://127.0.0.1:4747` |
-| **Claude Desktop** | Edit `claude_desktop_config.json` → add HTTP transport pointing to `127.0.0.1:4747` |
-| **Custom agents** | Use the HTTP or SSE endpoints directly |
+```tsx
+import { Pinmark } from '@pinmark/pinmark';
 
----
+function App() {
+  return (
+    <>
+      <YourApp />
+      {process.env.NODE_ENV === 'development' && (
+        <Pinmark endpoint="http://localhost:4747" />
+      )}
+    </>
+  );
+}
+```
 
 ## Usage
 

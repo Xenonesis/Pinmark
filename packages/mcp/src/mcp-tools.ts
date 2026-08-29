@@ -251,6 +251,31 @@ export function registerMcpTools(server: Server) {
             },
             required: ["annotationId"]
           }
+        },
+        {
+          name: "pinmark_watch_annotations",
+          description: "Block until new annotations appear on the web page, then collect a batch and return them. Enables hands-free continuous feedback loops between human reviewer and AI coding agent.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              sessionId: {
+                type: "string",
+                description: "Optional. The ID of the session to watch.",
+              },
+              batchWindowSeconds: {
+                type: "number",
+                description: "Optional. Seconds to wait for additional annotations after the first one is detected before returning (default: 10, max: 60).",
+              },
+              timeoutSeconds: {
+                type: "number",
+                description: "Optional. Maximum seconds to wait before returning (default: 120, max: 300).",
+              },
+              sinceTimestamp: {
+                type: "number",
+                description: "Optional. Only return annotations created after this unix epoch timestamp in milliseconds.",
+              },
+            },
+          },
         }
       ],
     };
@@ -299,6 +324,29 @@ export function registerMcpTools(server: Server) {
             {
               type: "text",
               text: JSON.stringify(pending, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "pinmark_watch_annotations": {
+        const sessionId = request.params.arguments?.sessionId ? String(request.params.arguments.sessionId) : undefined;
+        const batchWindowSeconds = typeof request.params.arguments?.batchWindowSeconds === 'number' ? request.params.arguments.batchWindowSeconds : undefined;
+        const timeoutSeconds = typeof request.params.arguments?.timeoutSeconds === 'number' ? request.params.arguments.timeoutSeconds : undefined;
+        const sinceTimestamp = typeof request.params.arguments?.sinceTimestamp === 'number' ? request.params.arguments.sinceTimestamp : undefined;
+
+        const result = await store.waitForAnnotations({
+          sessionId,
+          batchWindowSeconds,
+          timeoutSeconds,
+          sinceTimestamp,
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(result, null, 2),
             },
           ],
         };

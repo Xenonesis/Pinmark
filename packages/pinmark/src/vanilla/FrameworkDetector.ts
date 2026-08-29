@@ -18,6 +18,21 @@ export class FrameworkDetector {
   }
 
   private detectReact(element: HTMLElement): ComponentInfo | undefined {
+    // Check for explicit dev attributes on element or ancestors
+    let domSourcePath: string | undefined;
+    let domLineNumber: number | undefined;
+
+    const inspectAttr = element.getAttribute('data-source') || 
+                        element.getAttribute('data-source-file') ||
+                        element.getAttribute('data-loc') ||
+                        element.getAttribute('data-inspector-source') ||
+                        element.getAttribute('data-astro-source-file');
+    if (inspectAttr) {
+      const parts = inspectAttr.split(':');
+      domSourcePath = parts[0];
+      if (parts[1]) domLineNumber = parseInt(parts[1], 10);
+    }
+
     const nameAttr = element.getAttribute('data-pmk-react-component');
     if (nameAttr && nameAttr !== 'Unknown') {
       const hierarchyStr = element.getAttribute('data-pmk-react-hierarchy');
@@ -30,7 +45,9 @@ export class FrameworkDetector {
       return {
         framework: 'react',
         name: nameAttr,
-        hierarchy
+        hierarchy,
+        filePath: domSourcePath,
+        lineNumber: domLineNumber,
       };
     }
 
@@ -40,16 +57,16 @@ export class FrameworkDetector {
 
     if (fiberKey) {
       try {
-        let fiber = (element as any)[fiberKey];
+        const fiber = (element as unknown as Record<string, unknown>)[fiberKey] as Record<string, unknown>;
         let componentName = 'Unknown';
         const hierarchy: string[] = [];
-        let filePath: string | undefined;
-        let lineNumber: number | undefined;
+        let filePath: string | undefined = domSourcePath;
+        let lineNumber: number | undefined = domLineNumber;
 
-        let currentFiber = fiber;
+        let currentFiber: Record<string, unknown> | undefined = fiber;
         while (currentFiber) {
           if (currentFiber.type && (typeof currentFiber.type === 'function' || typeof currentFiber.type === 'object')) {
-            const type = currentFiber.type;
+            const type = currentFiber.type as { displayName?: string; name?: string };
             const name = type.displayName || type.name;
             if (name) {
               if (componentName === 'Unknown') componentName = name;
@@ -60,12 +77,22 @@ export class FrameworkDetector {
             }
           }
           
-          if (!filePath && currentFiber._debugSource) {
-            filePath = currentFiber._debugSource.fileName;
-            lineNumber = currentFiber._debugSource.lineNumber;
+          if (!filePath) {
+            const debugSource = currentFiber._debugSource as { fileName?: string; lineNumber?: number } | undefined;
+            if (debugSource?.fileName) {
+              filePath = debugSource.fileName;
+              lineNumber = debugSource.lineNumber;
+            } else {
+              const memoizedProps = currentFiber.memoizedProps as Record<string, unknown> | undefined;
+              const sourceProp = memoizedProps?.__source as { fileName?: string; lineNumber?: number } | undefined;
+              if (sourceProp?.fileName) {
+                filePath = sourceProp.fileName;
+                lineNumber = sourceProp.lineNumber;
+              }
+            }
           }
           
-          currentFiber = currentFiber.return;
+          currentFiber = currentFiber.return as Record<string, unknown> | undefined;
         }
 
         return {

@@ -621,9 +621,12 @@ export class Overlay {
       triage: this.buildTriage(element),
       fpsMetrics: [...this.fpsHistory],
       ...this.getDomAndMemoryMetrics(element),
-      ...(overrideRect ? { areaRect: { x: overrideRect.x + scrollLeft, y: overrideRect.y + scrollTop, width: overrideRect.width, height: overrideRect.height } } : {})
+      ...(overrideRect ? {
+        areaRect: { x: overrideRect.x + scrollLeft, y: overrideRect.y + scrollTop, width: overrideRect.width, height: overrideRect.height },
+        markerType: 'area',
+        selectedElements: this.findElementsInRect(overrideRect).slice(0, 10).map(el => this.elementAnalyzer.analyze(el))
+      } : {})
     };
-
     this.feedbackManager.add(feedback);
     this.markerManager.addMarker(feedback);
   }
@@ -817,7 +820,6 @@ export class Overlay {
       }
       return;
     }
-
     // Check for text selection
     if (!this.isActive || this.isPaused || this.isModalOpen || this.feedbackModal.isOpen() || this.isAreaSelectActive) return;
     if (Date.now() - this._modalClosedAt < 500) return;
@@ -838,6 +840,22 @@ export class Overlay {
     }
     this.hideSelectionButton();
   };
+
+  private findElementsInRect(rect: DOMRect): HTMLElement[] {
+    const elements: HTMLElement[] = [];
+    const candidates = document.querySelectorAll('button, input, select, textarea, a, p, h1, h2, h3, h4, h5, h6, img, svg, form, [role="button"], [role="link"], [class*="card"], [class*="item"], section, article');
+    for (let i = 0; i < candidates.length; i++) {
+      const el = candidates[i] as HTMLElement;
+      if (this.shadowRoot.contains(el) || el === this.container || el.id?.startsWith('pinmark-')) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      const intersects = !(r.right < rect.left || r.left > rect.right || r.bottom < rect.top || r.top > rect.bottom);
+      if (intersects) {
+        elements.push(el);
+      }
+    }
+    return elements;
+  }
 
   private showSelectionButton(rect: DOMRect) {
     this.hideSelectionButton();

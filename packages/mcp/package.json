@@ -4,6 +4,7 @@
   "description": "MCP server for Pinmark to integrate with AI agents",
   "type": "module",
   "bin": {
+    "pinmark": "./dist/cli.js",
     "pinmark-mcp": "./dist/cli.js"
   },
   "scripts": {
