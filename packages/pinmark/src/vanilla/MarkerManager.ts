@@ -83,9 +83,9 @@ const MARKER_STYLES = (color: string) => `
     content: '';
     position: absolute;
     top: 100%;
-    left: 0;
-    width: 100%;
-    height: 14px;
+    left: -20px;
+    right: -20px;
+    height: 20px;
     background: transparent;
   }
 
@@ -107,7 +107,10 @@ const MARKER_STYLES = (color: string) => `
   .pinmark-marker-popup.flip-down::before {
     top: auto;
     bottom: 100%;
-    height: 14px;
+    left: -20px;
+    right: -20px;
+    height: 20px;
+    background: transparent;
   }
   .pinmark-marker-popup.flip-down::after {
     top: auto;
@@ -223,12 +226,17 @@ export class MarkerManager {
     
     this.injectStyles();
 
-    // Dismiss active marker popups on outside click
+    // Dismiss active marker popups on outside click (safely inspect composedPath to respect shadow DOM)
     document.addEventListener('pointerdown', (e) => {
-      const target = e.target as HTMLElement;
-      if (!this.shadowRoot.contains(target)) {
-        this.container.querySelectorAll('.pinmark-marker.active').forEach(m => m.classList.remove('active'));
+      const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+      if (path.length > 0 && (path.includes(this.container) || path.includes(this.shadowRoot))) {
+        return;
       }
+      const target = e.target as HTMLElement;
+      if (target && (target.id?.startsWith('pinmark-') || this.shadowRoot.contains(target))) {
+        return;
+      }
+      this.container.querySelectorAll('.pinmark-marker.active').forEach(m => m.classList.remove('active'));
     });
   }
 
@@ -302,6 +310,9 @@ export class MarkerManager {
     };
 
     marker.addEventListener('mouseenter', adjustPosition);
+    marker.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+    });
     marker.addEventListener('click', (e) => {
       e.stopPropagation();
       const wasActive = marker.classList.contains('active');
@@ -312,6 +323,12 @@ export class MarkerManager {
       }
     });
 
+    popup.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+    });
+    popup.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
     // Comment text
     const commentEl = document.createElement('div');
     commentEl.className = 'pinmark-marker-comment';

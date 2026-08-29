@@ -1,61 +1,95 @@
+import type { ExtensionSettings } from '../shared/types';
 import { getSettings, saveSettings, getFeedback, saveFeedback } from '../shared/storage';
 
-let mcpEventSource: EventSource | null = null;
+let mcpAbortController: AbortController | null = null;
 
 async function setupEventSource() {
-  const settings = await getSettings();
-  if (!settings.autoSync || !settings.mcpEndpoint) {
-    if (mcpEventSource) {
-      mcpEventSource.close();
-      mcpEventSource = null;
-    }
-    return;
-  }
-  
-  const mcpEndpoint = (settings.mcpEndpoint || 'http://127.0.0.1:4747').replace(/\/+$/, '');
-  const sseUrl = `${mcpEndpoint}/events`;
-  
-  // Avoid reconnecting if already connected to same URL
-  if (mcpEventSource && mcpEventSource.url === sseUrl && mcpEventSource.readyState !== EventSource.CLOSED) {
-    return;
-  }
-  
-  if (mcpEventSource) {
-    mcpEventSource.close();
-  }
-  
   try {
-    mcpEventSource = new EventSource(sseUrl);
-    mcpEventSource.addEventListener('pinmark:highlight', (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data);
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          if (tabs[0] && tabs[0].id) {
-            chrome.tabs.sendMessage(tabs[0].id, {
-              type: 'PINMARK_HIGHLIGHT',
-              selector: data.selector,
-              durationMs: data.durationMs
-            });
+    const settings: ExtensionSettings | null = await getSettings().catch(() => null);
+    if (!settings || !settings.autoSync || !settings.mcpEndpoint) {
+      if (mcpAbortController) {
+        mcpAbortController.abort();
+        mcpAbortController = null;
+      }
+      return;
+    }
+
+    const mcpEndpoint = (settings.mcpEndpoint || 'http://127.0.0.1:4747').replace(/\/+$/, '');
+    const sseUrl = `${mcpEndpoint}/events`;
+
+    if (mcpAbortController) {
+      mcpAbortController.abort();
+      mcpAbortController = null;
+    }
+
+    mcpAbortController = new AbortController();
+    const signal = mcpAbortController.signal;
+
+    fetch(sseUrl, {
+      signal,
+      headers: { Accept: 'text/event-stream' }
+    }).then(async (res) => {
+      if (!res.ok || !res.body) {
+        if (!signal.aborted) {
+          setTimeout(setupEventSource, 8000);
+        }
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (!signal.aborted) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const blocks = buffer.split('\n\n');
+        buffer = blocks.pop() || '';
+
+        for (const block of blocks) {
+          const lines = block.split('\n');
+          let eventType = 'message';
+          let eventData = '';
+
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              eventType = line.slice(6).trim();
+            } else if (line.startsWith('data:')) {
+              eventData += (eventData ? '\n' : '') + line.slice(5).trim();
+            }
           }
-        });
-      } catch (e) {
-        console.error('Failed to parse highlight event', e);
+
+          if (eventType === 'pinmark:highlight' && eventData) {
+            try {
+              const data = JSON.parse(eventData);
+              chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                if (tabs[0] && tabs[0].id) {
+                  chrome.tabs.sendMessage(tabs[0].id, {
+                    type: 'PINMARK_HIGHLIGHT',
+                    selector: data.selector,
+                    durationMs: data.durationMs
+                  }).catch(() => {});
+                }
+              });
+            } catch (e) {
+              console.error('Failed to parse highlight event', e);
+            }
+          }
+        }
+      }
+    }).catch(() => {
+      if (!signal.aborted) {
+        setTimeout(setupEventSource, 8000);
       }
     });
-    
-    mcpEventSource.addEventListener('error', () => {
-      // Basic retry fallback
-      if (mcpEventSource && mcpEventSource.readyState === EventSource.CLOSED) {
-        setTimeout(setupEventSource, 5000);
-      }
-    });
-  } catch(e) {
+  } catch (e) {
     console.warn('Failed to setup SSE in background', e);
   }
 }
 
-// Initialize on startup
-setupEventSource();
+// Initialize on startup safely
+setupEventSource().catch(() => {});
 
 async function postJson(url: string, body: unknown): Promise<void> {
   const response = await fetch(url, {
