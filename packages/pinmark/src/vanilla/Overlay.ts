@@ -310,7 +310,7 @@ export class Overlay {
     }
 
     const shadowTarget = this.shadowRoot.elementFromPoint?.(e.clientX, e.clientY);
-    if (shadowTarget && shadowTarget !== this.container) {
+    if (shadowTarget && shadowTarget.closest('.pinmark-marker, .pinmark-marker-popup, .pinmark-toolbar, .pinmark-launcher, .pinmark-modal, .pinmark-component-palette, .pinmark-palette-panel')) {
       this.hoverBox.hide();
       this.targetElement = null;
       return;
@@ -352,7 +352,7 @@ export class Overlay {
     if (this.isRearrangeMode) return;
 
     const shadowTarget = this.shadowRoot.elementFromPoint?.(e.clientX, e.clientY);
-    if (shadowTarget && shadowTarget !== this.container) {
+    if (shadowTarget && shadowTarget.closest('.pinmark-marker, .pinmark-marker-popup, .pinmark-toolbar, .pinmark-launcher, .pinmark-modal, .pinmark-component-palette, .pinmark-palette-panel')) {
       return;
     }
 
