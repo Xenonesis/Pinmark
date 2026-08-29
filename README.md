@@ -20,7 +20,7 @@
 
   Place visual markers on any webpage element, draw annotations, capture network logs console errors, and sync instantly with your AI agents via a Local MCP Server. Perfect for code reviews, bug reporting, and communicating with **Claude**, **Cursor**, **ChatGPT**, or any MCP-compatible agent.
 
-  <video src="packages/extension/assets/pinmark.mp4" controls autoplay muted loop width="640" style="border-radius: 8px; margin-top: 16px; max-width: 100%;"></video>
+  <video src="media/pinmark.mp4" controls autoplay muted loop width="640" style="border-radius: 8px; margin-top: 16px; max-width: 100%;"></video>
 
 </div>
 

@@ -24,6 +24,7 @@
     "dev": "pnpm -r run dev",
     "build": "pnpm -r run build",
     "build:firefox": "pnpm -r run build:firefox",
+    "package": "pnpm build && pnpm build:firefox && node scripts/package-extensions.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "pnpm -r run preview",
@@ -35,7 +36,9 @@
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.7.1",
+    "@types/archiver": "^8.0.0",
     "@types/chrome": "^0.2.2",
+    "archiver": "^8.0.0",
     "esbuild": "^0.28.1",
     "serve-handler": "^6.1.7",
     "sharp": "^0.35.3",
