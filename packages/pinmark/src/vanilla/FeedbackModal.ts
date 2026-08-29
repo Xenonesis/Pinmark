@@ -4,6 +4,7 @@ const MODAL_STYLES = `
   @keyframes pmk-spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+  }
   @keyframes pmk-pulse {
     0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
     70% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
@@ -13,6 +14,7 @@ const MODAL_STYLES = `
     stroke: currentColor;
     stroke-linecap: round;
   }
+  .pinmark-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
