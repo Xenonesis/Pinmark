@@ -614,7 +614,7 @@ export class FeedbackModal {
       markupContainer.style.display = 'block';
 
       const canvas = document.createElement('canvas');
-      canvas.style.cssText = 'max-width:100%;max-height:180px;object-fit:contain;display:block;cursor:crosshair;margin:0 auto;';
+      canvas.style.cssText = 'max-width:100%;max-height:180px;object-fit:contain;display:block;cursor:crosshair;margin:0 auto;touch-action:none;';
 
       const ctx = canvas.getContext('2d');
       const img = new Image();
@@ -626,28 +626,44 @@ export class FeedbackModal {
       img.src = url;
 
       let isDrawing = false;
-      canvas.onmousedown = (e) => {
-        isDrawing = true;
-        ctx?.beginPath();
-        ctx?.moveTo(e.offsetX * (canvas.width / canvas.offsetWidth), e.offsetY * (canvas.height / canvas.offsetHeight));
+
+      const getCoords = (e: PointerEvent) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+          x: (e.clientX - rect.left) * scaleX,
+          y: (e.clientY - rect.top) * scaleY
+        };
       };
-      canvas.onmousemove = (e) => {
+
+      canvas.onpointerdown = (e) => {
+        canvas.setPointerCapture(e.pointerId);
+        isDrawing = true;
+        const coords = getCoords(e);
+        ctx?.beginPath();
+        ctx?.moveTo(coords.x, coords.y);
+      };
+      canvas.onpointermove = (e) => {
         if (isDrawing && ctx) {
-          ctx.lineTo(e.offsetX * (canvas.width / canvas.offsetWidth), e.offsetY * (canvas.height / canvas.offsetHeight));
+          const coords = getCoords(e);
+          ctx.lineTo(coords.x, coords.y);
           ctx.strokeStyle = '#ef4444';
-          ctx.lineWidth = Math.max(3, canvas.width / 100);
+          ctx.lineWidth = Math.max(3, canvas.width / 80);
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
           ctx.stroke();
         }
       };
-      const endDrawing = () => {
+      const endDrawing = (e: PointerEvent) => {
         if (isDrawing) {
           isDrawing = false;
+          try { canvas.releasePointerCapture(e.pointerId); } catch {}
           drawnScreenshot = canvas.toDataURL('image/jpeg', 0.8);
         }
       };
-      canvas.onmouseup = endDrawing;
-      canvas.onmouseleave = endDrawing;
-
+      canvas.onpointerup = endDrawing;
+      canvas.onpointercancel = endDrawing;
       const hint = document.createElement('div');
       hint.textContent = 'Draw to highlight';
       hint.style.cssText = 'font-size:10px;font-weight:500;color:#ededed;padding:4px 8px;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);border-radius:4px;border:1px solid rgba(255,255,255,0.15);position:absolute;top:12px;left:50%;transform:translateX(-50%);pointer-events:none;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
@@ -756,8 +772,22 @@ export class FeedbackModal {
     };
 
     const getResult = (): ModalResult => {
-      const comment = input.value.trim();
-      if (!comment) return null;
+      let comment = input.value.trim();
+      if (!comment) {
+        if (drawnScreenshot !== screenshotUrl || categorySelect.sel.value || intentSelect.sel.value || severitySelect.sel.value) {
+          const tag = element.tagName.toLowerCase();
+          comment = smartName ? `Feedback on "${smartName}"` : `Feedback on <${tag}>`;
+        } else {
+          input.focus();
+          input.style.borderColor = '#ef4444';
+          input.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.2)';
+          setTimeout(() => {
+            input.style.borderColor = '';
+            input.style.boxShadow = '';
+          }, 1500);
+          return null;
+        }
+      }
       return {
         comment,
         screenshot: drawnScreenshot,
@@ -782,7 +812,6 @@ export class FeedbackModal {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         const result = getResult();
-
         if (result) this.close(result);
       }
       if (e.key === 'Escape') {
