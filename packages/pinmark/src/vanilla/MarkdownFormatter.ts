@@ -129,7 +129,9 @@ export class MarkdownFormatter {
       source += '`';
       md += `**Source:** ${source}\n`;
     }
-
+    if (elem.resilientSelectors?.bestRobust && elem.resilientSelectors.bestRobust !== elem.selector) {
+      md += `**Robust Selector:** \`${elem.resilientSelectors.bestRobust}\`\n`;
+    }
     // ── Classes ─────────────────────────────────────────────────
     if (elem.classes.length > 0) {
       md += `**Classes:** \`${elem.classes.join(' ')}\`\n`;
@@ -180,9 +182,6 @@ export class MarkdownFormatter {
           md += `- \`${sub.selector}\` (${subTag}${subName ? ` ${subName}` : ''})\n`;
         }
       }
-    }
-    if (detail === 'detailed') {
-      return md;
     }
 
     // ── Text Content ─────────────────────────────────────────────
@@ -314,6 +313,15 @@ export class MarkdownFormatter {
       md += `\n#### Session Recording\n`;
       md += `- **Events captured:** ${item.sessionRecording.length}\n`;
       md += `- *Replay available via MCP server*\n`;
+    }
+    // ── User Journey / Breadcrumbs ───────────────────────────────
+    if (item.breadcrumbs && item.breadcrumbs.length > 0) {
+      md += `\n**User Journey (Recent Actions):**\n`;
+      item.breadcrumbs.forEach((b, i) => {
+        const targetStr = b.target ? ` on \`${b.target}\`` : '';
+        const textStr = b.text ? ` ("${b.text}")` : '';
+        md += `${i + 1}. \`${b.type}\`${targetStr}${textStr}\n`;
+      });
     }
 
     return md;

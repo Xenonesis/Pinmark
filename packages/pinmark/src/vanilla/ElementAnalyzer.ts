@@ -1,16 +1,17 @@
 import type { ElementInfo } from '@pinmark/core';
 import { SelectorGenerator } from './SelectorGenerator.js';
 import { FrameworkDetector } from './FrameworkDetector.js';
+import { SelectorEngine } from './SelectorEngine.js';
 
 export class ElementAnalyzer {
   private selectorGenerator: SelectorGenerator;
   private frameworkDetector: FrameworkDetector;
-
+  private selectorEngine: SelectorEngine;
   constructor() {
     this.selectorGenerator = new SelectorGenerator();
     this.frameworkDetector = new FrameworkDetector();
+    this.selectorEngine = new SelectorEngine();
   }
-
   analyze(element: HTMLElement): ElementInfo {
     const selector = this.selectorGenerator.generate(element);
     const classes = Array.from(element.classList);
@@ -18,6 +19,7 @@ export class ElementAnalyzer {
     const textContent = this.extractTextContent(element);
     const dataAttributes = this.extractDataAttributes(element);
     const component = this.frameworkDetector.detect(element);
+    const resilientSelectors = this.selectorEngine.generateResilientSelectors(element);
     const rect = element.getBoundingClientRect();
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
@@ -44,6 +46,7 @@ export class ElementAnalyzer {
       textContent,
       dataAttributes,
       component,
+      resilientSelectors,
       boundingRect,
       computedStyles,
       accessibility,

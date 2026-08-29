@@ -4,13 +4,15 @@ const MODAL_STYLES = `
   @keyframes pmk-spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+  @keyframes pmk-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
   }
   .pmk-spinner {
     stroke: currentColor;
     stroke-linecap: round;
   }
-
-  .pinmark-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -107,6 +109,40 @@ const MODAL_STYLES = `
     line-height: 1.5;
   }
 
+  .pinmark-input-container {
+    position: relative;
+    width: 100%;
+  }
+
+  .pinmark-modal-voice-btn {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .pinmark-modal-voice-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #f3f4f6;
+  }
+
+  .pinmark-modal-voice-btn.listening {
+    background: #ef4444;
+    border-color: #f87171;
+    color: #ffffff;
+    animation: pmk-pulse 1.5s infinite;
+  }
+
   .pinmark-modal-input:focus {
     border-color: rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.04);
@@ -115,8 +151,6 @@ const MODAL_STYLES = `
   .pinmark-modal-input::placeholder {
     color: var(--pmk-text-muted, #6b7280);
   }
-
-  .pinmark-modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 6px;
@@ -469,14 +503,77 @@ export class FeedbackModal {
       body.appendChild(treeEl);
     }
 
-    // Input
+    // Input Container with Voice-to-Text Button
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'pinmark-input-container';
+
     const input = document.createElement('textarea');
     input.className = 'pinmark-modal-input';
     input.placeholder = 'Enter your feedback... (Ctrl+Enter to submit)';
     input.value = existingComment || '';
-    body.appendChild(input);
+    inputContainer.appendChild(input);
 
-    // Computed styles panel
+    // Voice button
+    const voiceBtn = document.createElement('button');
+    voiceBtn.type = 'button';
+    voiceBtn.className = 'pinmark-modal-voice-btn';
+    voiceBtn.title = 'Speak feedback (Voice-to-Text)';
+    setHTML(voiceBtn, '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>');
+
+    let recognition: any = null;
+    let isListening = false;
+    const SpeechRec = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+
+    voiceBtn.onclick = () => {
+      if (!SpeechRec) {
+        alert('Speech recognition is not supported in this browser environment.');
+        return;
+      }
+      if (isListening && recognition) {
+        recognition.stop();
+        return;
+      }
+      try {
+        recognition = new SpeechRec();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+          isListening = true;
+          voiceBtn.classList.add('listening');
+        };
+        recognition.onresult = (event: any) => {
+          let interimTranscript = '';
+          let finalTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
+          }
+          if (finalTranscript) {
+            input.value = (input.value ? input.value + ' ' : '') + finalTranscript.trim();
+          }
+        };
+        recognition.onerror = () => {
+          isListening = false;
+          voiceBtn.classList.remove('listening');
+        };
+        recognition.onend = () => {
+          isListening = false;
+          voiceBtn.classList.remove('listening');
+        };
+        recognition.start();
+      } catch (err) {
+        isListening = false;
+        voiceBtn.classList.remove('listening');
+      }
+    };
+
+    inputContainer.appendChild(voiceBtn);
+    body.appendChild(inputContainer);
     if (computedStyles && Object.keys(computedStyles).length > 0) {
       const toggleBtn = document.createElement('button');
       toggleBtn.className = 'pinmark-modal-styles-toggle';

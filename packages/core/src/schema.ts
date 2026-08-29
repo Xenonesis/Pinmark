@@ -9,6 +9,15 @@ export const ComponentInfoSchema = z.object({
   hierarchy: z.array(z.string()).optional()
 });
 
+export const ResilientSelectorsSchema = z.object({
+  testId: z.string().optional(),
+  aria: z.string().optional(),
+  textAnchor: z.string().optional(),
+  semanticPath: z.string().optional(),
+  xpath: z.string().optional(),
+  bestRobust: z.string().optional()
+});
+
 export const ElementInfoSchema = z.object({
   selector: z.string(),
   tagName: z.string(),
@@ -17,6 +26,7 @@ export const ElementInfoSchema = z.object({
   textContent: z.string().optional(),
   dataAttributes: z.record(z.string(), z.string()),
   component: ComponentInfoSchema.optional(),
+  resilientSelectors: ResilientSelectorsSchema.optional(),
   boundingRect: z.object({
     x: z.number(),
     y: z.number(),
@@ -31,6 +41,23 @@ export const ElementInfoSchema = z.object({
   accessibility: z.record(z.string(), z.string()).optional(),
   selectionText: z.string().optional(),
   screenshot: z.string().optional()
+});
+
+export const BreadcrumbItemSchema = z.object({
+  timestamp: z.number(),
+  type: z.enum(['click', 'input', 'navigation', 'modal_open', 'route_change', 'custom']),
+  target: z.string().optional(),
+  text: z.string().optional(),
+  url: z.string().optional(),
+  metadata: z.record(z.string(), z.any()).optional()
+});
+
+export const VisualDiffSchema = z.object({
+  beforeScreenshot: z.string().optional(),
+  afterScreenshot: z.string().optional(),
+  diffScore: z.number().optional(),
+  resolvedMatch: z.boolean().optional(),
+  timestamp: z.number().optional()
 });
 
 export const ThreadReplySchema = z.object({
@@ -84,7 +111,8 @@ export const PinmarkAnnotationSchema = z.object({
     height: z.number()
   }).optional(),
   selectedElements: z.array(ElementInfoSchema).optional(),
-  // State Capture
+  breadcrumbs: z.array(BreadcrumbItemSchema).optional(),
+  visualDiff: VisualDiffSchema.optional(),
   state: z.object({
     localStorage: z.record(z.string(), z.string()).optional(),
     sessionStorage: z.record(z.string(), z.string()).optional(),
@@ -112,6 +140,9 @@ export type PinmarkAnnotation = z.infer<typeof PinmarkAnnotationSchema>;
 export type ElementInfo = z.infer<typeof ElementInfoSchema>;
 export type ComponentInfo = z.infer<typeof ComponentInfoSchema>;
 export type ThreadReply = z.infer<typeof ThreadReplySchema>;
+export type ResilientSelectors = z.infer<typeof ResilientSelectorsSchema>;
+export type BreadcrumbItem = z.infer<typeof BreadcrumbItemSchema>;
+export type VisualDiff = z.infer<typeof VisualDiffSchema>;
 
 export const SessionSchema = z.object({
   id: z.string(),

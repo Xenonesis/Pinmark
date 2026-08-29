@@ -1,0 +1,21 @@
+name: Pinmark Visual QA
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  visual-qa:
+    name: Autonomous Visual QA & Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Pinmark Visual QA
+        uses: ./.github/actions/visual-qa
+        with:
+          url: 'http://localhost:3000'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fail-on-blocking: 'true'
+          detail-level: 'detailed'

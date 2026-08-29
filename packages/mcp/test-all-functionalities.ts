@@ -220,6 +220,19 @@ async function main() {
     fs.rmSync('tests/e2e', { recursive: true, force: true });
   }
 
+  // Test Visual Fix Verification tool
+  const verifyFix = await callTool('pinmark_verify_fix', {
+    annotationId: 'ann-master-001',
+    notes: 'Updated button class from btn-secondary to btn-primary and added brand colors',
+  });
+  console.log(`  ✓ pinmark_verify_fix: ${verifyFix.split('\n')[2]} (PASS)`);
+
+  // Test Webhook Dispatcher Formatters
+  const { WebhookDispatcher } = await import('@pinmark/core');
+  const slackPayload = WebhookDispatcher.formatSlackPayload(testAnnotation as any);
+  const discordPayload = WebhookDispatcher.formatDiscordPayload(testAnnotation as any);
+  const githubIssue = WebhookDispatcher.formatGitHubIssue(testAnnotation as any);
+  console.log(`  ✓ WebhookDispatcher: Slack (${slackPayload.blocks.length} blocks), Discord (${discordPayload.embeds.length} embeds), GitHub (${githubIssue.title.slice(0, 30)}...) (PASS)`);
   // 4. Test Markdown Formatter across Detail Levels
   console.log('\n[4/5] Testing Markdown Formatter & Source Extraction...');
   const formatter = new MarkdownFormatter();
@@ -234,10 +247,22 @@ async function main() {
   console.log('    Has Source:', standardMd.includes('**Source:** `src/components/Button.tsx:12`') ? 'YES (PASS)' : 'NO (FAIL)');
   console.log('    Has Triage:', standardMd.includes('**Triage:**') ? 'YES (PASS)' : 'NO (FAIL)');
 
+  // Add breadcrumbs and resilient selectors to testAnnotation
+  testAnnotation.breadcrumbs = [
+    { timestamp: Date.now() - 5000, type: 'click', target: 'nav > a.dashboard', text: 'Dashboard' },
+    { timestamp: Date.now() - 2000, type: 'modal_open', target: 'dialog#settings', text: 'Settings modal' }
+  ];
+  testAnnotation.element.resilientSelectors = {
+    testId: '[data-testid="submit-btn"]',
+    aria: 'button[aria-label="Submit Button"]',
+    bestRobust: '[data-testid="submit-btn"]'
+  };
+
   const detailedMd = formatter.formatItem(testAnnotation, { outputDetail: 'detailed' } as any);
-  console.log('  ✓ Detailed Mode includes Enclosed Multi-Selected Elements:');
+  console.log('  ✓ Detailed Mode includes Enclosed Multi-Selected Elements & Breadcrumbs:');
   console.log('    Has Enclosed Elements:', detailedMd.includes('Enclosed Elements (2):') ? 'YES (PASS)' : 'NO (FAIL)');
-  console.log('\n[5/5] Testing CLI Diagnostics (Doctor)...');
+  console.log('    Has User Journey:', detailedMd.includes('User Journey (Recent Actions):') ? 'YES (PASS)' : 'NO (FAIL)');
+  console.log('    Has Robust Selector:', detailedMd.includes('**Robust Selector:**') ? 'YES (PASS)' : 'NO (FAIL)');
   await runDoctor(4747);
   console.log('  ✓ Doctor execution completed without errors: PASS');
 

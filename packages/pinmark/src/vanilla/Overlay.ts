@@ -11,6 +11,7 @@ import { getGlobalStateSnapshot } from './StateSniffer.js';
 import { auditA11y } from './A11yAuditor.js';
 import { ErrorStackTracer } from './ErrorStackTracer.js';
 import { autoTriage, type TriageResult } from './AutoTriage.js';
+import { BreadcrumbTracker } from './BreadcrumbTracker.js';
 import { FeedbackManager } from '../core/FeedbackManager.js';
 import type { PinmarkSettings, PinmarkConfig } from '../core/types.js';
 import type { PinmarkAnnotation as FeedbackItem } from '@pinmark/core';
@@ -124,6 +125,7 @@ export class Overlay {
 
   private networkInterceptor = new NetworkInterceptor();
   private errorTracer = new ErrorStackTracer();
+  private breadcrumbTracker = new BreadcrumbTracker();
   constructor(settings: PinmarkSettings, config: PinmarkConfig, initialFeedback: FeedbackItem[] = []) {
     this.settings = settings;
     this.config = config;
@@ -494,7 +496,7 @@ export class Overlay {
           useCORS: true,
           logging: false,
           scale: window.devicePixelRatio || 1,
-          ignoreElements: (node) => node.tagName === 'SCRIPT' || node.tagName === 'NOSCRIPT' || node.tagName === 'IFRAME' || node.tagName === 'LINK'
+          ignoreElements: (node: Element) => node.tagName === 'SCRIPT' || node.tagName === 'NOSCRIPT' || node.tagName === 'IFRAME' || node.tagName === 'LINK'
         });
         return canvas.toDataURL('image/jpeg', 0.8);
       } catch (e) {
@@ -620,6 +622,7 @@ export class Overlay {
       errorTrace: this.errorTracer.getErrors(),
       triage: this.buildTriage(element),
       fpsMetrics: [...this.fpsHistory],
+      breadcrumbs: this.breadcrumbTracker.getRecentBreadcrumbs(),
       ...this.getDomAndMemoryMetrics(element),
       ...(overrideRect ? {
         areaRect: { x: overrideRect.x + scrollLeft, y: overrideRect.y + scrollTop, width: overrideRect.width, height: overrideRect.height },
@@ -937,7 +940,7 @@ export class Overlay {
           useCORS: true,
           logging: false,
           scale: window.devicePixelRatio || 1,
-          ignoreElements: (node) => node.tagName === 'SCRIPT' || node.tagName === 'NOSCRIPT' || node.tagName === 'IFRAME' || node.tagName === 'LINK'
+          ignoreElements: (node: Element) => node.tagName === 'SCRIPT' || node.tagName === 'NOSCRIPT' || node.tagName === 'IFRAME' || node.tagName === 'LINK'
         });
         return canvas.toDataURL('image/jpeg', 0.8);
       } catch (e) {
@@ -997,6 +1000,7 @@ export class Overlay {
       errorTrace: this.errorTracer.getErrors(),
       triage: this.buildTriage(element),
       fpsMetrics: [...this.fpsHistory],
+      breadcrumbs: this.breadcrumbTracker.getRecentBreadcrumbs(),
       ...this.getDomAndMemoryMetrics(element),
     };
 
@@ -1508,6 +1512,7 @@ export class Overlay {
     this.setupEventListeners();
     this.networkInterceptor.enable();
     this.errorTracer.enable();
+    this.breadcrumbTracker.start();
     if (this.config.onToggle) this.config.onToggle(true);
     
     try {
@@ -1561,6 +1566,7 @@ export class Overlay {
     this.container.remove();
     this.networkInterceptor.disable();
     this.errorTracer.disable();
+    this.breadcrumbTracker.stop();
     this.setAreaSelectActive(false);
     this.toolbar.toggleAreaSelect(false);
     this.isFrozen = false;
