@@ -46,20 +46,18 @@
       <div class="setting-label-group">
         <span class="setting-label">Output Detail</span>
       </div>
-      <div class="setting-value-group">
+      <button class="setting-select-btn" id="outputDetailTrigger" title="Change output detail" aria-haspopup="listbox" aria-expanded="false">
         <span id="outputDetailLabel" class="setting-value-text">Standard</span>
-        <select id="outputDetail" class="hidden-select">
-          <option value="minimal">Compact</option>
-          <option value="standard" selected>Standard</option>
-          <option value="comprehensive">Detailed</option>
-          <option value="forensic">Forensic</option>
-        </select>
-        <button class="value-dots" id="outputDetailTrigger" title="Change output detail">
-          <svg viewBox="0 0 16 16" fill="currentColor">
-            <circle cx="8" cy="3" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="8" cy="13" r="1.2"/>
-          </svg>
-        </button>
-      </div>
+        <svg class="select-chevron" viewBox="0 0 16 16" fill="currentColor" width="12" height="12">
+          <path fill-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+        </svg>
+      </button>
+      <select id="outputDetail" class="hidden-select">
+        <option value="minimal">Compact</option>
+        <option value="standard" selected>Standard</option>
+        <option value="comprehensive">Detailed</option>
+        <option value="forensic">Forensic</option>
+      </select>
     </div>
 
     <!-- React Components Toggle (Hidden: Not Implemented) -->

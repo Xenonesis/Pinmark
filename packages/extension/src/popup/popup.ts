@@ -113,49 +113,81 @@ let dropdownOpen = false;
 let dropdown: HTMLElement | null = null;
 
 function closeDropdown() {
-  if (dropdown) { dropdown.remove(); dropdown = null; }
+  if (dropdown) { 
+    dropdown.remove(); 
+    dropdown = null; 
+  }
   dropdownOpen = false;
+  outputDetailTrigger?.setAttribute('aria-expanded', 'false');
+  outputDetailTrigger?.classList.remove('open');
 }
 
 function openDropdown() {
   if (dropdownOpen) { closeDropdown(); return; }
   dropdownOpen = true;
+  outputDetailTrigger?.setAttribute('aria-expanded', 'true');
+  outputDetailTrigger?.classList.add('open');
 
   dropdown = document.createElement('div');
   dropdown.className = 'dropdown-menu';
-  dropdown.style.position = 'fixed';
+  dropdown.setAttribute('role', 'listbox');
+  dropdown.setAttribute('aria-label', 'Output detail level');
 
   const rect = outputDetailTrigger.getBoundingClientRect();
   dropdown.style.top = `${rect.bottom + 6}px`;
-  dropdown.style.left = `${rect.left - 100}px`;
 
   const options = [
-    { value: 'minimal', label: 'Compact' },
-    { value: 'standard', label: 'Standard' },
-    { value: 'comprehensive', label: 'Detailed' },
-    { value: 'forensic', label: 'Forensic' },
+    { value: 'minimal', label: 'Compact', desc: 'Element & feedback comment only' },
+    { value: 'standard', label: 'Standard', desc: 'Element, CSS classes, hierarchy & location' },
+    { value: 'comprehensive', label: 'Detailed', desc: 'Adds bounding box, styles & accessibility' },
+    { value: 'forensic', label: 'Forensic', desc: 'Full forensic state, logs, network & stores' },
   ];
 
   options.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.className = 'dropdown-item';
-    btn.textContent = opt.label;
-    if (outputDetailSelect.value === opt.value) btn.classList.add('active');
-    btn.onclick = async () => {
+    const isSelected = outputDetailSelect.value === opt.value;
+    const item = document.createElement('button');
+    item.className = 'dropdown-item' + (isSelected ? ' active' : '');
+    item.setAttribute('role', 'option');
+    item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+    
+    setHTML(item, `
+      <div class="dropdown-item-content">
+        <div class="dropdown-item-header">
+          <span class="dropdown-item-title">${opt.label}</span>
+          ${isSelected ? '<svg class="dropdown-check-icon" viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd"/></svg>' : ''}
+        </div>
+        <span class="dropdown-item-desc">${opt.desc}</span>
+      </div>
+    `);
+
+    item.onclick = async (e) => {
+      e.stopPropagation();
       outputDetailSelect.value = opt.value;
       if (outputDetailLabel) outputDetailLabel.textContent = opt.label;
       await saveSetting('outputDetail', opt.value as 'minimal' | 'standard' | 'comprehensive' | 'forensic');
       closeDropdown();
     };
-    dropdown!.appendChild(btn);
+    dropdown!.appendChild(item);
   });
 
   document.body.appendChild(dropdown);
+
+  // Position adjustment if menu overflows viewport
+  const menuRect = dropdown.getBoundingClientRect();
+  if (menuRect.bottom > window.innerHeight - 8) {
+    dropdown.style.top = `${Math.max(8, rect.top - menuRect.height - 6)}px`;
+  }
 
   setTimeout(() => {
     document.addEventListener('click', closeDropdown, { once: true });
   }, 0);
 }
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && dropdownOpen) {
+    closeDropdown();
+  }
+});
 
 outputDetailTrigger?.addEventListener('click', (e) => { e.stopPropagation(); openDropdown(); });
 
