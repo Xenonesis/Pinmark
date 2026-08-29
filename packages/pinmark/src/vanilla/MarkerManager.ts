@@ -65,18 +65,18 @@ const MARKER_STYLES = (color: string) => `
     left: 50%;
     transform: translateX(-50%);
     background: var(--pmk-bg-2, #111827);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.1));
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--pmk-border, rgba(255, 255, 255, 0.12));
     border-radius: 8px;
     padding: 12px 14px;
     min-width: 200px;
     max-width: 280px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transition: opacity 0.15s ease-out, visibility 0.15s ease-out, transform 0.15s ease-out;
-    z-index: 2147483646;
+    z-index: 2147483647;
   }
 
   .pinmark-marker-popup::before {
@@ -85,7 +85,7 @@ const MARKER_STYLES = (color: string) => `
     top: 100%;
     left: 0;
     width: 100%;
-    height: 12px;
+    height: 14px;
     background: transparent;
   }
 
@@ -99,11 +99,65 @@ const MARKER_STYLES = (color: string) => `
     border-top-color: var(--pmk-bg-2, #111827);
   }
 
-  .pinmark-marker:hover .pinmark-marker-popup {
+  /* Flip Down when marker is near top of viewport */
+  .pinmark-marker-popup.flip-down {
+    bottom: auto;
+    top: calc(100% + 10px);
+  }
+  .pinmark-marker-popup.flip-down::before {
+    top: auto;
+    bottom: 100%;
+    height: 14px;
+  }
+  .pinmark-marker-popup.flip-down::after {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: var(--pmk-bg-2, #111827);
+  }
+
+  /* Horizontal overflow adjustments */
+  .pinmark-marker-popup.align-left {
+    left: -10px;
+    transform: none;
+  }
+  .pinmark-marker-popup.align-left::after {
+    left: 20px;
+    transform: none;
+  }
+
+  .pinmark-marker-popup.align-right {
+    left: auto;
+    right: -10px;
+    transform: none;
+  }
+  .pinmark-marker-popup.align-right::after {
+    left: auto;
+    right: 20px;
+    transform: none;
+  }
+
+  .pinmark-marker:hover,
+  .pinmark-marker.active {
+    z-index: 2147483647;
+    transform: scale(1.15);
+  }
+
+  .pinmark-marker:hover .pinmark-marker-popup,
+  .pinmark-marker.active .pinmark-marker-popup {
     opacity: 1;
     visibility: visible;
     pointer-events: all;
+  }
+
+  .pinmark-marker:hover .pinmark-marker-popup:not(.align-left):not(.align-right),
+  .pinmark-marker.active .pinmark-marker-popup:not(.align-left):not(.align-right) {
     transform: translateX(-50%) translateY(-2px);
+  }
+
+  .pinmark-marker:hover .pinmark-marker-popup.flip-down:not(.align-left):not(.align-right),
+  .pinmark-marker.active .pinmark-marker-popup.flip-down:not(.align-left):not(.align-right) {
+    transform: translateX(-50%) translateY(2px);
   }
 
   .pinmark-marker-comment {
@@ -168,6 +222,14 @@ export class MarkerManager {
     this.shadowRoot.appendChild(this.container);
     
     this.injectStyles();
+
+    // Dismiss active marker popups on outside click
+    document.addEventListener('pointerdown', (e) => {
+      const target = e.target as HTMLElement;
+      if (!this.shadowRoot.contains(target)) {
+        this.container.querySelectorAll('.pinmark-marker.active').forEach(m => m.classList.remove('active'));
+      }
+    });
   }
 
   private injectStyles() {
@@ -213,9 +275,42 @@ export class MarkerManager {
     marker.style.top = `${rectTop - 14}px`;
     marker.style.left = `${rectLeft - 14}px`;
 
-    // Create popup container
     const popup = document.createElement('div');
     popup.className = 'pinmark-marker-popup';
+
+    // Adjust popup positioning for viewport edge collisions
+    const adjustPosition = () => {
+      const rect = marker.getBoundingClientRect();
+      // If near the top edge (< 160px), flip down
+      if (rect.top < 160) {
+        popup.classList.add('flip-down');
+      } else {
+        popup.classList.remove('flip-down');
+      }
+
+      // Left / Right edge collision
+      if (rect.left < 150) {
+        popup.classList.add('align-left');
+        popup.classList.remove('align-right');
+      } else if (window.innerWidth - rect.right < 150) {
+        popup.classList.add('align-right');
+        popup.classList.remove('align-left');
+      } else {
+        popup.classList.remove('align-left');
+        popup.classList.remove('align-right');
+      }
+    };
+
+    marker.addEventListener('mouseenter', adjustPosition);
+    marker.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wasActive = marker.classList.contains('active');
+      this.container.querySelectorAll('.pinmark-marker.active').forEach(m => m.classList.remove('active'));
+      if (!wasActive) {
+        adjustPosition();
+        marker.classList.add('active');
+      }
+    });
 
     // Comment text
     const commentEl = document.createElement('div');

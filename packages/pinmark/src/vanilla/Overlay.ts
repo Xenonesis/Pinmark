@@ -309,6 +309,13 @@ export class Overlay {
       return;
     }
 
+    const shadowTarget = this.shadowRoot.elementFromPoint?.(e.clientX, e.clientY);
+    if (shadowTarget && shadowTarget !== this.container) {
+      this.hoverBox.hide();
+      this.targetElement = null;
+      return;
+    }
+
     const target = document.elementFromPoint(e.clientX, e.clientY);
     if (!target || target === this.container || target === this.blockOverlay || target.id.startsWith('pinmark-')) {
       this.hoverBox.hide();
@@ -319,7 +326,6 @@ export class Overlay {
     if (this.shadowRoot.contains(target)) {
       return;
     }
-
     if (target instanceof HTMLElement) {
       this.hoverBox.show(target);
       this.targetElement = target;
@@ -344,6 +350,11 @@ export class Overlay {
 
     // Ignore clicks if we're in rearrange mode, avoiding interference with layout interactions
     if (this.isRearrangeMode) return;
+
+    const shadowTarget = this.shadowRoot.elementFromPoint?.(e.clientX, e.clientY);
+    if (shadowTarget && shadowTarget !== this.container) {
+      return;
+    }
 
     const target = e.target as HTMLElement;
 
