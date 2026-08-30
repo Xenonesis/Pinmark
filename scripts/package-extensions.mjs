@@ -47,8 +47,8 @@ function auditDirectory(dirName, dirPath) {
   console.log(`  Permissions: ${JSON.stringify(manifest.permissions)}`);
 
   // Assert version
-  if (manifest.version !== '1.5.0') {
-    throw new Error(`Manifest version is ${manifest.version}, expected 1.5.0`);
+  if (manifest.version !== '1.6.0') {
+    throw new Error(`Manifest version is ${manifest.version}, expected 1.6.0`);
   }
 
   // Scan all files for banned extensions/patterns
@@ -77,14 +77,14 @@ async function packageAll() {
   console.log('📦 Packaging Pinmark Browser Extensions...');
 
   auditDirectory('Chrome (dist)', chromeDist);
-  const chromeZipPath = join(releaseDir, 'pinmark-chrome-v1.5.0.zip');
+  const chromeZipPath = join(releaseDir, 'pinmark-chrome-v1.6.0.zip');
   const chromeBytes = await createZip(chromeDist, chromeZipPath);
-  console.log(`  ✓ Created: release/pinmark-chrome-v1.5.0.zip (${(chromeBytes / 1024).toFixed(1)} KB)`);
+  console.log(`  ✓ Created: release/pinmark-chrome-v1.6.0.zip (${(chromeBytes / 1024).toFixed(1)} KB)`);
 
   auditDirectory('Firefox (dist-firefox)', firefoxDist);
-  const firefoxZipPath = join(releaseDir, 'pinmark-firefox-v1.5.0.zip');
+  const firefoxZipPath = join(releaseDir, 'pinmark-firefox-v1.6.0.zip');
   const firefoxBytes = await createZip(firefoxDist, firefoxZipPath);
-  console.log(`  ✓ Created: release/pinmark-firefox-v1.5.0.zip (${(firefoxBytes / 1024).toFixed(1)} KB)`);
+  console.log(`  ✓ Created: release/pinmark-firefox-v1.6.0.zip (${(firefoxBytes / 1024).toFixed(1)} KB)`);
 
   console.log('\n🎉 Extension packaging complete and verified!');
 }
