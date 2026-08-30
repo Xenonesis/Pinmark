@@ -15,6 +15,7 @@
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
   [![License](https://img.shields.io/badge/License-Polyform%20Noncommercial-red.svg?style=flat-square)](LICENSE.md)
   [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple.svg?style=flat-square)](https://modelcontextprotocol.io/)
+  [![Version](https://img.shields.io/badge/Version-1.6.0-blue.svg?style=flat-square)](https://github.com/Xenonesis/Pinmark/releases/tag/v1.6.0)
 
   [Features](#features) · [Installation](#installation) · [Usage](#usage) · [Architecture](#architecture) · [MCP Reference](#mcp-server-reference) · [Development](#development) · [FAQ](#faq)
 
@@ -22,6 +23,16 @@
 
   <video src="media/pinmark.mp4" controls autoplay muted loop width="640" style="border-radius: 8px; margin-top: 16px; max-width: 100%;"></video>
 
+  <!-- 1.6.0 Release Highlights -->
+  <div style="margin-top: 12px; padding: 16px; background: var(--pm-bg, #f8f9fa); border-radius: 8px; font-size: 13px;">
+    <b>🔒 1.6.0 — Stability & Recursion Fixes</b><br/>
+    • Cross-tab message-loop elimination (background.ts)<br/>
+    • Iframe guard to prevent duplicate instances (content.ts)<br/>
+    • main-world.ts DOM inspection optimization (WeakSet + depth bounds)<br/>
+    • Overlay lifecycle: onToggle now only fires on explicit user exit (Toolbar/Escape)<br/>
+    • SPA URL navigation: preserve existing overlay instead of destroy/recreate<br/>
+    • All suites pass: 0 crashes, 0 errors, 100% stable verification
+  </div>
 </div>
 
 ---
