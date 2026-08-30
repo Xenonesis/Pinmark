@@ -3,6 +3,11 @@ import { ChromeStorageAdapter } from './ChromeStorageAdapter';
 
 import { sendMessage } from '../shared/messaging';
 
+// Guard against running in subframes/iframes
+if (window.top !== window) {
+  // Do not inject overlay/launcher inside iframes
+  // Exit immediately to avoid duplicate instances and message storms
+} else {
 console.log('[Pinmark] Content script loaded');
 
 let overlay: Overlay | null = null;
@@ -62,7 +67,11 @@ async function initializeOverlay() {
         });
       },
       onToggle: (isActive: boolean) => {
-        sendMessage({ type: 'SET_STATE', state: { isActive } }).catch(console.error);
+        // Fired only when user explicitly closes overlay via Toolbar Exit or Escape
+        if (!isActive) {
+          deactivateOverlay();
+          sendMessage({ type: 'TOGGLE_EXTENSION', isActive: false }).catch(console.error);
+        }
       },
       captureScreenshot: async (element: HTMLElement): Promise<string | undefined> => {
         const response = await new Promise<{ dataUrl?: string; error?: string }>((resolve) => {
@@ -177,55 +186,14 @@ async function handleUrlChange() {
       currentUrl = newUrl;
       overlay.clearAllMarkers();
       
-      const settings = await storageAdapter.getSettings();
       const feedback = await storageAdapter.getFeedback(newUrl);
-      const storage = await chrome.storage.local.get(['extensionPaused']);
-      const isPaused = (storage?.extensionPaused as boolean) ?? false;
-      
-      if (!overlay) return;
-
-      const config = {
-        url: currentUrl,
-        storage: storageAdapter,
-        isPaused,
-        onPauseToggle: (isPaused: boolean) => {
-          sendMessage({ type: 'SET_PAUSE_STATE', isPaused }).catch(console.error);
-        },
-        onSync: (item: any) => {
-          chrome.runtime.sendMessage({
-            type: 'SYNC_MCP',
-            url: currentUrl,
-            item: item
-          }, () => {});
-        },
-        onGithubCreate: (markdown: string) => {
-          chrome.runtime.sendMessage({
-            type: 'CREATE_GITHUB_ISSUE',
-            url: currentUrl,
-            content: markdown
-          }, (response) => {
-            if (response && response.success) {
-              console.log('[Pinmark] GitHub issue created:', response.issueUrl);
-            } else if (response && response.error) {
-              console.warn('[Pinmark] GitHub issue failed:', response.error);
-              alert('Failed to create GitHub issue: ' + response.error);
-            }
-          });
-        },
-        onToggle: (isActive: boolean) => {
-          sendMessage({ type: 'SET_STATE', state: { isActive } }).catch(console.error);
+      if (feedbackManager) {
+        feedbackManager.clearAll();
+        for (const item of feedback) {
+          feedbackManager.add(item);
         }
-      };
-
-      // Since we can't cleanly hotswap config inside the current Overlay architecture,
-      // it is safer to just recreate it for SPA navigation.
-      overlay.deactivate();
-      overlay = new Overlay(settings, config, feedback);
-      feedbackManager = overlay.getFeedbackManager();
-      overlay.activate();
-      if (settings.hideUntilRestart) {
-        overlay.toggleMarkers();
       }
+      overlay.loadExistingMarkers();
     }
   } finally {
     isHandlingUrlChange = false;
@@ -260,10 +228,10 @@ function initializeLauncher() {
   launcher.onClick = () => {
     if (overlay) {
       deactivateOverlay();
-      sendMessage({ type: 'SET_STATE', state: { isActive: false } }).catch(console.error);
+      sendMessage({ type: 'TOGGLE_EXTENSION', isActive: false }).catch(console.error);
     } else {
       initializeOverlay();
-      sendMessage({ type: 'SET_STATE', state: { isActive: true } }).catch(console.error);
+      sendMessage({ type: 'TOGGLE_EXTENSION', isActive: true }).catch(console.error);
     }
   };
 }
@@ -293,16 +261,22 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   switch (message.type) {
     case 'TOGGLE_EXTENSION':
       if (message.isActive) {
-        initializeLauncher();
-        initializeOverlay();
+        if (!overlay) {
+          initializeLauncher();
+          initializeOverlay();
+        }
       } else {
-        deactivateOverlay();
+        if (overlay) {
+          deactivateOverlay();
+        }
       }
       sendResponse({ success: true });
       break;
     case 'ACTIVATE_OVERLAY':
-      initializeLauncher();
-      initializeOverlay();
+      if (!overlay) {
+        initializeLauncher();
+        initializeOverlay();
+      }
       sendResponse({ success: true });
       break;
     case 'PINMARK_HIGHLIGHT':
@@ -419,7 +393,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       sendResponse({ success: true });
       break;
     case 'UPDATE_SETTINGS':
-      overlay?.updateSettings(message.settings as any);
+      if (message.settings) {
+        overlay?.updateSettings(message.settings);
+      }
       sendResponse({ success: true });
       break;
   }
@@ -427,3 +403,4 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 setupUrlMonitoring();
+}

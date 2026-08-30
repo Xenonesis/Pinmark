@@ -221,6 +221,7 @@ export class Overlay {
         this.toggleLayoutMode(false);
       } else {
         this.deactivate();
+        this.config.onToggle?.(false);
       }
     } else if (e.key.toLowerCase() === 'p') {
       e.preventDefault();
@@ -815,7 +816,10 @@ export class Overlay {
         console.warn('[Pinmark] Cannot open settings:', e);
       }
     };
-    this.toolbar.onExitClick = () => this.deactivate();
+    this.toolbar.onExitClick = () => {
+      this.deactivate();
+      this.config.onToggle?.(false);
+    };
 
     if (this.settings.webhookUrl) {
       this.toolbar.setWebhookEnabled(true);
@@ -1524,8 +1528,6 @@ export class Overlay {
     this.networkInterceptor.enable();
     this.errorTracer.enable();
     this.breadcrumbTracker.start();
-    if (this.config.onToggle) this.config.onToggle(true);
-    
     try {
       const stopFn = rrweb.record({
         emit: (event) => {
@@ -1610,7 +1612,6 @@ export class Overlay {
     this.networkInterceptor.clear();
     this.errorTracer.clear();
 
-    if (this.config.onToggle) this.config.onToggle(false);
   }
 
   private startPerfObservers() {

@@ -110,11 +110,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       (async () => {
         try {
           const storage = await chrome.storage.local.get('extensionActive');
-          // Respect explicit isActive payload (sent by popup); fall back to a
-          // blind toggle only when no explicit value is provided (legacy callers).
+          const current = !!storage.extensionActive;
           const nextActive = (message.isActive !== undefined)
-            ? message.isActive
-            : !storage.extensionActive;
+            ? !!message.isActive
+            : !current;
+
+          if (current === nextActive) {
+            sendResponse({ isActive: nextActive });
+            return;
+          }
+
           await chrome.storage.local.set({ extensionActive: nextActive });
 
           // Broadcast new state to all tabs
@@ -144,7 +149,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'SET_STATE':
       (async () => {
         try {
-          const isActive = message.state.isActive;
+          const isActive = !!message.state?.isActive;
+          const storage = await chrome.storage.local.get('extensionActive');
+          if (storage.extensionActive === isActive) {
+            sendResponse({ success: true });
+            return;
+          }
           await chrome.storage.local.set({ extensionActive: isActive });
 
           // Send message to all other tabs to sync the state
