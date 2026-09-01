@@ -8,7 +8,10 @@ import { runDoctor } from './src/init-doctor.js';
 import { MarkdownFormatter } from '../pinmark/dist/vanilla/MarkdownFormatter.js';
 
 const TEST_PORT = 8199;
-const EXTENSION_DIST = path.resolve('packages/extension/dist');
+const EXTENSION_DIST = [
+  path.resolve('packages/extension/.output/chrome-mv3'),
+  path.resolve('packages/extension/dist'),
+].find((d) => fs.existsSync(d)) || path.resolve('packages/extension/.output/chrome-mv3');
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 
 async function main() {

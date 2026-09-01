@@ -1,8 +1,8 @@
-import type { ExtensionSettings, FeedbackItem } from '../shared/types';
-import { sendMessage } from '../shared/messaging';
-import { getSettings, saveSettings, getFeedback } from '../shared/storage';
-import { setHTML } from "../../../pinmark/src/vanilla/domUtils";
-import { MarkdownFormatter } from "../../../pinmark/src/vanilla/MarkdownFormatter";
+import type { ExtensionSettings, FeedbackItem } from '../../src/shared/types';
+import { sendMessage } from '../../src/shared/messaging';
+import { getSettings, saveSettings, getFeedback } from '../../src/shared/storage';
+import { setHTML } from '../../../pinmark/src/vanilla/domUtils';
+import { MarkdownFormatter } from '../../../pinmark/src/vanilla/MarkdownFormatter';
 
 let currentTabId: number | null = null;
 let currentTabUrl: string = '';
@@ -26,7 +26,6 @@ const markerColorInput = document.getElementById('markerColor') as HTMLInputElem
 const themeToggleBtn = document.getElementById('themeToggleBtn') as HTMLButtonElement;
 
 const swatches = document.querySelectorAll('.swatch[data-color]') as NodeListOf<HTMLButtonElement>;
-
 
 const autoSyncToggle = document.getElementById('autoSync') as HTMLInputElement;
 const mcpEndpointInput = document.getElementById('mcpEndpoint') as HTMLInputElement;
@@ -327,16 +326,16 @@ closeReviewBtn?.addEventListener('click', () => slideBackFromPanel(reviewPanel))
 
 // ── Review rendering ─────────────────────────────────
 function triageChip(item: FeedbackItem): string {
-  const t: any = item.triage;
+  const t = item.triage as { severity?: string; category?: string } | undefined;
   const sev = t?.severity || item.severity || 'suggestion';
   const cat = t?.category || item.category || 'question';
   return `<span class="triage-chip sev-${sev}">${cat} · ${sev}</span>`;
 }
 
 function diagnosticBadges(item: FeedbackItem): string {
-  const perf = (item.performanceMetrics || []).filter((m: any) => m.entryType === 'longtask').length;
-  const failing = (item.networkRequests || []).filter((r: any) => r.isError || (r.status && r.status >= 400)).length;
-  const stores = ((item.stateSnapshot as any)?.detected || []).length;
+  const perf = (item.performanceMetrics || []).filter((m: { entryType?: string }) => m.entryType === 'longtask').length;
+  const failing = (item.networkRequests || []).filter((r: { isError?: boolean; status?: number }) => r.isError || (r.status && r.status >= 400)).length;
+  const stores = ((item.stateSnapshot as { detected?: string[] } | undefined)?.detected || []).length;
   const a11y = (item.a11yIssues || []).length;
   const errors = (item.errorTrace || []).length;
   const badges: string[] = [];
@@ -350,14 +349,14 @@ function diagnosticBadges(item: FeedbackItem): string {
 
 function detailSections(item: FeedbackItem): string {
   const sections: string[] = [];
-  const t: any = item.triage;
+  const t = item.triage as { summary?: string; reasons?: string[] } | undefined;
   if (t?.summary) {
     sections.push(`<div class="detail-sec"><div class="detail-sec-title">Auto-Triage</div>${t.summary}${t.reasons?.length ? ` <span style="opacity:.7">(${t.reasons.join('; ')})</span>` : ''}</div>`);
   }
 
-  const longTasks = (item.performanceMetrics || []).filter((m: any) => m.entryType === 'longtask');
-  const tbt = longTasks.reduce((s: number, lt: any) => s + Math.max(0, (lt.duration || 0) - 50), 0);
-  const shifts = (item.performanceMetrics || []).filter((m: any) => m.entryType === 'layout-shift');
+  const longTasks = (item.performanceMetrics || []).filter((m: { entryType?: string; duration?: number }) => m.entryType === 'longtask');
+  const tbt = longTasks.reduce((s: number, lt: { duration?: number }) => s + Math.max(0, (lt.duration || 0) - 50), 0);
+  const shifts = (item.performanceMetrics || []).filter((m: { entryType?: string }) => m.entryType === 'layout-shift');
   if (longTasks.length > 0 || shifts.length > 0) {
     const parts: string[] = [];
     if (longTasks.length > 0) parts.push(`${longTasks.length} long task(s), TBT ${Math.round(tbt)}ms`);
@@ -365,25 +364,25 @@ function detailSections(item: FeedbackItem): string {
     sections.push(`<div class="detail-sec"><div class="detail-sec-title">Performance</div>${parts.join(' · ')}</div>`);
   }
 
-  const failing = (item.networkRequests || []).filter((r: any) => r.isError || (r.status && r.status >= 400));
+  const failing = (item.networkRequests || []).filter((r: { isError?: boolean; status?: number; method?: string; url?: string }) => r.isError || (r.status && r.status >= 400));
   if (failing.length > 0) {
-    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Network Failures</div>${failing.map((r: any) => `<code>${r.method} ${r.url}</code> → ${r.status ?? 'ERR'}`).join('<br>')}</div>`);
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Network Failures</div>${failing.map((r: { method?: string; url?: string; status?: number }) => `<code>${r.method} ${r.url}</code> → ${r.status ?? 'ERR'}`).join('<br>')}</div>`);
   }
 
-  const issues: any[] = item.a11yIssues || [];
+  const issues = (item.a11yIssues || []) as Array<{ type: string; wcag: string }>;
   if (issues.length > 0) {
-    sections.push(`<div class="detail-sec"><div class="detail-sec-title">A11y (WCAG)</div>${issues.slice(0, 4).map((i: any) => `${i.type} (${i.wcag})`).join(', ')}${issues.length > 4 ? ` +${issues.length - 4}` : ''}</div>`);
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">A11y (WCAG)</div>${issues.slice(0, 4).map((i) => `${i.type} (${i.wcag})`).join(', ')}${issues.length > 4 ? ` +${issues.length - 4}` : ''}</div>`);
   }
 
-  const errors: any[] = item.errorTrace || [];
+  const errors = (item.errorTrace || []) as Array<{ name: string; message: string; stack?: Array<{ fn: string; file: string; line: number }> }>;
   if (errors.length > 0) {
-    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Runtime Errors</div>${errors.map((e: any) => {
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Runtime Errors</div>${errors.map((e) => {
       const first = (e.stack || [])[0];
       return `<code>${e.name}</code>: ${e.message}${first ? ` @ ${first.fn} ${first.file}:${first.line}` : ''}`;
     }).join('<br>')}</div>`);
   }
 
-  const ss: any = item.stateSnapshot;
+  const ss = item.stateSnapshot as { detected?: string[]; snapshot?: unknown } | undefined;
   if (ss?.detected?.length) {
     sections.push(`<div class="detail-sec"><div class="detail-sec-title">State</div>${ss.detected.join(', ')}<br><code>${JSON.stringify(ss.snapshot).slice(0, 180)}</code></div>`);
   }
@@ -495,7 +494,7 @@ function hideStatus() {
 // ── Init ──────────────────────────────────────────────
 async function init() {
   const settings = await getSettings();
-  applyTheme((settings.theme as 'light' | 'dark' | 'auto') || 'auto');
+  applyTheme((settings.theme as 'auto' | 'light' | 'dark') || 'auto');
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTabId = tab?.id || null;

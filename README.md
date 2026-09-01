@@ -370,9 +370,7 @@ Browser-specific integration layer.
 - **Background** — Service worker for extension lifecycle, storage events, and context menus.
 - **Popup** (`src/popup/`) — Quick status, theme toggle, GitHub issue export, and server connectivity check.
 - **Manifest** — Targets both Chromium (`manifest_version: 3`) and Firefox (`browser_specific_settings.gecko`).
-
-Build powered by **Vite** + **@crxjs/vite-plugin` for HMR during development.
-
+Build powered by **WXT** (`wxt.dev`) + **Vite** for native multi-browser packaging (Chrome, Firefox, Edge, Safari) and instant HMR.
 #### `@pinmark/mcp`
 
 Local bridge between the extension and AI agents.
@@ -1949,8 +1947,8 @@ Contributors retain copyright but grant the same rights to downstream users unde
 | MCP tools | `packages/mcp/src/mcp-tools.ts` |
 | MCP server | `packages/mcp/src/server.ts` |
 | HTTP routes | `packages/mcp/src/http-routes.ts` |
-| Build config | `packages/extension/vite.config.ts` |
-| Manifest | `packages/extension/manifest.json` |
+| Build config | `packages/extension/wxt.config.ts` |
+| Entrypoints | `packages/extension/entrypoints/` |
 | Settings types | `packages/extension/src/shared/types.ts` |
 ```
 
@@ -2048,9 +2046,8 @@ Key production dependencies to monitor:
 | `express` | MCP HTTP server | Low |
 | `commander` | MCP CLI | Low |
 | `zod` | Schema validation | Low |
-| `vite` | Build tooling | Low |
-| `@crxjs/vite-plugin` | Extension HMR | Medium |
-
+| `wxt` | Extension framework & build tooling | Low |
+| `vite` | Core bundler engine | Low |
 Recommend running `npm audit` weekly. Pick one vendor for security advisories.
 
 ## Appendix VV: Error Codes & Messaging Conventions

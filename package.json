@@ -35,7 +35,6 @@
     "rrweb": "^2.1.1"
   },
   "devDependencies": {
-    "@crxjs/vite-plugin": "^2.7.1",
     "@types/archiver": "^8.0.0",
     "@types/chrome": "^0.2.2",
     "archiver": "^8.0.0",

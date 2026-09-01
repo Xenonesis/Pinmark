@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pinmark</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="card">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <div class="brand">
+          <span class="brand-name">Pinmark</span>
+          <span class="brand-ver">v1.6.0</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn theme-toggle" id="themeToggleBtn" title="Toggle theme">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M16.5 13.5A7.5 7.5 0 018.5 2.5a8.5 8.5 0 108 11z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Message -->
+    <div id="statusMsg" class="status-msg"></div>
+
+    <!-- Enable Toggle -->
+    <div class="setting-row highlight-row">
+      <div class="setting-info">
+        <div class="setting-title">
+          <span>Enable Pinmark</span>
+          <span class="status-indicator" id="statusIndicator"></span>
+        </div>
+        <div class="setting-desc">Show feedback tools on all pages</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="toggleBtnCheckbox">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Output Detail -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Output Detail</div>
+        <div class="setting-desc">Level of technical detail in exported Markdown</div>
+      </div>
+      <div class="custom-select" id="outputDetailCustom">
+        <button class="custom-select-trigger" id="outputDetailTrigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="custom-select-label" id="outputDetailLabel">Standard</span>
+          <svg class="custom-select-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <div class="custom-select-options" id="outputDetailOptions" role="listbox">
+          <div class="custom-select-option" data-value="minimal" role="option">Minimal</div>
+          <div class="custom-select-option selected" data-value="standard" role="option">Standard</div>
+          <div class="custom-select-option" data-value="full" role="option">Full</div>
+        </div>
+        <select id="outputDetail" style="display:none" tabindex="-1">
+          <option value="minimal">Minimal</option>
+          <option value="standard" selected>Standard</option>
+          <option value="full">Full</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- React Components Toggle (Hidden: Not Implemented) -->
+    <div class="setting-row" style="display: none;">
+      <div class="setting-info">
+        <div class="setting-title">React Components</div>
+        <div class="setting-desc">Detect component names via React DevTools</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="reactComponents">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <!-- Block Interactions Toggle -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Block Interactions</div>
+        <div class="setting-desc">Prevent clicking underlying page elements</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="blockInteractions">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <!-- Hide Until Restart Toggle -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Hide Markers on Open</div>
+        <div class="setting-desc">Keep pins hidden by default until revealed</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="hideUntilRestart">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Marker Color -->
+    <div class="color-section">
+      <div class="setting-info">
+        <div class="setting-title">Default Marker Color</div>
+        <div class="setting-desc">Color for newly placed pins</div>
+      </div>
+      <div class="swatches-row">
+        <div class="swatches" id="swatches">
+          <button class="swatch active" data-color="#0066FF" style="background:#0066FF" title="Blue"></button>
+          <button class="swatch" data-color="#10B981" style="background:#10B981" title="Green"></button>
+          <button class="swatch" data-color="#F59E0B" style="background:#F59E0B" title="Amber"></button>
+          <button class="swatch" data-color="#EF4444" style="background:#EF4444" title="Red"></button>
+          <button class="swatch" data-color="#8B5CF6" style="background:#8B5CF6" title="Purple"></button>
+          <button class="swatch" data-color="#EC4899" style="background:#EC4899" title="Pink"></button>
+        </div>
+        <div class="custom-color-wrap" title="Custom color">
+          <input type="color" id="markerColor" value="#0066FF" class="color-picker-input">
+          <div class="custom-color-preview" id="colorPreview" style="background:#0066FF"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Clear on copy -->
+    <label class="setting-row checkbox-row">
+      <input type="checkbox" id="clearAfterCopy">
+      <span class="checkbox-box"></span>
+      <span class="setting-title">Clear feedback after copy</span>
+    </label>
+
+    <div class="divider"></div>
+
+    <!-- Manage MCP & Webhooks → nav row -->
+    <button class="nav-row" id="openAdvanced">
+      <span class="nav-row-label">Manage MCP & Webhooks</span>
+      <svg class="nav-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M6 3l5 5-5 5"/>
+      </svg>
+    </button>
+
+    <!-- Review Annotations → nav row -->
+    <button class="nav-row" id="openReview">
+      <div class="nav-row-left">
+        <span class="nav-row-label">Review Current Feedback</span>
+        <span class="badge" id="feedbackCountBadge">0</span>
+      </div>
+      <svg class="nav-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M6 3l5 5-5 5"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Advanced Panel (hidden by default) -->
+  <div class="card advanced-panel" id="advancedPanel" style="display:none">
+    <div class="panel-header">
+      <button class="back-btn" id="closeAdvanced">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M10 3L5 8l5 5"/>
+        </svg>
+        <span>Back</span>
+      </button>
+      <span class="panel-title">MCP & Webhooks</span>
+    </div>
+
+    <div class="panel-body">
+      <!-- Auto-sync to MCP -->
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">Auto-sync to MCP Server</div>
+          <div class="setting-desc">Stream feedback live to local MCP server</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="autoSync">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- MCP Endpoint -->
+      <div class="field-group">
+        <label class="field-label" for="mcpEndpoint">MCP Server Endpoint</label>
+        <input type="url" id="mcpEndpoint" class="field-input" placeholder="http://127.0.0.1:4747" autocomplete="off" spellcheck="false">
+      </div>
+
+      <!-- Webhook URL -->
+      <div class="field-group">
+        <label class="field-label" for="webhookUrl">Webhook URL (Slack/Discord/Custom)</label>
+        <input type="url" id="webhookUrl" class="field-input" placeholder="https://hooks.slack.com/services/..." autocomplete="off" spellcheck="false">
+      </div>
+
+      <!-- GitHub Token -->
+      <div class="field-group">
+        <label class="field-label" for="githubToken">GitHub Personal Access Token</label>
+        <input type="password" id="githubToken" class="field-input" placeholder="ghp_..." autocomplete="off" spellcheck="false">
+      </div>
+
+      <!-- GitHub Repo -->
+      <div class="field-group">
+        <label class="field-label" for="githubRepo">GitHub Target Repository</label>
+        <input type="text" id="githubRepo" class="field-input" placeholder="owner/repo" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Panel (hidden by default) -->
+  <div class="card advanced-panel" id="reviewPanel" style="display:none">
+    <div class="panel-header">
+      <button class="back-btn" id="closeReview">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M10 3L5 8l5 5"/>
+        </svg>
+        <span>Back</span>
+      </button>
+      <span class="panel-title">Review Feedback</span>
+    </div>
+    <div class="panel-body review-body" id="reviewList">
+      <!-- Injected via JS -->
+    </div>
+    <div class="review-footer">
+      <button class="btn btn-secondary" id="clearAllBtn">Clear All</button>
+      <button class="btn btn-secondary" id="copyJsonBtn">Copy JSON</button>
+      <button class="btn btn-primary" id="copyMarkdownBtn">Copy Markdown</button>
+    </div>
+  </div>
+
+  <script type="module" src="popup.ts"></script>
+</body>
+</html>

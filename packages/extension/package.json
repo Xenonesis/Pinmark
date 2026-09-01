@@ -18,10 +18,13 @@
     "url": "https://github.com/Xenonesis/Pinmark/issues"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "build:firefox": "npm run build && node ../../scripts/build-firefox.mjs",
-    "preview": "vite preview",
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "postinstall": "wxt prepare",
     "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
@@ -30,10 +33,10 @@
     "html2canvas": "^1.4.1"
   },
   "devDependencies": {
-    "@crxjs/vite-plugin": "^2.7.1",
     "@types/chrome": "^0.2.2",
     "sharp": "^0.35.3",
     "typescript": "^7.0.2",
-    "vite": "^8.2.0"
+    "vite": "^8.2.0",
+    "wxt": "^0.21.4"
   }
 }

@@ -1,10 +1,14 @@
-import puppeteer from 'puppeteer';
+import { spawn, ChildProcess } from 'node:child_process';
+import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
+import puppeteer from 'puppeteer';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DIST = path.resolve(__dirname, '../extension/dist');
+const DIST = [
+  path.resolve(__dirname, '../extension/.output/chrome-mv3'),
+  path.resolve(__dirname, '../extension/dist'),
+].find((d) => fs.existsSync(d)) || path.resolve(__dirname, '../extension/.output/chrome-mv3');
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PORT = 8488;
 const PAGE_URL = `http://127.0.0.1:${PORT}/index.html`;
@@ -118,7 +122,9 @@ async function testPopupStability() {
     if (msg.type() === 'error') popupErrors.push(msg.text());
   });
 
-  const popupUrl = `chrome-extension://${extId}/src/popup/index.html`;
+  const manifest = JSON.parse(fs.readFileSync(path.join(DIST, 'manifest.json'), 'utf8'));
+  const popupRel = manifest.action?.default_popup || 'popup.html';
+  const popupUrl = `chrome-extension://${extId}/${popupRel}`;
   await popupPage.goto(popupUrl, { waitUntil: 'networkidle0' });
 
   // Verify popup DOM rendered cleanly

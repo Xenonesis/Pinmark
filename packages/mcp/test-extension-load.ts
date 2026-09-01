@@ -8,7 +8,10 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DIST = path.resolve(__dirname, '../extension/dist');
+const DIST = [
+  path.resolve(__dirname, '../extension/.output/chrome-mv3'),
+  path.resolve(__dirname, '../extension/dist'),
+].find((d) => fs.existsSync(d)) || path.resolve(__dirname, '../extension/.output/chrome-mv3');
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PORT = 8199;
 const PAGE_URL = `http://127.0.0.1:${PORT}/page.html`;
@@ -167,7 +170,9 @@ const popup = await browser.newPage();
 const popupErrors: string[] = [];
 popup.on('pageerror', (e) => popupErrors.push(String(e)));
 await popup.evaluateOnNewDocument(`chrome.tabs.query = async () => [{ id: 1, url: '${PAGE_URL}' }];`);
-await popup.goto(`chrome-extension://${extId}/src/popup/index.html`, { waitUntil: 'networkidle2', timeout: 15000 });
+const manifest = JSON.parse(fs.readFileSync(path.join(DIST, 'manifest.json'), 'utf8'));
+const popupRel = manifest.action?.default_popup || 'popup.html';
+await popup.goto(`chrome-extension://${extId}/${popupRel}`, { waitUntil: 'networkidle2', timeout: 15000 });
 await new Promise((r) => setTimeout(r, 1200));
 out.popupBrand = await popup.evaluate(() => document.querySelector('.brand-name')?.textContent || '');
 out.popupErrors = popupErrors.length;

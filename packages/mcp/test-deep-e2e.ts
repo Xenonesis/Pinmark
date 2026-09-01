@@ -9,7 +9,10 @@ import { WebhookDispatcher } from '../../packages/core/src/WebhookDispatcher.js'
 import { MarkdownFormatter } from '../../packages/pinmark/dist/vanilla/MarkdownFormatter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DIST = path.resolve(__dirname, '../extension/dist');
+const DIST = [
+  path.resolve(__dirname, '../extension/.output/chrome-mv3'),
+  path.resolve(__dirname, '../extension/dist'),
+].find((d) => fs.existsSync(d)) || path.resolve(__dirname, '../extension/.output/chrome-mv3');
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PORT = 8399;
 const PAGE_URL = `http://127.0.0.1:${PORT}/app.html`;
@@ -313,7 +316,9 @@ async function runDeepAudit() {
 
   // Open Extension Popup Page
   const popupPage = await browser.newPage();
-  await popupPage.goto(`chrome-extension://${extId}/src/popup/index.html`);
+  const manifest = JSON.parse(fs.readFileSync(path.join(DIST, 'manifest.json'), 'utf8'));
+  const popupRel = manifest.action?.default_popup || 'popup.html';
+  await popupPage.goto(`chrome-extension://${extId}/${popupRel}`);
   await new Promise((r) => setTimeout(r, 400));
 
   const popupUI = await popupPage.evaluate(async () => {

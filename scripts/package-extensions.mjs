@@ -8,8 +8,16 @@ const { ZipArchive } = require('archiver');
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, '..');
 const extensionDir = resolve(rootDir, 'packages', 'extension');
-const chromeDist = resolve(extensionDir, 'dist');
-const firefoxDist = resolve(extensionDir, 'dist-firefox');
+const chromeDist = [
+  resolve(extensionDir, '.output', 'chrome-mv3'),
+  resolve(extensionDir, 'dist'),
+].find((d) => existsSync(d)) || resolve(extensionDir, '.output', 'chrome-mv3');
+
+const firefoxDist = [
+  resolve(extensionDir, '.output', 'firefox-mv2'),
+  resolve(extensionDir, '.output', 'firefox-mv3'),
+  resolve(extensionDir, 'dist-firefox'),
+].find((d) => existsSync(d)) || resolve(extensionDir, '.output', 'firefox-mv2');
 const releaseDir = resolve(rootDir, 'release');
 
 if (!existsSync(releaseDir)) {
