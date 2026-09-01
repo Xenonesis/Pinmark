@@ -24,7 +24,7 @@ const reactComponentsToggle = document.getElementById('reactComponents') as HTML
 const clearAfterCopyCheckbox = document.getElementById('clearAfterCopy') as HTMLInputElement;
 const markerColorInput = document.getElementById('markerColor') as HTMLInputElement;
 const themeToggleBtn = document.getElementById('themeToggleBtn') as HTMLButtonElement;
-
+const colorPreview = document.getElementById('colorPreview') as HTMLElement;
 const swatches = document.querySelectorAll('.swatch[data-color]') as NodeListOf<HTMLButtonElement>;
 
 const autoSyncToggle = document.getElementById('autoSync') as HTMLInputElement;
@@ -95,8 +95,13 @@ function loadSettings(settings: ExtensionSettings) {
 
 function updateSwatchSelection(color: string) {
   swatches.forEach(s => {
-    s.classList.toggle('selected', s.dataset.color?.toLowerCase() === color.toLowerCase());
+    const isMatch = s.dataset.color?.toLowerCase() === color.toLowerCase();
+    s.classList.toggle('selected', isMatch);
+    s.classList.toggle('active', isMatch);
   });
+  if (colorPreview) {
+    colorPreview.style.background = color;
+  }
 }
 
 // ── Save a single setting ─────────────────────────────
@@ -133,8 +138,8 @@ function openDropdown() {
   dropdown.setAttribute('aria-label', 'Output detail level');
 
   const rect = outputDetailTrigger.getBoundingClientRect();
-  dropdown.style.top = `${rect.bottom + 6}px`;
-
+  dropdown.style.top = `${rect.bottom + 4}px`;
+  dropdown.style.right = '16px';
   const options = [
     { value: 'minimal', label: 'Compact', desc: 'Element & feedback comment only' },
     { value: 'standard', label: 'Standard', desc: 'Element, CSS classes, hierarchy & location' },
