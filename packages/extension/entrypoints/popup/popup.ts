@@ -1,7 +1,7 @@
 import type { ExtensionSettings, FeedbackItem } from '../../src/shared/types';
 import { sendMessage } from '../../src/shared/messaging';
 import { getSettings, saveSettings, getFeedback } from '../../src/shared/storage';
-import { setHTML } from '../../../pinmark/src/vanilla/domUtils';
+import { setHTML, escapeHTML } from '../../../pinmark/src/vanilla/domUtils';
 import { MarkdownFormatter } from '../../../pinmark/src/vanilla/MarkdownFormatter';
 
 let currentTabId: number | null = null;
@@ -332,8 +332,8 @@ closeReviewBtn?.addEventListener('click', () => slideBackFromPanel(reviewPanel))
 // ── Review rendering ─────────────────────────────────
 function triageChip(item: FeedbackItem): string {
   const t = item.triage as { severity?: string; category?: string } | undefined;
-  const sev = t?.severity || item.severity || 'suggestion';
-  const cat = t?.category || item.category || 'question';
+  const sev = escapeHTML(t?.severity || item.severity || 'suggestion');
+  const cat = escapeHTML(t?.category || item.category || 'question');
   return `<span class="triage-chip sev-${sev}">${cat} · ${sev}</span>`;
 }
 
@@ -356,7 +356,7 @@ function detailSections(item: FeedbackItem): string {
   const sections: string[] = [];
   const t = item.triage as { summary?: string; reasons?: string[] } | undefined;
   if (t?.summary) {
-    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Auto-Triage</div>${t.summary}${t.reasons?.length ? ` <span style="opacity:.7">(${t.reasons.join('; ')})</span>` : ''}</div>`);
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Auto-Triage</div>${escapeHTML(t.summary)}${t.reasons?.length ? ` <span style="opacity:.7">(${escapeHTML(t.reasons.join('; '))})</span>` : ''}</div>`);
   }
 
   const longTasks = (item.performanceMetrics || []).filter((m: { entryType?: string; duration?: number }) => m.entryType === 'longtask');
@@ -366,30 +366,30 @@ function detailSections(item: FeedbackItem): string {
     const parts: string[] = [];
     if (longTasks.length > 0) parts.push(`${longTasks.length} long task(s), TBT ${Math.round(tbt)}ms`);
     if (shifts.length > 0) parts.push(`${shifts.length} layout shift(s)`);
-    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Performance</div>${parts.join(' · ')}</div>`);
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Performance</div>${escapeHTML(parts.join(' · '))}</div>`);
   }
 
   const failing = (item.networkRequests || []).filter((r: { isError?: boolean; status?: number; method?: string; url?: string }) => r.isError || (r.status && r.status >= 400));
   if (failing.length > 0) {
-    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Network Failures</div>${failing.map((r: { method?: string; url?: string; status?: number }) => `<code>${r.method} ${r.url}</code> → ${r.status ?? 'ERR'}`).join('<br>')}</div>`);
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">Network Failures</div>${failing.map((r: { method?: string; url?: string; status?: number }) => `<code>${escapeHTML(r.method || 'GET')} ${escapeHTML(r.url || '')}</code> → ${escapeHTML(String(r.status ?? 'ERR'))}`).join('<br>')}</div>`);
   }
 
   const issues = (item.a11yIssues || []) as Array<{ type: string; wcag: string }>;
   if (issues.length > 0) {
-    sections.push(`<div class="detail-sec"><div class="detail-sec-title">A11y (WCAG)</div>${issues.slice(0, 4).map((i) => `${i.type} (${i.wcag})`).join(', ')}${issues.length > 4 ? ` +${issues.length - 4}` : ''}</div>`);
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">A11y (WCAG)</div>${issues.slice(0, 4).map((i) => `${escapeHTML(i.type)} (${escapeHTML(i.wcag)})`).join(', ')}${issues.length > 4 ? ` +${issues.length - 4}` : ''}</div>`);
   }
 
   const errors = (item.errorTrace || []) as Array<{ name: string; message: string; stack?: Array<{ fn: string; file: string; line: number }> }>;
   if (errors.length > 0) {
     sections.push(`<div class="detail-sec"><div class="detail-sec-title">Runtime Errors</div>${errors.map((e) => {
       const first = (e.stack || [])[0];
-      return `<code>${e.name}</code>: ${e.message}${first ? ` @ ${first.fn} ${first.file}:${first.line}` : ''}`;
+      return `<code>${escapeHTML(e.name)}</code>: ${escapeHTML(e.message)}${first ? ` @ ${escapeHTML(first.fn)} ${escapeHTML(first.file)}:${first.line}` : ''}`;
     }).join('<br>')}</div>`);
   }
 
   const ss = item.stateSnapshot as { detected?: string[]; snapshot?: unknown } | undefined;
   if (ss?.detected?.length) {
-    sections.push(`<div class="detail-sec"><div class="detail-sec-title">State</div>${ss.detected.join(', ')}<br><code>${JSON.stringify(ss.snapshot).slice(0, 180)}</code></div>`);
+    sections.push(`<div class="detail-sec"><div class="detail-sec-title">State</div>${escapeHTML(ss.detected.join(', '))}<br><code>${escapeHTML(JSON.stringify(ss.snapshot).slice(0, 180))}</code></div>`);
   }
 
   return sections.join('');
@@ -419,10 +419,10 @@ async function renderReview() {
       <div class="review-item-head" data-detail="${detailId}">
         <div class="review-item-top">
           <span class="review-idx">#${item.index ?? '?'}</span>
-          <span class="review-comment">${item.comment || '(no comment)'}</span>
+          <span class="review-comment">${escapeHTML(item.comment || '(no comment)')}</span>
           ${triageChip(item)}
         </div>
-        <span class="review-selector">${selector}</span>
+        <span class="review-selector">${escapeHTML(selector)}</span>
         ${diagnosticBadges(item)}
       </div>
       <div class="review-detail" id="${detailId}" style="display:none">
@@ -431,7 +431,6 @@ async function renderReview() {
       </div>
     </div>`;
   }).join('');
-  setHTML(reviewList, html);
 
   reviewList.querySelectorAll('.review-item-head').forEach((head) => {
     head.addEventListener('click', () => {

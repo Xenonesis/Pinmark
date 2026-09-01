@@ -1,5 +1,5 @@
 import { FrameworkDetector } from './FrameworkDetector.js';
-import { setHTML } from "./domUtils.js";
+import { setHTML, escapeHTML } from "./domUtils.js";
 
 const HOVER_BOX_STYLES = `
   .pinmark-hover-box {
@@ -168,15 +168,15 @@ export class HoverBox {
   }
 
   private buildLabelHTML(target: HTMLElement, rect: DOMRect): string {
-    const tag = target.tagName.toLowerCase();
+    const tag = escapeHTML(target.tagName.toLowerCase());
     // Smart name: for button/a/label, use text content
     const smartName = this.getSmartName(target);
-    const id = target.id ? `<span class="pinmark-hover-label-id">#${target.id}</span>` : '';
+    const id = target.id ? `<span class="pinmark-hover-label-id">#${escapeHTML(target.id)}</span>` : '';
     const classes = target.classList.length > 0
       ? Array.from(target.classList)
           .filter(c => !c.startsWith('pinmark'))
           .slice(0, 2)
-          .map(c => `<span class="pinmark-hover-label-class">.${c}</span>`)
+          .map(c => `<span class="pinmark-hover-label-class">.${escapeHTML(c)}</span>`)
           .join('')
       : '';
 
@@ -188,7 +188,7 @@ export class HoverBox {
         const prefix = component.framework === 'react' ? '⚛' : component.framework === 'vue' ? '💚' : '🔷';
         componentHTML = `
           <span class="pinmark-hover-label-divider"></span>
-          <span class="pinmark-hover-label-component">${prefix} ${component.name}</span>
+          <span class="pinmark-hover-label-component">${prefix} ${escapeHTML(component.name)}</span>
         `;
       }
     } catch (e) {
@@ -202,7 +202,7 @@ export class HoverBox {
     if (smartName) {
       return `
         <span class="pinmark-hover-label-tag">&lt;${tag}&gt;</span>
-        <span class="pinmark-hover-label-class">"${smartName}"</span>
+        <span class="pinmark-hover-label-class">"${escapeHTML(smartName)}"</span>
         ${componentHTML}
         ${dimsHTML}
       `;

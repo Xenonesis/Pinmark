@@ -1,4 +1,4 @@
-import { setHTML } from "./domUtils.js";
+import { setHTML, escapeHTML } from "./domUtils.js";
 
 const MODAL_STYLES = `
   @keyframes pmk-spin {
@@ -525,7 +525,7 @@ export class FeedbackModal {
       const hierarchy = componentInfo.hierarchy.slice(-5); // last 5 in tree
       setHTML(treeEl, hierarchy.map((name, i) => {
                 const isLast = i === hierarchy.length - 1;
-                return `<span class="${isLast ? 'pinmark-modal-component-name' : ''}">${name}</span>`;
+                return `<span class="${isLast ? 'pinmark-modal-component-name' : ''}">${escapeHTML(name)}</span>`;
               }).join(' <span style="opacity:0.3;font-size:10px;margin:0 4px">&gt;</span> '));
       body.appendChild(treeEl);
     }
@@ -866,19 +866,19 @@ export class FeedbackModal {
   }
 
   private formatElementInfo(element: HTMLElement, smartName?: string, componentInfo?: { framework: string; name: string; hierarchy?: string[] }): string {
-    const tag = element.tagName.toLowerCase();
-    const id = element.id ? `<span class="pinmark-modal-element-id">#${element.id}</span>` : '';
+    const tag = escapeHTML(element.tagName.toLowerCase());
+    const id = element.id ? `<span class="pinmark-modal-element-id">#${escapeHTML(element.id)}</span>` : '';
     const classes = element.className && typeof element.className === 'string'
-      ? element.className.split(' ').filter(c => c && !c.startsWith('pinmark')).slice(0, 3).map(c => `<span class="pinmark-modal-element-class">.${c}</span>`).join('')
+      ? element.className.split(' ').filter(c => c && !c.startsWith('pinmark')).slice(0, 3).map(c => `<span class="pinmark-modal-element-class">.${escapeHTML(c)}</span>`).join('')
       : '';
 
     let componentHTML = '';
     if (componentInfo && componentInfo.name && componentInfo.name !== 'Unknown') {
-      componentHTML = `<span class="pinmark-modal-element-component">${componentInfo.name}</span>`;
+      componentHTML = `<span class="pinmark-modal-element-component">${escapeHTML(componentInfo.name)}</span>`;
     }
 
     if (smartName) {
-      return `<span class="pinmark-modal-element-tag">&lt;${tag}&gt;</span> <span style="color:var(--pmk-text-muted,#9ca3af)">"${smartName}"</span>${componentHTML}`;
+      return `<span class="pinmark-modal-element-tag">&lt;${tag}&gt;</span> <span style="color:var(--pmk-text-muted,#9ca3af)">"${escapeHTML(smartName)}"</span>${componentHTML}`;
     }
 
     return `<span class="pinmark-modal-element-tag">&lt;${tag}&gt;</span>${id}${classes}${componentHTML}`;

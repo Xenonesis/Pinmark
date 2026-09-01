@@ -368,23 +368,33 @@ export default defineContentScript({
           overlay?.clearAllMarkers();
           sendResponse({ success: true });
           break;
-        case 'COPY_FEEDBACK':
+        case 'COPY_FEEDBACK': {
           const markdown = feedbackManager?.toMarkdown();
           if (markdown) {
-            navigator.clipboard.writeText(markdown);
-            sendResponse({ success: true });
+            navigator.clipboard.writeText(markdown)
+              .then(() => sendResponse({ success: true }))
+              .catch((err) => {
+                console.warn('[Pinmark] Failed to copy markdown to clipboard:', err);
+                sendResponse({ success: false, error: (err as Error).message });
+              });
           } else {
-            sendResponse({ success: false });
+            sendResponse({ success: false, error: 'No feedback to copy' });
           }
           return true;
-        case 'COPY_JSON':
+        }
+        case 'COPY_JSON': {
           if (overlay) {
-            overlay.copyJson();
-            sendResponse({ success: true });
+            try {
+              overlay.copyJson();
+              sendResponse({ success: true });
+            } catch (err) {
+              sendResponse({ success: false, error: (err as Error).message });
+            }
           } else {
-            sendResponse({ success: false });
+            sendResponse({ success: false, error: 'Overlay not active' });
           }
           return true;
+        }
         case 'ADD_FEEDBACK':
           feedbackManager?.add(message.item);
           overlay?.loadExistingMarkers();
