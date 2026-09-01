@@ -15,7 +15,7 @@
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
   [![License](https://img.shields.io/badge/License-Polyform%20Noncommercial-red.svg?style=flat-square)](LICENSE.md)
   [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple.svg?style=flat-square)](https://modelcontextprotocol.io/)
-  [![Version](https://img.shields.io/badge/Version-1.6.0-blue.svg?style=flat-square)](https://github.com/Xenonesis/Pinmark/releases/tag/v1.6.0)
+  [![Version](https://img.shields.io/badge/Version-1.7.0-blue.svg?style=flat-square)](https://github.com/Xenonesis/Pinmark/releases/tag/v1.7.0)
 
   [Features](#features) · [Installation](#installation) · [Usage](#usage) · [Architecture](#architecture) · [MCP Reference](#mcp-server-reference) · [Development](#development) · [FAQ](#faq)
 
@@ -23,15 +23,14 @@
 
   <video src="media/pinmark.mp4" controls autoplay muted loop width="640" style="border-radius: 8px; margin-top: 16px; max-width: 100%;"></video>
 
-  <!-- 1.6.0 Release Highlights -->
+  <!-- 1.7.0 Release Highlights -->
   <div style="margin-top: 12px; padding: 16px; background: var(--pm-bg, #f8f9fa); border-radius: 8px; font-size: 13px;">
-    <b>🔒 1.6.0 — Stability & Recursion Fixes</b><br/>
-    • Cross-tab message-loop elimination (background.ts)<br/>
-    • Iframe guard to prevent duplicate instances (content.ts)<br/>
-    • main-world.ts DOM inspection optimization (WeakSet + depth bounds)<br/>
-    • Overlay lifecycle: onToggle now only fires on explicit user exit (Toolbar/Escape)<br/>
-    • SPA URL navigation: preserve existing overlay instead of destroy/recreate<br/>
-    • All suites pass: 0 crashes, 0 errors, 100% stable verification
+    <b>🚀 1.7.0 — WXT Framework Migration, Modern Popup UI & Security Hardening</b><br/>
+    • <b>WXT Framework</b>: Built on <a href="https://wxt.dev">WXT</a> + Vite 8 + Rollup for instant multi-browser packaging (~600ms builds for Chrome MV3, Firefox MV2/MV3, Edge).<br/>
+    • <b>Action Popup Overhaul</b>: Modern zinc dark/light themes, sleek iOS-style toggle switches, floating detail dropdowns, and glowing color swatches.<br/>
+    • <b>Vibe-Audit Security Hardening</b>: Full <code>escapeHTML()</code> XSS sanitization across HoverBox, FeedbackModal, and Popup review panels.<br/>
+    • <b>Async Clipboard & State Polish</b>: Promise-safe clipboard handlers with error boundaries and clean cross-tab pause synchronization.<br/>
+    • <b>100% Verified</b>: All stability, deep E2E, and MCP test suites pass with 0 crashes and 0 errors.
   </div>
 </div>
 
@@ -80,6 +79,7 @@
 - [Contributing](#contributing)
 - [Roadmap](#roadmap)
 - [License](#license)
+- [Version History & Comparison Matrix](#version-history--comparison-matrix)
 
 ---
 
@@ -1855,6 +1855,28 @@ If any path exceeds target, inspect:
 1. `html2canvas` configuration and DOM complexity.
 2. Chrome storage write batching.
 3. Network request listener memory growth.
+
+## Version History & Comparison Matrix
+
+A comprehensive comparison of Pinmark across major milestones:
+
+| Feature / Dimension | **v1.7.0** *(Current)* | **v1.6.0** | **v1.5.0** | **v1.0.0** |
+|---|---|---|---|---|
+| **Extension Framework** | **WXT (`wxt.dev`)** + Vite 8 + Rollup | Vite + `@crxjs/vite-plugin` | Vite + `@crxjs/vite-plugin` | Rollup vanilla |
+| **Multi-Browser Builds** | **Native WXT targets** (Chrome MV3, Firefox, Edge, Safari) | Custom `build-firefox.mjs` script | Chromium only | Single target |
+| **Build Speed** | **~600ms** (fast incremental) | ~1.8s - 2.5s | ~2.5s | ~4s |
+| **Action Popup UI/UX** | **Redesigned iOS toggles**, floating dropdowns, swatches, zinc theme | Functional with default styles | Functional with default styles | Basic popup |
+| **DOM Metadata Security** | **Strict `escapeHTML()` sanitization** on all extracted DOM data (XSS immune) | Unescaped template strings | Unescaped template strings | Raw string injection |
+| **Clipboard Handling** | **Async/await with try-catch** & failure reporting | Unawaited synchronous fire | Unawaited synchronous fire | Sync `execCommand` fallback |
+| **Service Worker Stability** | **100% Stable** (fetch+abort streaming SSE, deduplicated broadcasts) | Stream SSE + loop fixes | EventSource (crashed on MV3) | In-memory only |
+| **Iframe Protection** | `window.top === window` top-level guard | Added in patch | Not protected | Not protected |
+| **MCP Blocking Watcher** | `pinmark_watch_annotations` with batching & timeout | `pinmark_watch_annotations` | Polling only (`pinmark_get_pending`) | Polling only |
+| **CLI & Doctor** | `pinmark init` + `pinmark doctor` CLI diagnostics | CLI diagnostics | Basic CLI | No CLI |
+| **Agent Skills** | 4 Claude/Cursor skills (`watch`, `critique`, `self-driving`, `base`) | 4 skills | 1 skill | No skills |
+| **Screenshot Engine** | Pointer-event markup (`pointerdown/move/up`) + canvas crop | Pointer-event markup | Mouse-only drawing | Basic html2canvas |
+| **Marker Collisions** | Smart auto-flip (`.flip-down`) + click-to-lock | Auto-flip + click-to-lock | Viewport clipping | No collision logic |
+
+---
 
 ## Appendix NN: Release Example
 

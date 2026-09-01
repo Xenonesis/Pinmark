@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-pinmark",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Vite dev plugin for zero-config Pinmark visual feedback overlay injection",
   "type": "module",
   "main": "./dist/index.js",

@@ -24,7 +24,7 @@ function escapeNonAsciiInDir(dir: string) {
 export default defineConfig({
   manifest: {
     name: 'Pinmark',
-    version: '1.6.0',
+    version: '1.7.0',
     description: 'Visual feedback annotation tool for developers to place markers on DOM elements and generate AI-optimized Markdown',
     permissions: ['storage', 'activeTab'],
     host_permissions: ['<all_urls>'],

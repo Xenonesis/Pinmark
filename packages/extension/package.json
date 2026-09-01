@@ -1,6 +1,6 @@
 {
   "name": "@pinmark/extension",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Visual feedback annotation tool for developers to place markers on DOM elements and generate AI-optimized Markdown",
   "type": "module",
   "license": "Polyform-Noncommercial-1.0.0",
