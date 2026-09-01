@@ -132,8 +132,8 @@ npm run build
 
 | Browser | Steps |
 |---------|-------|
-| **Chrome / Edge** | `chrome://extensions` → Developer mode → Load unpacked → select `packages/extension/dist/` |
-| **Firefox** | `about:debugging` → This Firefox → Load Temporary Add-on → select `packages/extension/dist/manifest.json` |
+| **Chrome / Edge** | `chrome://extensions` → Developer mode → Load unpacked → select `packages/extension/.output/chrome-mv3/` |
+| **Firefox** | `about:debugging` → This Firefox → Load Temporary Add-on → select `packages/extension/.output/firefox-mv2/manifest.json` |
 
 > **Tip:** After loading, pin the Pinmark icon to your toolbar for 1-click access.
 
@@ -320,12 +320,12 @@ Pinmark/
 │   │   ├── vanilla/    # Framework-agnostic Web Component base
 │   │   └── react/      # React bindings (optional peer dep)
 │   ├── extension/      # @pinmark/extension — Chrome/Firefox extension wrapper
-│   │   ├── src/
-│   │   │   ├── background/   # Service worker
-│   │   │   ├── content/      # Content script (ISOLATED world)
-│   │   │   ├── popup/        # Extension popup UI
-│   │   │   └── shared/       # Shared styles / messages
-│   │   └── manifest.json     # Manifest V3 (+ Gecko config for Firefox)
+│   │   ├── entrypoints/
+│   │   │   ├── background.ts # Service worker (background lifecycle, tabs, MCP sync)
+│   │   │   ├── content.ts    # Content script (ISOLATED world overlay)
+│   │   │   ├── main-world.ts # Main world bridge (React Fiber inspection)
+│   │   │   └── popup/        # Extension popup UI (index.html, popup.ts, popup.css)
+│   │   └── wxt.config.ts     # Multi-browser WXT configuration (Chrome MV3 + Firefox Gecko)
 │   ├── mcp/            # @pinmark/mcp — MCP stdio server + HTTP/SSE bridge
 │   │   ├── cli.ts
 │   │   ├── server.ts
@@ -365,10 +365,10 @@ Framework-agnostic visual layer.
 
 Browser-specific integration layer.
 
-- **Content script** (`src/content/index.ts`) — Bootstraps the overlay in the page's isolated world.
-- **Main-world script** (`src/content/main-world.ts`) — Bridges isolated-world events to the page context when needed.
-- **Background** — Service worker for extension lifecycle, storage events, and context menus.
-- **Popup** (`src/popup/`) — Quick status, theme toggle, GitHub issue export, and server connectivity check.
+- **Content script** (`entrypoints/content.ts`) — Bootstraps the overlay in the page's isolated world.
+- **Main-world script** (`entrypoints/main-world.ts`) — Bridges isolated-world events to the page context when needed.
+- **Background** (`entrypoints/background.ts`) — Service worker for extension lifecycle, storage events, and context menus.
+- **Popup** (`entrypoints/popup/`) — Quick status, theme toggle, GitHub issue export, and server connectivity check.
 - **Manifest** — Targets both Chromium (`manifest_version: 3`) and Firefox (`browser_specific_settings.gecko`).
 Build powered by **WXT** (`wxt.dev`) + **Vite** for native multi-browser packaging (Chrome, Firefox, Edge, Safari) and instant HMR.
 #### `@pinmark/mcp`
@@ -512,8 +512,8 @@ Not configured out of the box. Recommended baseline:
 ## Troubleshooting
 
 **Extension doesn't appear in `chrome://extensions` after Load Unpacked**
-- Verify you selected `packages/extension/dist/`, not the repo root.
-- Run `npm run build` first if the `dist/` folder is missing.
+- Verify you selected `packages/extension/.output/chrome-mv3/`, not the repo root.
+- Run `npm run build` (or `pnpm build`) first if the `.output/chrome-mv3/` folder is missing.
 - Check the browser console for manifest parsing errors.
 
 **MCP server is unreachable**
@@ -690,15 +690,15 @@ The extension communicates via a typed union:
 
 | Package output | Path |
 |----------------|------|
-| Chromium bundle | `packages/extension/dist/` |
-| Firefox bundle | `packages/extension/dist-firefox/` |
+| Chromium bundle | `packages/extension/.output/chrome-mv3/` |
+| Firefox bundle | `packages/extension/.output/firefox-mv2/` |
 | Core types | `packages/core/dist/` |
 | Pinmark UI | `packages/pinmark/dist/` |
 | MCP server | `packages/mcp/dist/` |
 
 ### Firefox Build Notes
 
-`npm run build:firefox` rewrites the manifest and asset paths for Gecko. Temporary add-ons in Firefox must be loaded from a directory containing `manifest.json`, not a zip.
+`npm run build:firefox` compiles the Firefox target using WXT (`wxt build -b firefox`). Temporary add-ons in Firefox must be loaded from `packages/extension/.output/firefox-mv2/manifest.json`.
 
 ### GitHub Issue Integration
 
@@ -1006,7 +1006,7 @@ This means:
 
 ## Appendix E: Content Script Lifecycle
 
-From `packages/extension/src/content/index.ts`:
+From `packages/extension/entrypoints/content.ts`:
 
 ```ts
 async function startupInit() {
@@ -1045,7 +1045,7 @@ function initializeOverlay() {
 
 ## Appendix F: Background Service Worker Flow
 
-From `packages/extension/src/background/index.ts`:
+From `packages/extension/entrypoints/background.ts`:
 
 **MCP sync:**
 ```ts
@@ -1263,7 +1263,7 @@ class IdbAdapter implements StorageAdapter {
 }
 ```
 
-Wire it in `packages/extension/src/content/index.ts`:
+Wire it in `packages/extension/entrypoints/content.ts`:
 ```ts
 const storageAdapter = new IdbAdapter();
 ```
@@ -1315,7 +1315,7 @@ Minimum GitHub Actions workflow (`ci.yml`):
 - `npm install` at root.
 - `npm run build --workspaces --if-present`.
 - `npm run build:firefox --workspace @pinmark/extension`.
-- Upload `packages/extension/dist` and `packages/extension/dist-firefox` as artifacts.
+- Upload `packages/extension/.output/chrome-mv3` and `packages/extension/.output/firefox-mv2` as artifacts.
 - Optional: `npm run lint` if ESLint is added.
 
 Branch rules:
@@ -1329,7 +1329,7 @@ Branch rules:
 
 Before submitting changes:
 - [ ] `npm run build` passes across all workspaces.
-- [ ] `packages/extension/dist/manifest.json` still declares MV3.
+- [ ] `packages/extension/.output/chrome-mv3/manifest.json` still declares MV3.
 - [ ] Firefox manifest is not broken by `build:firefox`.
 - [ ] No secrets in source (tokens, cookies, passwords).
 - [ ] User-visible strings stay in `ExtensionSettings` or copy constants.
@@ -1612,7 +1612,7 @@ case 'GET_SETTINGS':
 npm run build
 ```
 
-Output goes to `packages/extension/dist/`.
+Output goes to `packages/extension/.output/chrome-mv3/`.
 
 ### Firefox
 
@@ -1620,7 +1620,7 @@ Output goes to `packages/extension/dist/`.
 npm run build:firefox
 ```
 
-Output goes to `packages/extension/dist-firefox/`.
+Output goes to `packages/extension/.output/firefox-mv2/`.
 
 ### Verify
 
@@ -1631,7 +1631,7 @@ Output goes to `packages/extension/dist-firefox/`.
 ### Optional zip for submission
 
 ```bash
-cd packages/extension/dist && zip -r ../dist-chromium.zip .
+npm run package # Generates release/pinmark-chrome-v1.7.0.zip & release/pinmark-firefox-v1.7.0.zip
 ```
 
 ## Appendix AA: Security Hardening
@@ -1777,9 +1777,9 @@ Available commands:
 - `base: './'` ensures relative asset paths for unpacked loading.
 - `publicDir: 'assets'` copies logo, icons, and video.
 
-### CrxJS
-- Hooks into Vite to generate `manifest.json` and service worker artifacts.
-- In dev mode, hot reloads content scripts.
+### WXT
+- Unified multi-browser compiler built on Vite and Rollup.
+- In dev mode, provides instant HMR and targeted extension context reloaders.
 
 ### TypeScript
 - Strict mode enabled in all packages.
@@ -1788,20 +1788,13 @@ Available commands:
 
 ## Appendix HH: Packaging & Distribution
 
-### Chromium archive
-
 ```bash
-cd packages/extension/dist && zip -r ../../../pinmark-chromium.zip .
-```
-
-### Firefox archive
-
-```bash
-cd packages/extension/dist-firefox && zip -r ../../../pinmark-firefox.zip .
+pnpm package # Builds Chrome & Firefox zips in release/
+# Or manual WXT zip: cd packages/extension && npx wxt zip && npx wxt zip -b firefox
 ```
 
 ### Verifying artifacts
-- Open `dist/manifest.json` and confirm host permissions and version.
+- Open `.output/chrome-mv3/manifest.json` and confirm host permissions and version.
 - Confirm icons exist at 16, 32, 48, and 128.
 - Confirm `action` or `browser_action` paths point to existing HTML/JS.
 
@@ -1965,7 +1958,7 @@ Contributors retain copyright but grant the same rights to downstream users unde
 | Annotations | `packages/core/src/schema.ts` |
 | Overlay logic | `packages/pinmark/src/vanilla/Overlay.ts` |
 | Storage | `packages/extension/src/shared/storage.ts` |
-| Background bridge | `packages/extension/src/background/index.ts` |
+| Background bridge | `packages/extension/entrypoints/background.ts` |
 | MCP tools | `packages/mcp/src/mcp-tools.ts` |
 | MCP server | `packages/mcp/src/server.ts` |
 | HTTP routes | `packages/mcp/src/http-routes.ts` |
@@ -2025,7 +2018,7 @@ describe('ElementInfoSchema', () => {
 2. `build`
    - Matrix: `ubuntu-latest`, `windows-latest`, `macos-latest`.
    - Run `npm run build`.
-   - Upload `packages/extension/dist/**` and `packages/extension/dist-firefox/**` as artifacts.
+   - Upload `packages/extension/.output/chrome-mv3/**` and `packages/extension/.output/firefox-mv2/**` as artifacts.
 
 3. `test`
    - Runs `npx vitest run` across packages.
@@ -2435,10 +2428,10 @@ Use Conventional Commits:
 
 ### Vite output mapping
 
-- Entry points: `src/content/index.ts`, `src/popup/popup.ts`, `src/background/index.ts`.
-- Assets copied from `publicDir` to `dist/assets/`.
-- CSS is extracted into hashed files.
-- Service worker loader is generated by CrxJS.
+- Entry points: `entrypoints/content.ts`, `entrypoints/popup/popup.ts`, `entrypoints/background.ts`, `entrypoints/main-world.ts`.
+- Assets copied from `assets/` to `.output/chrome-mv3/assets/`.
+- CSS is extracted into optimized bundles.
+- Service worker loader and manifest transformations are handled natively by WXT.
 
 ### Icon set
 

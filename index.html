@@ -3482,7 +3482,7 @@ footer a:hover { color: var(--ink); }
 <section id="changelog">
   <div class="wrap">
     <span class="eyebrow">// version evolution</span>
-    <h2>Pinmark v1.0 vs Pinmark v1.5</h2>
+    <h2>Pinmark v1.0 (Legacy) vs Pinmark v1.7 (Current)</h2>
     <p class="lede">How Pinmark evolved from a text-only selector tool to a fully integrated visual feedback engine.</p>
 
     <div class="compare" style="grid-template-columns: repeat(2, 1fr); gap: 32px; margin-top: 40px;">
@@ -3504,18 +3504,17 @@ footer a:hover { color: var(--ink); }
 
       <div class="compare-col good" style="border: 1px solid var(--accent); background: var(--accent-soft); padding: 24px; border-radius: 8px;">
         <h4 style="color: var(--accent); display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 18px;">🚀</span> Pinmark v1.5 (Current)
+          <span style="font-size: 18px;">🚀</span> Pinmark v1.7 (Current)
         </h4>
         <p style="font-size: 14px; color: var(--ink-mid); margin-top: 8px; line-height: 1.6;">
           A fully featured feedback workspace integrating native screenshots, drawing markup, metadata classification, and model-context connections.
         </p>
         <ul style="margin-top: 16px; padding-left: 20px; line-height: 1.8; color: var(--ink-mid); font-size: 13.5px;">
-          <li>✨ <strong>Instant viewport screenshot</strong> (&lt;100ms) with canvas crop</li>
-          <li>✨ <strong>Drawing markup tool</strong> to draw highlights directly</li>
-          <li>✨ <strong>Model Context Protocol (MCP) server</strong> for AI agents</li>
-          <li>✨ <strong>Dual-browser package</strong> (Chrome MV3 + Firefox)</li>
-          <li>✨ <strong>Metadata tags</strong> (Intent, Severity, and Categories)</li>
-        </ul>
+          <li>✨ <strong>WXT Multi-Browser Engine</strong> (Chrome MV3 + Firefox) built on Vite 8</li>
+          <li>✨ <strong>Instant viewport screenshot</strong> (&lt;100ms) with canvas crop & pointer markup</li>
+          <li>✨ <strong>Model Context Protocol (MCP) server</strong> with blocking watcher (<code>pinmark_watch_annotations</code>)</li>
+          <li>✨ <strong>Redesigned Action Popup</strong> with iOS toggles, floating dropdowns & Zinc theme</li>
+          <li>✨ <strong>Metadata tags & Diagnostics</strong> (Intent, Severity, Categories, FPS, Network logs)</li>
       </div>
     </div>
 
@@ -3670,25 +3669,25 @@ footer a:hover { color: var(--ink); }
       <div class="arch-card" data-card="background">
         <div class="role">background</div>
         <h4>Service worker</h4>
-        <div class="path">src/background/index.ts</div>
+        <div class="path">entrypoints/background.ts</div>
         <p>Message broker between popup and content scripts. Holds the canonical active/inactive state per tab.</p>
       </div>
       <div class="arch-card" data-card="content">
         <div class="role">content</div>
         <h4>Content script</h4>
-        <div class="path">src/content/index.ts</div>
+        <div class="path">entrypoints/content.ts</div>
         <p>Injected into every page. Runs the overlay, captures DOM context, generates Markdown. Uses a closed Shadow DOM so page styles can't leak in.</p>
       </div>
       <div class="arch-card" data-card="ui">
         <div class="role">ui</div>
         <h4>Popup</h4>
-        <div class="path">src/popup/</div>
+        <div class="path">entrypoints/popup/</div>
         <p>Activate/deactivate toggle and settings panel (marker color, output detail, theme, clear-after-copy, block interactions).</p>
       </div>
       <div class="arch-card" data-card="shared">
         <div class="role">shared</div>
         <h4>Types & storage</h4>
-        <div class="path">src/shared/</div>
+        <div class="path">shared/ &amp; packages/pinmark/</div>
         <p>Shared TypeScript types, the messaging protocol, and the <code>chrome.storage</code> wrapper used by every context.</p>
       </div>
     </div>
@@ -3720,7 +3719,7 @@ footer a:hover { color: var(--ink); }
   <div class="wrap">
     <span class="eyebrow">// settings</span>
     <h2>Tune it to your workflow</h2>
-    <p class="lede">All settings live in the popup and persist per install via <code>chrome.storage.sync</code>.</p>
+    <p class="lede">All settings live in the popup and persist per install via <code>chrome.storage.local</code>.</p>
 
     <div class="settings-grid">
       <div class="setting-card setting-color" data-setting="color">
@@ -3904,8 +3903,8 @@ footer a:hover { color: var(--ink); }
         </div>
         <div class="install-cmd">
           <span class="install-cmd-prompt">$</span>
-          <code data-cmd="build">npm run build  <span class="install-cmd-note"># builds workspaces to dist/</span></code>
-          <code data-cmd="dev" hidden>npm run dev  <span class="install-cmd-note"># HMR via Vite + @crxjs</span></code>
+          <code data-cmd="build">npm run build  <span class="install-cmd-note"># builds to .output/chrome-mv3/</span></code>
+          <code data-cmd="dev" hidden>npm run dev  <span class="install-cmd-note"># hot reload via WXT + Vite</span></code>
           <button type="button" class="install-cmd-copy" aria-label="Copy command">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             <span class="install-cmd-copy-label">copy</span>
@@ -3919,8 +3918,8 @@ footer a:hover { color: var(--ink); }
         </div>
         <div class="install-cmd install-cmd-multiline">
           <span class="install-cmd-prompt">$</span>
-          <code data-cmd="build">open chrome://extensions  →  Developer mode  →  Load unpacked  →  select <em>packages/extension/dist/</em></code>
-          <code data-cmd="dev" hidden>open chrome://extensions  →  click the ↻ reload icon on Pinmark</code>
+          <code data-cmd="build">open chrome://extensions  &rarr;  Developer mode  &rarr;  Load unpacked  &rarr;  select <em>packages/extension/.output/chrome-mv3/</em></code>
+          <code data-cmd="dev" hidden>open chrome://extensions  &rarr;  click the &#8635; reload icon on Pinmark</code>
           <button type="button" class="install-cmd-copy install-cmd-copy-block" aria-label="Copy URL">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             <span class="install-cmd-copy-label">copy</span>
@@ -3933,7 +3932,7 @@ footer a:hover { color: var(--ink); }
       Updates after a pull: <code>git pull &amp;&amp; npm install &amp;&amp; npm run build</code>, then click the reload icon on the extension card in <code>chrome://extensions</code>.
     </p>
     <p class="install-after">
-      <strong>Firefox:</strong> run <code>npm run build:firefox</code>, then open <code>about:debugging#/runtime/this-firefox</code> &rarr; <em>Load Temporary Add-on</em> &rarr; select <code>packages/extension/dist-firefox/manifest.json</code>.
+      <strong>Firefox:</strong> run <code>npm run build:firefox</code>, then open <code>about:debugging#/runtime/this-firefox</code> &rarr; <em>Load Temporary Add-on</em> &rarr; select <code>packages/extension/.output/firefox-mv2/manifest.json</code>.
     </p>
   </div>
 </section>
