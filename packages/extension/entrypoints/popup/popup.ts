@@ -431,7 +431,8 @@ async function renderReview() {
       </div>
     </div>`;
   }).join('');
-
+  setHTML(reviewList, html);
+  
   reviewList.querySelectorAll('.review-item-head').forEach((head) => {
     head.addEventListener('click', () => {
       const detail = document.getElementById(head.getAttribute('data-detail') || '') as HTMLElement;
@@ -502,9 +503,9 @@ async function init() {
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTabId = tab?.id || null;
-  currentTabUrl = tab?.url || '';
+  currentTabUrl = new URLSearchParams(window.location.search).get('url') || tab?.url || '';
 
-  if (currentTabId === null) {
+  if (currentTabId === null && !new URLSearchParams(window.location.search).has('url')) {
     showStatus('Open a webpage, then click the Pinmark icon.');
     return;
   }
