@@ -539,6 +539,16 @@ export class FeedbackModal {
     input.placeholder = 'Enter your feedback... (Ctrl+Enter to submit)';
     input.value = existingComment || '';
     inputContainer.appendChild(input);
+    
+    // Dynamic contenteditable trick to bypass aggressive host page capture-phase key interception
+    input.addEventListener('focus', () => {
+      const host = this.shadowRoot.host as HTMLElement;
+      if (host) host.setAttribute('contenteditable', 'true');
+    });
+    input.addEventListener('blur', () => {
+      const host = this.shadowRoot.host as HTMLElement;
+      if (host) host.removeAttribute('contenteditable');
+    });
 
     // Voice button
     const voiceBtn = document.createElement('button');
@@ -845,6 +855,10 @@ export class FeedbackModal {
       }
       e.stopPropagation();
     };
+
+    
+    input.onkeypress = (e) => e.stopPropagation();
+    input.onkeyup = (e) => e.stopPropagation();
 
     actions.appendChild(cancelBtn);
     actions.appendChild(submitBtn);

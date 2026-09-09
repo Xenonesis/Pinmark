@@ -22,6 +22,8 @@ import { setHTML } from "./domUtils.js";
 const OVERLAY_STYLES = `
   :host {
     all: initial;
+    outline: none !important;
+    caret-color: transparent !important;
     display: block;
     position: fixed;
     top: 0;
@@ -550,6 +552,7 @@ export class Overlay {
 
     // Show the modal immediately (passing undefined for screenshot initially)
     const triage = this.buildTriage(element);
+    this.isModalOpen = true;
     const modalPromise = this.feedbackModal.show(element, {
       screenshotUrl: undefined,
       computedStyles: computedStylesData,
@@ -969,6 +972,7 @@ export class Overlay {
     const componentInfo = (() => { try { return this.frameworkDetector.detect(element); } catch { return undefined; } })();
 
     // Show the modal immediately (passing undefined for screenshot initially)
+    this.isModalOpen = true;
     const modalPromise = this.feedbackModal.show(element, {
       screenshotUrl: undefined,
       selectionText: selText,
