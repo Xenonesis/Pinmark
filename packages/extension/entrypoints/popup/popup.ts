@@ -1,8 +1,7 @@
 import type { ExtensionSettings, FeedbackItem } from '../../src/shared/types';
 import { sendMessage } from '../../src/shared/messaging';
 import { getSettings, saveSettings, getFeedback } from '../../src/shared/storage';
-import { setHTML, escapeHTML } from '../../../pinmark/src/vanilla/domUtils';
-import { MarkdownFormatter } from '../../../pinmark/src/vanilla/MarkdownFormatter';
+import { setHTML, escapeHTML, MarkdownFormatter } from '@pinmark/pinmark';
 
 let currentTabId: number | null = null;
 let currentTabUrl: string = '';
@@ -233,7 +232,7 @@ themeToggleBtn?.addEventListener('click', async () => {
   const s = await getSettings();
   const themes: Array<'auto' | 'light' | 'dark'> = ['auto', 'dark', 'light'];
   const idx = themes.indexOf((s.theme as 'auto' | 'light' | 'dark') || 'auto');
-  const next = themes[(idx + 1) % themes.length];
+  const next = themes[(idx + 1) % themes.length] ?? 'auto';
   await saveSettings({ theme: next });
   applyTheme(next);
   if (currentTabId) {

@@ -257,7 +257,8 @@ export class Overlay {
   };
 
   private handleWindowMessage = (e: MessageEvent) => {
-    if (e.data?.source === 'pinmark-logger') {
+    if (e.source !== window || !e.data || typeof e.data !== 'object') return;
+    if (e.data.source === 'pinmark-logger') {
       if (e.data.type === 'console') {
         this.consoleLogs.push({ time: Date.now(), ...e.data.data });
         if (this.consoleLogs.length > 50) this.consoleLogs.shift();

@@ -75,7 +75,7 @@ export class ThemeProvider {
   /** Cycle through light → dark → auto → light. */
   async cycle(): Promise<ThemeMode> {
     const order: ThemeMode[] = ['light', 'dark', 'auto'];
-    const next = order[(order.indexOf(this.#mode) + 1) % order.length];
+    const next = order[(order.indexOf(this.#mode) + 1) % order.length] ?? 'light';
     await this.set(next);
     return next;
   }

@@ -25,7 +25,8 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "postinstall": "wxt prepare",
-    "generate-icons": "node scripts/generate-icons.js"
+    "generate-icons": "node scripts/generate-icons.js",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@pinmark/core": "workspace:^",

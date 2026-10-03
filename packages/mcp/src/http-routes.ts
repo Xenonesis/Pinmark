@@ -7,7 +7,7 @@ export function createHttpServer() {
   const app = express();
   
   app.use(cors());
-  app.use(express.json());
+  app.use(express.json({ limit: '25mb' }));
 
   app.get('/events', (_req: Request, res: Response) => {
     res.setHeader('Content-Type', 'text/event-stream');

@@ -20,8 +20,10 @@ export class MarkdownFormatter {
     const detail = this.normalizeDetailLevel(rawLevel);
 
     // Earliest captured timestamp
+    const firstItem = feedback[0];
+    const initialTs = firstItem ? firstItem.timestamp : Date.now();
     const ts = feedback.length > 0
-      ? feedback.reduce((earliest, item) => item.timestamp < earliest ? item.timestamp : earliest, feedback[0].timestamp)
+      ? feedback.reduce((earliest, item) => item.timestamp < earliest ? item.timestamp : earliest, initialTs)
       : Date.now();
 
     // Viewport — captured at format time (best approximation)
@@ -374,10 +376,10 @@ export class MarkdownFormatter {
     }
 
     // 6. First class name
-    if (elem.classes.length > 0) {
-      const cls = elem.classes[0];
+    const firstClass = elem.classes[0];
+    if (firstClass) {
       // Convert kebab-case to Title Case
-      return cls
+      return firstClass
         .split(/[-_]/)
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))
         .join(' ');

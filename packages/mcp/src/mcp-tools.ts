@@ -1,4 +1,5 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { Browser } from "puppeteer";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -535,30 +536,37 @@ export function registerMcpTools(server: Server) {
           const puppeteer = await import('puppeteer');
           const fs = await import('fs/promises');
           const path = await import('path');
-          
-          const browser = await puppeteer.default.launch();
-          const page = await browser.newPage();
-          await page.goto(url, { waitUntil: 'networkidle2' });
-          // Inject local UMD bundle for rrweb-snapshot
-          await page.addScriptTag({ path: path.resolve(process.cwd(), 'node_modules/rrweb-snapshot/dist/rrweb-snapshot.umd.min.cjs') });
-          
-          const snapshot = await page.evaluate(() => {
-            // @ts-ignore - injected via script tag
-            return window.rrwebSnapshot.snapshot(document);
-          });
-          
-          // Capture raw HTML and inject a <base> tag to fix relative CSS/image links
-          let html = await page.content();
-          if (!html.includes('<base ')) {
-            html = html.replace('<head>', `<head>\n<base href="${new URL(url).origin}">`);
+          let browser: Browser | null = null;
+          let snapshot: unknown = null;
+          let html = '';
+          let mhtml = '';
+          try {
+            browser = await puppeteer.default.launch();
+            const page = await browser.newPage();
+            await page.goto(url, { waitUntil: 'networkidle2' });
+            // Inject local UMD bundle for rrweb-snapshot
+            await page.addScriptTag({ path: path.resolve(process.cwd(), 'node_modules/rrweb-snapshot/dist/rrweb-snapshot.umd.min.cjs') });
+            
+            snapshot = await page.evaluate(() => {
+              const win = window as unknown as { rrwebSnapshot?: { snapshot: (doc: Document) => unknown } };
+              return win.rrwebSnapshot?.snapshot(document);
+            });
+            
+            // Capture raw HTML and inject a <base> tag to fix relative CSS/image links
+            html = await page.content();
+            if (!html.includes('<base ')) {
+              html = html.replace('<head>', `<head>\n<base href="${new URL(url).origin}">`);
+            }
+            
+            // Capture MHTML (bundled HTML + CSS + Images in one file)
+            const cdp = await page.target().createCDPSession();
+            const { data } = await cdp.send('Page.captureSnapshot', { format: 'mhtml' });
+            mhtml = data;
+          } finally {
+            if (browser) {
+              await browser.close().catch(() => {});
+            }
           }
-          
-          // Capture MHTML (bundled HTML + CSS + Images in one file)
-          const cdp = await page.target().createCDPSession();
-          const { data: mhtml } = await cdp.send('Page.captureSnapshot', { format: 'mhtml' });
-          
-          await browser.close();
-          
           await fs.mkdir(outputDir, { recursive: true });
           const safeName = url.replace(/[^a-z0-9]/gi, '_').toLowerCase();
           

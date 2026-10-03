@@ -4,3 +4,5 @@ export type { PinmarkSettings, StorageAdapter, PinmarkConfig } from './core/type
 export { FeedbackManager } from './core/FeedbackManager.js';
 export { Pinmark } from './react/index.js';
 export type { PinmarkProps } from './react/index.js';
+export { MarkdownFormatter } from './vanilla/MarkdownFormatter.js';
+export { setHTML, escapeHTML } from './vanilla/domUtils.js';

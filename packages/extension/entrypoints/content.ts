@@ -1,5 +1,6 @@
-import { Overlay, FeedbackManager, Launcher } from '@pinmark/pinmark';
-import type { FeedbackItem, ExtensionSettings, OverlayConfig } from '@pinmark/core';
+import { Overlay, FeedbackManager, Launcher, type PinmarkConfig as OverlayConfig } from '@pinmark/pinmark';
+import type { PinmarkAnnotation as FeedbackItem } from '@pinmark/core';
+import type { ExtensionSettings } from '../src/shared/types';
 import { ChromeStorageAdapter } from '../src/content/ChromeStorageAdapter';
 import { sendMessage } from '../src/shared/messaging';
 
