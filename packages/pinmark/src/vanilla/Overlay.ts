@@ -45,6 +45,10 @@ const OVERLAY_STYLES = `
     --pmk-success: #22c55e;
   }
 
+  input, textarea, [contenteditable="true"] {
+    caret-color: auto !important;
+  }
+
   :host(.blocking) {
     pointer-events: all;
     cursor: crosshair;

@@ -101,6 +101,8 @@ const MODAL_STYLES = `
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.02);
     color: #ededed;
+    caret-color: #ededed !important;
+    cursor: text;
     font-size: 13px;
     outline: none;
     transition: border-color 0.15s ease;
@@ -538,6 +540,7 @@ export class FeedbackModal {
     input.className = 'pinmark-modal-input';
     input.placeholder = 'Enter your feedback... (Ctrl+Enter to submit)';
     input.value = existingComment || '';
+    input.style.caretColor = '#ededed';
     inputContainer.appendChild(input);
     
     // Dynamic contenteditable trick to bypass aggressive host page capture-phase key interception

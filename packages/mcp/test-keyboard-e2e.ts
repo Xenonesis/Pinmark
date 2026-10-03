@@ -102,6 +102,13 @@ async function testKeyboard() {
       (input as HTMLElement)?.focus();
     }
   });
+
+  const caretColor = await page.evaluate(() => {
+    const o = document.querySelector('pinmark-overlay');
+    const input = o?.shadowRoot?.querySelector('textarea.pinmark-modal-input');
+    return input ? window.getComputedStyle(input).caretColor : '';
+  });
+  console.log('Caret color in modal textarea:', caretColor);
   
   const alphabet = 'abcdefghijklmnopqrstuvwxyz';
   console.log('Typing:', alphabet);
