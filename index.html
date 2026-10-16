@@ -3010,7 +3010,7 @@ footer a:hover { color: var(--ink); }
         <circle cx="64" cy="48" r="14" fill="var(--bg)"/>
         <circle cx="64" cy="48" r="6" fill="var(--accent)"/>
       </svg>
-      Pinmark <span class="brand-version">v1.7.0</span>
+      Pinmark <span class="brand-version">v1.8.0</span>
     </div>
     <nav class="topbar-nav" aria-label="Sections navigation">
       <a href="#main" class="nav-link active">Home</a>
@@ -3482,7 +3482,7 @@ footer a:hover { color: var(--ink); }
 <section id="changelog">
   <div class="wrap">
     <span class="eyebrow">// version evolution</span>
-    <h2>Pinmark v1.0 (Legacy) vs Pinmark v1.7 (Current)</h2>
+    <h2>Pinmark v1.0 (Legacy) vs Pinmark v1.8 (Current)</h2>
     <p class="lede">How Pinmark evolved from a text-only selector tool to a fully integrated visual feedback engine.</p>
 
     <div class="compare" style="grid-template-columns: repeat(2, 1fr); gap: 32px; margin-top: 40px;">
@@ -3504,32 +3504,45 @@ footer a:hover { color: var(--ink); }
 
       <div class="compare-col good" style="border: 1px solid var(--accent); background: var(--accent-soft); padding: 24px; border-radius: 8px;">
         <h4 style="color: var(--accent); display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 18px;">🚀</span> Pinmark v1.7 (Current)
+          <span style="font-size: 18px;">🚀</span> Pinmark v1.8 (Current)
         </h4>
         <p style="font-size: 14px; color: var(--ink-mid); margin-top: 8px; line-height: 1.6;">
           A fully featured feedback workspace integrating native screenshots, drawing markup, metadata classification, and model-context connections.
         </p>
         <ul style="margin-top: 16px; padding-left: 20px; line-height: 1.8; color: var(--ink-mid); font-size: 13.5px;">
-          <li>✨ <strong>WXT Multi-Browser Engine</strong> (Chrome MV3 + Firefox) built on Vite 8</li>
-          <li>✨ <strong>Instant viewport screenshot</strong> (&lt;100ms) with canvas crop & pointer markup</li>
-          <li>✨ <strong>Model Context Protocol (MCP) server</strong> with blocking watcher (<code>pinmark_watch_annotations</code>)</li>
-          <li>✨ <strong>Redesigned Action Popup</strong> with iOS toggles, floating dropdowns & Zinc theme</li>
-          <li>✨ <strong>Metadata tags & Diagnostics</strong> (Intent, Severity, Categories, FPS, Network logs)</li>
-      </div>
+          <li>✨ <strong>Full Session DOM Replay</strong> (20s throttled buffer with PII/password auto-masking)</li>
+          <li>✨ <strong>Interactive Replay Player Modal</strong> with timeline scrubber & synchronized activity rail</li>
+          <li>✨ <strong>1-Click Standalone Offline HTML Export</strong> (zero dependency, runs in any browser)</li>
+          <li>✨ <strong>AI Reproduction Action Trail</strong> (<code>pinmark_get_replay_trail</code> distill steps for agents)</li>
+          <li>✨ <strong>WXT Multi-Browser Engine</strong> (Chrome MV3 + Firefox) with <code>unlimitedStorage</code></li>
+        </ul>
     </div>
 
     <!-- Patch timeline — keeps landing page in sync with extension builds -->
     <div style="margin-top: 40px; display: grid; gap: 16px;">
       <div style="border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; background: var(--bg-elev);">
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--bg-elev); background: var(--ink); padding: 3px 8px; border-radius: 999px;">v1.7.0</span>
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted);">01 Sep 2026 — major framework & UI release</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--bg-elev); background: var(--ink); padding: 3px 8px; border-radius: 999px;">v1.8.0</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted);">16 Oct 2026 — full session DOM replay & diagnostic engine</span>
           <span style="font-size: 12px; color: var(--good); background: var(--good-soft); padding: 2px 8px; border-radius: 999px; font-weight: 600;">● live</span>
+        </div>
+        <ul style="margin: 14px 0 0 18px; line-height: 1.9; color: var(--ink-mid); font-size: 13.5px;">
+          <li><strong>Full Session DOM Replayer:</strong> Integrated 20s rolling buffer with 50ms mousemove throttling and automatic PII/password masking. Review modal embeds <code>rrweb.Replayer</code> with play/pause, timeline scrubber, speed multiplier (1x/1.5x/2x), and click wave ripples.</li>
+          <li><strong>Synchronized Diagnostic Activity Rail:</strong> Real-time activity ticker below the replayer syncing with playback time offset, highlighting network requests (4xx/5xx in red) and console errors as they occur in the video.</li>
+          <li><strong>Standalone Offline HTML Export:</strong> 1-click export generating self-contained single-file <code>pinmark-replay-*.html</code> with embedded dark-theme viewer and event data — shareable with teammates without needing the extension installed.</li>
+          <li><strong>AI Agent MCP Action Trail:</strong> Added <code>pinmark_get_replay_trail</code> tool to distill thousands of raw DOM mutations into an ordered, token-efficient action recipe (Navigation &rarr; Clicks &rarr; Inputs &rarr; Failures &rarr; Pin Drop) and enhanced <code>pinmark_generate_test</code> to synthesize Playwright/Cypress reproduction scripts.</li>
+          <li><strong>Storage Optimization & LRU Retention:</strong> Added <code>unlimitedStorage</code> manifest permission to eliminate 10MB quota crashes, paired with 15-replay LRU storage pruning to keep disk footprint minimal.</li>
+        </ul>
+      </div>
+      <div style="border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; background: var(--bg-elev); opacity: 0.92;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--ink); border: 1px solid var(--line-strong); padding: 3px 8px; border-radius: 999px;">v1.7.0</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted);">01 Sep 2026 — major framework & UI release</span>
         </div>
         <ul style="margin: 14px 0 0 18px; line-height: 1.9; color: var(--ink-mid); font-size: 13.5px;">
           <li><strong>WXT Framework Migration:</strong> Replaced legacy CRXJS setup with <a href="https://wxt.dev" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">WXT (Web Extension Toolbox)</a> powered by Vite 8 + Rollup. Achieves ~600ms builds and unified multi-browser outputs (Chrome MV3, Firefox MV2/MV3, Edge).</li>
           <li><strong>Popup UI/UX Overhaul:</strong> Completely redesigned extension action popup with compact header (20×20px), smooth iOS-style toggle switches, floating detail dropdowns with checkmarks, circular color swatches with active glows, and clean Zinc dark/light themes.</li>
-          <li><strong>Vibe-Audit Security Hardening:</strong> Added <code>escapeHTML()</code> sanitization for all webpage-extracted DOM metadata (tags, IDs, classes, React components, and smart names) across HoverBox, FeedbackModal, and Popup review panels to eliminate XSS risks.</li>
+          <li><strong>Vibe-Audit Security Hardening:</strong> Added <code>escapeHTML()</code> sanitization for all webpage-extracted DOM metadata across HoverBox, FeedbackModal, and Popup review panels to eliminate XSS risks.</li>
           <li><strong>Async Clipboard & State Normalization:</strong> Wrapped clipboard writes in async/await with error boundaries and streamlined cross-tab pause and active state synchronization.</li>
         </ul>
       </div>

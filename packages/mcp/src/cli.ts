@@ -8,7 +8,7 @@ const program = new Command();
 program
   .name('pinmark')
   .description('Pinmark AI Agent Bridge & Visual Feedback Suite')
-  .version('1.7.0');
+  .version('1.8.0');
 
 program
   .command('server')

@@ -15,7 +15,7 @@
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
   [![License](https://img.shields.io/badge/License-Polyform%20Noncommercial-red.svg?style=flat-square)](LICENSE.md)
   [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple.svg?style=flat-square)](https://modelcontextprotocol.io/)
-  [![Version](https://img.shields.io/badge/Version-1.7.0-blue.svg?style=flat-square)](https://github.com/Xenonesis/Pinmark/releases/tag/v1.7.0)
+  [![Version](https://img.shields.io/badge/Version-1.8.0-blue.svg?style=flat-square)](https://github.com/Xenonesis/Pinmark/releases/tag/v1.8.0)
 
   [Features](#features) · [Installation](#installation) · [Usage](#usage) · [Architecture](#architecture) · [MCP Reference](#mcp-server-reference) · [Development](#development) · [FAQ](#faq)
 
@@ -23,14 +23,15 @@
 
   <video src="media/pinmark.mp4" controls autoplay muted loop width="640" style="border-radius: 8px; margin-top: 16px; max-width: 100%;"></video>
 
-  <!-- 1.7.0 Release Highlights -->
+  <!-- 1.8.0 Release Highlights -->
   <div style="margin-top: 12px; padding: 16px; background: var(--pm-bg, #f8f9fa); border-radius: 8px; font-size: 13px;">
-    <b>🚀 1.7.0 — WXT Framework Migration, Modern Popup UI & Security Hardening</b><br/>
-    • <b>WXT Framework</b>: Built on <a href="https://wxt.dev">WXT</a> + Vite 8 + Rollup for instant multi-browser packaging (~600ms builds for Chrome MV3, Firefox MV2/MV3, Edge).<br/>
-    • <b>Action Popup Overhaul</b>: Modern zinc dark/light themes, sleek iOS-style toggle switches, floating detail dropdowns, and glowing color swatches.<br/>
-    • <b>Vibe-Audit Security Hardening</b>: Full <code>escapeHTML()</code> XSS sanitization across HoverBox, FeedbackModal, and Popup review panels.<br/>
-    • <b>Async Clipboard & State Polish</b>: Promise-safe clipboard handlers with error boundaries and clean cross-tab pause synchronization.<br/>
-    • <b>100% Verified</b>: All stability, deep E2E, and MCP test suites pass with 0 crashes and 0 errors.
+    <b>🚀 1.8.0 — Full Session DOM Replay, Interactive Player & Offline Exporter</b><br/>
+    • <b>Full Session DOM Replay</b>: 20-second throttled rolling buffer with 50ms mousemove sampling and automatic PII/password masking.<br/>
+    • <b>Interactive Replay Player Modal</b>: Review modal in popup with <code>rrweb.Replayer</code>, scrubber, speed multiplier (1x/1.5x/2x), and click wave ripples.<br/>
+    • <b>Synchronized Diagnostic Rail</b>: Real-time network calls (4xx/5xx in red) and console errors synchronized with playback timeline.<br/>
+    • <b>Standalone Offline HTML Export</b>: 1-click zero-dependency <code>pinmark-replay-*.html</code> export runnable in any browser without extension.<br/>
+    • <b>AI Agent MCP Reproduction Trail</b>: <code>pinmark_get_replay_trail</code> tool distills raw mutations into ordered action steps for Claude/Cursor, and <code>pinmark_generate_test</code> generates Playwright/Cypress reproduction specs.<br/>
+    • <b>100% Verified</b>: Unlimited local storage support with 15-replay LRU retention cap; zero crashes.
   </div>
 </div>
 
