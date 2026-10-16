@@ -9,11 +9,13 @@
   },
   "scripts": {
     "build": "tsc",
+    "test": "vitest run",
     "start": "node dist/cli.js server"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@pinmark/core": "workspace:^",
+    "@pinmark/pinmark": "workspace:^",
     "commander": "^15.0.0",
     "cors": "^2.8.5",
     "express": "^5.2.1",

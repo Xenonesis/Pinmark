@@ -1541,13 +1541,16 @@ export class Overlay {
       const stopFn = rrweb.record({
         emit: (event) => {
           this.rrwebEvents.push(event);
-          const cutoff = Date.now() - 15000;
+          const cutoff = Date.now() - 20000;
           while (this.rrwebEvents.length > 0 && this.rrwebEvents[0].timestamp < cutoff) {
             this.rrwebEvents.shift();
           }
         },
+        sampling: { mousemove: 50 },
+        maskAllInputs: true,
+        maskInputOptions: { password: true },
+        blockClass: 'pinmark-mask-private',
       });
-      // rrweb.record() may return undefined if recording is already active
       if (stopFn) {
         this.stopRecording = stopFn as () => void;
       }

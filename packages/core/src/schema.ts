@@ -153,3 +153,29 @@ export const SessionSchema = z.object({
 });
 
 export type Session = z.infer<typeof SessionSchema>;
+
+export const ReplayActionStepSchema = z.object({
+  timeMs: z.number(),
+  timeOffset: z.string(),
+  type: z.enum(['click', 'input', 'scroll', 'navigation', 'network_call', 'network_error', 'runtime_error', 'pin_dropped']),
+  selector: z.string().optional(),
+  targetText: z.string().optional(),
+  value: z.string().optional(),
+  method: z.string().optional(),
+  url: z.string().optional(),
+  status: z.number().optional(),
+  errorMessage: z.string().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
+export type ReplayActionStep = z.infer<typeof ReplayActionStepSchema>;
+
+export const ReplayTrailSummarySchema = z.object({
+  annotationId: z.string(),
+  url: z.string(),
+  totalDurationMs: z.number(),
+  eventCount: z.number(),
+  steps: z.array(ReplayActionStepSchema),
+  networkFailuresCount: z.number(),
+  runtimeErrorsCount: z.number(),
+});
+export type ReplayTrailSummary = z.infer<typeof ReplayTrailSummarySchema>;

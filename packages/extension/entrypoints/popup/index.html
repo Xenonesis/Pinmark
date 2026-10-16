@@ -240,6 +240,31 @@
     </div>
   </div>
 
+  <!-- Session Replay Modal -->
+  <div id="replayModal" class="replay-modal-backdrop" style="display:none">
+    <div class="replay-modal" role="dialog" aria-modal="true" aria-labelledby="replayModalTitle">
+      <div class="replay-modal-header">
+        <span id="replayModalTitle" class="replay-modal-title">Session Replay</span>
+        <div class="replay-modal-header-actions">
+          <button id="replayModalExport" class="replay-btn-export" type="button">⬇ Export HTML</button>
+          <button id="replayModalClose" class="replay-modal-close" type="button" aria-label="Close replay modal">&times;</button>
+        </div>
+      </div>
+      <div id="replayViewport" class="replay-viewport"></div>
+      <div class="replay-controls">
+        <button id="replayPlayPause" class="replay-ctrl-btn" type="button">▶</button>
+        <input type="range" id="replayScrubber" min="0" max="100" value="0" step="1" class="replay-scrubber">
+        <span id="replayTimeLabel" class="replay-time">00:00 / 00:00</span>
+        <div class="replay-speed-group">
+          <button data-speed="1" class="speed-btn active" type="button">1x</button>
+          <button data-speed="1.5" class="speed-btn" type="button">1.5x</button>
+          <button data-speed="2" class="speed-btn" type="button">2x</button>
+        </div>
+      </div>
+      <div id="replayActivityRail" class="replay-activity-rail"></div>
+    </div>
+  </div>
+
   <script type="module" src="popup.ts"></script>
 </body>
 </html>

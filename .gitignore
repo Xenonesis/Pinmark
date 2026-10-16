@@ -33,6 +33,7 @@ mcp.json
 clones/
 generated-tests/
 out/
+test-artifacts/
 test-*.js
 test-*.html
 test-*.mjs

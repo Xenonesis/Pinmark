@@ -1,7 +1,9 @@
 import type { PinmarkAnnotation as FeedbackItem } from '@pinmark/core';
 import type { PinmarkSettings, PinmarkConfig } from './types.js';
 import { MarkdownFormatter } from '../vanilla/MarkdownFormatter.js';
+import { pruneReplayStorage } from '../vanilla/FeedbackManager.js';
 
+export { pruneReplayStorage };
 export class FeedbackManager {
   private config: PinmarkConfig;
   private feedbackItems: FeedbackItem[] = [];
@@ -58,6 +60,7 @@ export class FeedbackManager {
   private async persist(): Promise<void> {
     if (this.config.storage) {
       const url = this.config.url || window.location.href;
+      this.feedbackItems = pruneReplayStorage(this.feedbackItems);
       await this.config.storage.saveFeedback(url, this.feedbackItems);
     }
   }

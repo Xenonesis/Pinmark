@@ -26,7 +26,7 @@ export default defineConfig({
     name: 'Pinmark',
     version: '1.7.0',
     description: 'Visual feedback annotation tool for developers to place markers on DOM elements and generate AI-optimized Markdown',
-    permissions: ['storage', 'activeTab'],
+    permissions: ['storage', 'activeTab', 'unlimitedStorage'],
     host_permissions: ['<all_urls>'],
     icons: {
       16: 'icon16.png',

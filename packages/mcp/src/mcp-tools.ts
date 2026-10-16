@@ -1,3 +1,5 @@
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import type { Browser } from "puppeteer";
 import {
@@ -6,7 +8,269 @@ import {
   ErrorCode,
   McpError,
 } from "@modelcontextprotocol/sdk/types.js";
+import type { ReplayActionStep, ReplayTrailSummary } from "@pinmark/core";
+import { generateStandaloneReplayHtml } from "@pinmark/pinmark";
 import { store } from "./store.js";
+
+interface ReplayEventLike {
+  type?: number;
+  data?: {
+    source?: number;
+    type?: number;
+    id?: number;
+    selector?: string;
+    target?: string;
+    targetText?: string;
+    text?: string;
+    value?: unknown;
+    href?: string;
+    url?: string;
+    [key: string]: unknown;
+  };
+  timestamp?: number;
+}
+
+interface NetworkRequestLike {
+  timestamp?: number;
+  startTime?: number;
+  method?: string;
+  url?: string;
+  status?: number;
+  isError?: boolean;
+  errorMessage?: string;
+  error?: string;
+  responseBody?: unknown;
+}
+
+interface ConsoleLogLike {
+  timestamp?: number;
+  time?: number;
+  type?: string;
+  level?: string;
+  name?: string;
+  message?: string;
+  args?: unknown[];
+}
+
+interface ErrorTraceLike {
+  timestamp?: number;
+  name?: string;
+  type?: string;
+  message?: string;
+}
+
+interface DistillAnnotationInput {
+  id?: string;
+  url?: string;
+  timestamp?: number;
+  comment?: string;
+  element?: {
+    selector?: string;
+    [key: string]: unknown;
+  };
+  sessionReplayEvents?: ReplayEventLike[];
+  networkRequests?: NetworkRequestLike[];
+  consoleLogs?: ConsoleLogLike[];
+  errorTrace?: ErrorTraceLike[];
+  [key: string]: unknown;
+}
+
+export function distillReplayTrail(annotation: unknown): ReplayTrailSummary {
+  const ann = (annotation && typeof annotation === 'object' ? annotation : {}) as DistillAnnotationInput;
+
+  const sessionReplayEvents = Array.isArray(ann.sessionReplayEvents) ? ann.sessionReplayEvents : [];
+  const networkRequests = Array.isArray(ann.networkRequests) ? ann.networkRequests : [];
+  const consoleLogs = Array.isArray(ann.consoleLogs) ? ann.consoleLogs : [];
+  const errorTrace = Array.isArray(ann.errorTrace) ? ann.errorTrace : [];
+
+  const timestamps: number[] = [];
+  for (const ev of sessionReplayEvents) {
+    if (typeof ev?.timestamp === 'number') timestamps.push(ev.timestamp);
+  }
+  for (const req of networkRequests) {
+    if (typeof req?.timestamp === 'number') timestamps.push(req.timestamp);
+    else if (typeof req?.startTime === 'number') timestamps.push(req.startTime);
+  }
+  for (const log of consoleLogs) {
+    if (typeof log?.timestamp === 'number') timestamps.push(log.timestamp);
+    else if (typeof log?.time === 'number') timestamps.push(log.time);
+  }
+  for (const err of errorTrace) {
+    if (typeof err?.timestamp === 'number') timestamps.push(err.timestamp);
+  }
+
+  const baseTimestamp = timestamps.length > 0
+    ? Math.min(...timestamps)
+    : (typeof ann.timestamp === 'number' ? ann.timestamp : 0);
+
+  const computeOffset = (timeMs: number): string => {
+    const diff = Math.max(0, timeMs - baseTimestamp);
+    return `${(diff / 1000).toFixed(1)}s`;
+  };
+
+  const steps: ReplayActionStep[] = [];
+
+  // Maps sessionReplayEvents
+  for (const ev of sessionReplayEvents) {
+    const timeMs = typeof ev?.timestamp === 'number' ? ev.timestamp : baseTimestamp;
+    const timeOffset = computeOffset(timeMs);
+    const data = ev?.data || {};
+
+    // Navigation events (type 4)
+    if (ev.type === 4) {
+      const url = String(data.href || data.url || ann.url || '');
+      steps.push({
+        timeMs,
+        timeOffset,
+        type: 'navigation',
+        url,
+      });
+    }
+    // IncrementalSnapshot (type 3)
+    else if (ev.type === 3) {
+      // Mouse interaction events (type 3, source 2, e.g. click)
+      if (data.source === 2) {
+        const step: ReplayActionStep = {
+          timeMs,
+          timeOffset,
+          type: 'click',
+        };
+        const sel = data.selector || data.target;
+        if (sel) step.selector = String(sel);
+        const text = data.targetText || data.text;
+        if (text) step.targetText = String(text);
+        steps.push(step);
+      }
+      // Input events (type 3, source 5)
+      else if (data.source === 5) {
+        const step: ReplayActionStep = {
+          timeMs,
+          timeOffset,
+          type: 'input',
+        };
+        const sel = data.selector || data.target;
+        if (sel) step.selector = String(sel);
+        const val = data.value !== undefined ? data.value : data.text;
+        if (val !== undefined && val !== null) step.value = String(val);
+        steps.push(step);
+      }
+      // Scroll events (type 3, source 3)
+      else if (data.source === 3) {
+        steps.push({
+          timeMs,
+          timeOffset,
+          type: 'scroll',
+        });
+      }
+    }
+  }
+
+  // Maps networkRequests: failed vs normal
+  for (const req of networkRequests) {
+    const timeMs = typeof req?.timestamp === 'number'
+      ? req.timestamp
+      : (typeof req?.startTime === 'number' ? req.startTime : baseTimestamp);
+    const timeOffset = computeOffset(timeMs);
+    const method = req?.method ? String(req.method).toUpperCase() : 'GET';
+    const url = req?.url ? String(req.url) : '';
+    const status = typeof req?.status === 'number' ? req.status : undefined;
+    const isFailed = Boolean(req?.isError || (status !== undefined && status >= 400));
+
+    if (isFailed) {
+      const errorMsg = req?.errorMessage || req?.error || (req?.responseBody ? String(req.responseBody) : (status ? `HTTP ${status}` : 'Network error'));
+      steps.push({
+        timeMs,
+        timeOffset,
+        type: 'network_error',
+        method,
+        url,
+        ...(status !== undefined ? { status } : {}),
+        errorMessage: String(errorMsg),
+      });
+    } else {
+      steps.push({
+        timeMs,
+        timeOffset,
+        type: 'network_call',
+        method,
+        url,
+        ...(status !== undefined ? { status } : {}),
+      });
+    }
+  }
+
+  // Maps runtime errors / errorTrace / console errors
+  for (const err of errorTrace) {
+    const timeMs = typeof err?.timestamp === 'number' ? err.timestamp : baseTimestamp;
+    const timeOffset = computeOffset(timeMs);
+    const name = err?.name || err?.type || 'Error';
+    const message = err?.message || 'Runtime error';
+    const errorMessage = `${name}: ${message}`;
+    steps.push({
+      timeMs,
+      timeOffset,
+      type: 'runtime_error',
+      errorMessage: String(errorMessage),
+    });
+  }
+
+  for (const log of consoleLogs) {
+    if (log?.type === 'error' || log?.level === 'error') {
+      const timeMs = typeof log?.timestamp === 'number'
+        ? log.timestamp
+        : (typeof log?.time === 'number' ? log.time : baseTimestamp);
+      const timeOffset = computeOffset(timeMs);
+      const name = log?.name || 'ConsoleError';
+      const message = log?.message || (Array.isArray(log?.args) ? log.args.join(' ') : 'Console error');
+      const errorMessage = log?.name && log?.message ? `${log.name}: ${log.message}` : (name && message && !message.startsWith(name) ? `${name}: ${message}` : message);
+      const alreadyCovered = steps.some(s => s.type === 'runtime_error' && s.errorMessage === errorMessage && Math.abs(s.timeMs - timeMs) < 100);
+      if (!alreadyCovered) {
+        steps.push({
+          timeMs,
+          timeOffset,
+          type: 'runtime_error',
+          errorMessage: String(errorMessage),
+        });
+      }
+    }
+  }
+
+  // Appends final pin_dropped step
+  const pinTimeMs = typeof ann.timestamp === 'number' ? ann.timestamp : baseTimestamp;
+  const pinTimeOffset = computeOffset(pinTimeMs);
+  const pinStep: ReplayActionStep = {
+    timeMs: pinTimeMs,
+    timeOffset: pinTimeOffset,
+    type: 'pin_dropped',
+  };
+  if (ann.element?.selector) {
+    pinStep.selector = String(ann.element.selector);
+  }
+  if (ann.comment) {
+    pinStep.targetText = String(ann.comment);
+  }
+  steps.push(pinStep);
+
+  // Sorts all steps chronologically by timeMs
+  steps.sort((a, b) => a.timeMs - b.timeMs);
+
+  const maxTimeMs = steps.length > 0 ? Math.max(...steps.map(s => s.timeMs)) : baseTimestamp;
+  const totalDurationMs = Math.max(0, maxTimeMs - baseTimestamp);
+  const rawCount = sessionReplayEvents.length;
+  const eventCount = rawCount > 0 ? rawCount : steps.length;
+  const networkFailuresCount = steps.filter(s => s.type === 'network_error').length;
+  const runtimeErrorsCount = steps.filter(s => s.type === 'runtime_error').length;
+
+  return {
+    annotationId: String(ann.id || ''),
+    url: String(ann.url || ''),
+    totalDurationMs,
+    eventCount,
+    steps,
+    networkFailuresCount,
+    runtimeErrorsCount,
+  };
+}
 
 export function registerMcpTools(server: Server) {
   server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -331,6 +595,38 @@ export function registerMcpTools(server: Server) {
             required: ["annotationId", "webhookType", "webhookUrl"],
           },
         },
+        {
+          name: "pinmark_get_replay_trail",
+          description: "Get a distilled, token-optimized chronological reproduction trail of user actions, network calls, and errors leading up to an annotation.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              annotationId: {
+                type: "string",
+                description: "The ID of the annotation to retrieve the replay trail for.",
+              },
+            },
+            required: ["annotationId"],
+          },
+        },
+        {
+          name: "pinmark_export_replay_html",
+          description: "Export a standalone, self-contained HTML replay player for a specific annotation.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              annotationId: {
+                type: "string",
+                description: "The ID of the annotation to export.",
+              },
+              outputPath: {
+                type: "string",
+                description: "Optional file path where the HTML replay should be saved. Defaults to ./replays/pinmark-replay-<annotationId>.html",
+              },
+            },
+            required: ["annotationId"],
+          },
+        },
       ],
     };
   });
@@ -497,16 +793,37 @@ export function registerMcpTools(server: Server) {
           throw new McpError(ErrorCode.InvalidParams, `Annotation not found: ${annotationId}`);
         }
 
-        // Localized agent workflow to translate rrweb events + DOM into a test script
-        // In this implementation, we write a structured template containing the bug details
-        // and instructions for the agent to complete the test logic.
-        const testContent = framework === 'playwright' 
-          ? `import { test, expect } from '@playwright/test';\n\n// Generated from Pinmark Annotation: ${annotationId}\n// Comment: ${annotation.comment}\n// URL: ${annotation.url}\n\ntest('Reproduce bug: ${annotation.comment.replace(/'/g, "\\'")}', async ({ page }) => {\n  await page.goto('${annotation.url}');\n  \n  // Target element selector: ${annotation.element.selector}\n  // Component: ${annotation.element.component?.name || 'Unknown'}\n  \n  // TODO: Agent workflow should inject rrweb event sequence here\n  // sessionReplayEvents count: ${annotation.sessionReplayEvents?.length || 0}\n  \n  // Ensure element is visible before interacting\n  await expect(page.locator('${annotation.element.selector}')).toBeVisible();\n});\n`
-          : `describe('Pinmark Auto-generated Test', () => {\n  it('Reproduces bug: ${annotation.comment.replace(/'/g, "\\'")}', () => {\n    cy.visit('${annotation.url}');\n    \n    // Generated from Pinmark Annotation: ${annotationId}\n    // Target element selector: ${annotation.element.selector}\n    // Component: ${annotation.element.component?.name || 'Unknown'}\n    // sessionReplayEvents count: ${annotation.sessionReplayEvents?.length || 0}\n    \n    // TODO: Agent workflow should inject rrweb event sequence here\n    \n    cy.get('${annotation.element.selector}').should('be.visible');\n  });\n});\n`;
+        const trail = distillReplayTrail(annotation);
+        const playwrightSteps: string[] = [];
+        const cypressSteps: string[] = [];
 
+        for (const step of trail.steps) {
+          if (step.type === 'click') {
+            const sel = step.selector || step.targetText;
+            if (sel) {
+              const safeSel = sel.replace(/'/g, "\\'");
+              playwrightSteps.push(`  await page.locator('${safeSel}').click();`);
+              cypressSteps.push(`    cy.get('${safeSel}').click();`);
+            }
+          } else if (step.type === 'input') {
+            if (step.selector) {
+              const safeSel = step.selector.replace(/'/g, "\\'");
+              const safeVal = (step.value ?? '').replace(/'/g, "\\'");
+              playwrightSteps.push(`  await page.locator('${safeSel}').fill('${safeVal}');`);
+              cypressSteps.push(`    cy.get('${safeSel}').clear().type('${safeVal}');`);
+            }
+          } else if (step.type === 'navigation' && step.url && step.url !== annotation.url) {
+            const safeUrl = step.url.replace(/'/g, "\\'");
+            playwrightSteps.push(`  await page.goto('${safeUrl}');`);
+            cypressSteps.push(`    cy.visit('${safeUrl}');`);
+          }
+        }
+
+        const safeSelector = annotation.element.selector.replace(/'/g, "\\'");
+        const testContent = framework === 'playwright' 
+          ? `import { test, expect } from '@playwright/test';\n\n// Generated from Pinmark Annotation: ${annotationId}\n// Comment: ${annotation.comment}\n// URL: ${annotation.url}\n\ntest('Reproduce bug: ${annotation.comment.replace(/'/g, "\\'")}', async ({ page }) => {\n  await page.goto('${annotation.url}');\n  \n  // Target element selector: ${annotation.element.selector}\n  // Component: ${annotation.element.component?.name || 'Unknown'}\n  \n  // Reproduction action trail distilled from replay events (${trail.steps.length} steps)\n${playwrightSteps.length > 0 ? playwrightSteps.join('\n') + '\n\n' : ''}  // Ensure element is visible before interacting\n  await expect(page.locator('${safeSelector}')).toBeVisible();\n});\n`
+          : `describe('Pinmark Auto-generated Test', () => {\n  it('Reproduces bug: ${annotation.comment.replace(/'/g, "\\'")}', () => {\n    cy.visit('${annotation.url}');\n    \n    // Generated from Pinmark Annotation: ${annotationId}\n    // Target element selector: ${annotation.element.selector}\n    // Component: ${annotation.element.component?.name || 'Unknown'}\n    // Reproduction action trail distilled from replay events (${trail.steps.length} steps)\n${cypressSteps.length > 0 ? cypressSteps.join('\n') + '\n\n' : ''}    cy.get('${safeSelector}').should('be.visible');\n  });\n});\n`;
         try {
-          const fs = await import('fs/promises');
-          const path = await import('path');
           
           await fs.mkdir(outputDir, { recursive: true });
           const safeComment = annotation.comment.replace(/[^a-z0-9]/gi, '-').toLowerCase().substring(0, 30);
@@ -991,6 +1308,64 @@ export function registerMcpTools(server: Server) {
 
         return {
           content: [{ type: "text", text: `Successfully dispatched annotation ${annotationId} to ${webhookType} (${webhookUrl}).` }],
+        };
+      }
+
+      case "pinmark_get_replay_trail": {
+        const annotationId = String(request.params.arguments?.annotationId);
+        const annotation = store.getAnnotation(annotationId);
+        if (!annotation) {
+          throw new McpError(ErrorCode.InvalidParams, `Annotation not found: ${annotationId}`);
+        }
+
+        const trail = distillReplayTrail(annotation);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(trail, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "pinmark_export_replay_html": {
+        const annotationId = String(request.params.arguments?.annotationId);
+        const customOutputPath = request.params.arguments?.outputPath
+          ? String(request.params.arguments.outputPath)
+          : undefined;
+
+        const annotation = store.getAnnotation(annotationId);
+        if (!annotation) {
+          throw new McpError(ErrorCode.InvalidParams, `Annotation not found: ${annotationId}`);
+        }
+
+        const html = generateStandaloneReplayHtml(annotation);
+
+        const defaultPath = path.resolve(process.cwd(), 'replays', `pinmark-replay-${annotationId}.html`);
+        const targetPath = customOutputPath
+          ? path.resolve(process.cwd(), customOutputPath)
+          : defaultPath;
+
+        await fs.mkdir(path.dirname(targetPath), { recursive: true });
+        await fs.writeFile(targetPath, html, 'utf-8');
+        const byteSize = Buffer.byteLength(html, 'utf-8');
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  success: true,
+                  path: targetPath,
+                  byteSize,
+                },
+                null,
+                2
+              ),
+            },
+          ],
         };
       }
       default:

@@ -1,7 +1,9 @@
 import type { ExtensionSettings, FeedbackItem } from '../../src/shared/types';
 import { sendMessage } from '../../src/shared/messaging';
 import { getSettings, saveSettings, getFeedback } from '../../src/shared/storage';
-import { setHTML, escapeHTML, MarkdownFormatter } from '@pinmark/pinmark';
+import { setHTML, escapeHTML, MarkdownFormatter, generateStandaloneReplayHtml } from '@pinmark/pinmark';
+import * as rrweb from 'rrweb';
+import type { eventWithTime } from 'rrweb';
 
 let currentTabId: number | null = null;
 let currentTabUrl: string = '';
@@ -32,6 +34,18 @@ const webhookUrlInput = document.getElementById('webhookUrl') as HTMLInputElemen
 const githubTokenInput = document.getElementById('githubToken') as HTMLInputElement;
 const githubRepoInput = document.getElementById('githubRepo') as HTMLInputElement;
 const copyJsonBtn = document.getElementById('copyJsonBtn') as HTMLButtonElement;
+
+// ── Replay Modal DOM refs ──────────────────────────────────
+const replayModal = document.getElementById('replayModal') as HTMLElement;
+const replayModalTitle = document.getElementById('replayModalTitle') as HTMLElement;
+const replayModalClose = document.getElementById('replayModalClose') as HTMLButtonElement;
+const replayModalExport = document.getElementById('replayModalExport') as HTMLButtonElement;
+const replayViewport = document.getElementById('replayViewport') as HTMLElement;
+const replayPlayPause = document.getElementById('replayPlayPause') as HTMLButtonElement;
+const replayScrubber = document.getElementById('replayScrubber') as HTMLInputElement;
+const replayTimeLabel = document.getElementById('replayTimeLabel') as HTMLElement;
+const replaySpeedBtns = document.querySelectorAll('.replay-speed-group .speed-btn') as NodeListOf<HTMLButtonElement>;
+const replayActivityRail = document.getElementById('replayActivityRail') as HTMLElement;
 
 // ── Theme ─────────────────────────────────────────────
 let isDark = true;
@@ -391,8 +405,360 @@ function detailSections(item: FeedbackItem): string {
     sections.push(`<div class="detail-sec"><div class="detail-sec-title">State</div>${escapeHTML(ss.detected.join(', '))}<br><code>${escapeHTML(JSON.stringify(ss.snapshot).slice(0, 180))}</code></div>`);
   }
 
+  if (item.sessionReplayEvents && item.sessionReplayEvents.length > 0) {
+    sections.push(`<div class="replay-actions-row"><button class="btn-watch-replay" data-item-id="${item.id}">▶ Watch Session Replay (${Math.round((item.sessionReplayEvents[item.sessionReplayEvents.length - 1]!.timestamp - item.sessionReplayEvents[0]!.timestamp) / 1000) || 15}s)</button><button class="btn-export-replay" data-item-id="${item.id}">⬇ Export HTML</button></div>`);
+  }
+
   return sections.join('');
 }
+
+// ── Replay Player Interfaces & Controller ──────────────────
+interface ActivityEntry {
+  kind: 'network' | 'console';
+  timestamp: number;
+  offsetMs: number;
+  title: string;
+  detail: string;
+  isError: boolean;
+  statusBadge: string;
+}
+
+interface ErrorItemLike {
+  timestamp?: number;
+  name?: string;
+  message?: string;
+  stack?: Array<{ fn: string; file: string; line: number }>;
+}
+
+interface ConsoleLogLike {
+  timestamp?: number;
+  time?: number;
+  type?: string;
+  message?: string;
+  args?: unknown[];
+}
+
+interface NetworkRequestLike {
+  timestamp?: number;
+  url?: string;
+  method?: string;
+  status?: number;
+  isError?: boolean;
+}
+
+let activeReplayer: rrweb.Replayer | null = null;
+let activeReplayItem: FeedbackItem | null = null;
+let replayIsPlaying = false;
+let replayAnimFrameId: number | null = null;
+let replayDurationMs = 0;
+let replayCurrentSpeed = 1;
+
+function formatReplayTime(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function highlightActivity(offsetMs: number) {
+  if (!replayActivityRail) return;
+  const items = replayActivityRail.querySelectorAll('.replay-activity-item');
+  items.forEach((item) => {
+    const itemOffset = Number(item.getAttribute('data-offset') || 0);
+    if (Math.abs(itemOffset - offsetMs) < 1200) {
+      item.classList.add('active-activity');
+    } else {
+      item.classList.remove('active-activity');
+    }
+  });
+}
+
+function updateReplayLoop() {
+  if (!replayIsPlaying || !activeReplayer) return;
+  const current = activeReplayer.getCurrentTime();
+  if (replayScrubber) replayScrubber.value = String(current);
+  if (replayTimeLabel) {
+    replayTimeLabel.textContent = `${formatReplayTime(current)} / ${formatReplayTime(replayDurationMs)}`;
+  }
+  highlightActivity(current);
+
+  if (current >= replayDurationMs) {
+    replayIsPlaying = false;
+    if (replayPlayPause) replayPlayPause.textContent = '▶';
+  } else {
+    replayAnimFrameId = requestAnimationFrame(updateReplayLoop);
+  }
+}
+
+function playReplay() {
+  if (!activeReplayer) return;
+  const currentVal = Number(replayScrubber ? replayScrubber.value : 0);
+  if (currentVal >= replayDurationMs) {
+    activeReplayer.play(0);
+    if (replayScrubber) replayScrubber.value = '0';
+  } else {
+    activeReplayer.play(currentVal);
+  }
+  replayIsPlaying = true;
+  if (replayPlayPause) replayPlayPause.textContent = '⏸';
+  if (replayAnimFrameId !== null) cancelAnimationFrame(replayAnimFrameId);
+  replayAnimFrameId = requestAnimationFrame(updateReplayLoop);
+}
+
+function pauseReplay() {
+  if (!activeReplayer) return;
+  activeReplayer.pause();
+  replayIsPlaying = false;
+  if (replayPlayPause) replayPlayPause.textContent = '▶';
+  if (replayAnimFrameId !== null) {
+    cancelAnimationFrame(replayAnimFrameId);
+    replayAnimFrameId = null;
+  }
+}
+
+function seekReplay(targetMs: number) {
+  if (replayScrubber) replayScrubber.value = String(targetMs);
+  if (replayTimeLabel) {
+    replayTimeLabel.textContent = `${formatReplayTime(targetMs)} / ${formatReplayTime(replayDurationMs)}`;
+  }
+  highlightActivity(targetMs);
+  if (activeReplayer) {
+    activeReplayer.pause(targetMs);
+  }
+  replayIsPlaying = false;
+  if (replayPlayPause) replayPlayPause.textContent = '▶';
+  if (replayAnimFrameId !== null) {
+    cancelAnimationFrame(replayAnimFrameId);
+    replayAnimFrameId = null;
+  }
+}
+
+function closeReplayModal() {
+  if (replayAnimFrameId !== null) {
+    cancelAnimationFrame(replayAnimFrameId);
+    replayAnimFrameId = null;
+  }
+  if (activeReplayer) {
+    try {
+      activeReplayer.pause();
+      activeReplayer.destroy();
+    } catch (e) {
+      console.warn('Error destroying replayer:', e);
+    }
+    activeReplayer = null;
+  }
+  replayIsPlaying = false;
+  activeReplayItem = null;
+  if (replayViewport) {
+    replayViewport.innerHTML = '';
+  }
+  if (replayModal) {
+    replayModal.style.display = 'none';
+  }
+}
+
+function exportReplayHtml(item: FeedbackItem) {
+  try {
+    const html = generateStandaloneReplayHtml(item);
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pinmark-replay-${item.id}.html`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  } catch (err) {
+    console.error('Failed to export standalone replay HTML:', err);
+  }
+}
+
+function setupActivityRail(item: FeedbackItem, firstTs: number) {
+  if (!replayActivityRail) return;
+
+  const activityList: ActivityEntry[] = [];
+
+  const networkRequests = (item.networkRequests || []) as NetworkRequestLike[];
+  for (const req of networkRequests) {
+    const ts = typeof req.timestamp === 'number' ? req.timestamp : (item.timestamp || 0);
+    const offset = firstTs > 0 ? Math.max(0, ts - firstTs) : 0;
+    const isErr = Boolean(req.isError || (typeof req.status === 'number' && req.status >= 400));
+    activityList.push({
+      kind: 'network',
+      timestamp: ts,
+      offsetMs: offset,
+      title: `${req.method || 'GET'} ${req.url || ''}`,
+      detail: req.status ? `Status: ${req.status}` : 'Completed',
+      isError: isErr,
+      statusBadge: req.status ? String(req.status) : (req.method || 'NET'),
+    });
+  }
+
+  const errorTrace = (item.errorTrace || []) as ErrorItemLike[];
+  for (const err of errorTrace) {
+    const ts = typeof err.timestamp === 'number' ? err.timestamp : (item.timestamp || 0);
+    const offset = firstTs > 0 ? Math.max(0, ts - firstTs) : 0;
+    activityList.push({
+      kind: 'console',
+      timestamp: ts,
+      offsetMs: offset,
+      title: err.name || 'Runtime Error',
+      detail: err.message || 'Error occurred',
+      isError: true,
+      statusBadge: 'ERR',
+    });
+  }
+
+  const consoleLogs = (item.consoleLogs || []) as ConsoleLogLike[];
+  for (const log of consoleLogs) {
+    const ts = typeof log.timestamp === 'number' ? log.timestamp : (typeof log.time === 'number' ? log.time : (item.timestamp || 0));
+    const offset = firstTs > 0 ? Math.max(0, ts - firstTs) : 0;
+    const logType = log.type || 'log';
+    const isErr = logType === 'error';
+    const msg = log.message || (Array.isArray(log.args) ? log.args.join(' ') : JSON.stringify(log));
+    activityList.push({
+      kind: 'console',
+      timestamp: ts,
+      offsetMs: offset,
+      title: `console.${logType}`,
+      detail: msg,
+      isError: isErr,
+      statusBadge: logType.toUpperCase(),
+    });
+  }
+
+  activityList.sort((a, b) => a.timestamp - b.timestamp);
+
+  if (activityList.length === 0) {
+    replayActivityRail.innerHTML = '';
+    return;
+  }
+
+  replayActivityRail.innerHTML = activityList.map((act, idx) => {
+    const offsetStr = `+${(act.offsetMs / 1000).toFixed(1)}s`;
+    return `<div class="replay-activity-item ${act.isError ? 'is-error' : ''}" data-offset="${act.offsetMs}" data-index="${idx}" title="Click to seek">
+      <span class="replay-activity-badge ${act.isError ? 'badge-error' : ''}">${escapeHTML(act.statusBadge)}</span>
+      <span class="replay-activity-title" title="${escapeHTML(act.title)}">${escapeHTML(act.title)}</span>
+      <span class="replay-activity-offset">${offsetStr}</span>
+    </div>`;
+  }).join('');
+
+  replayActivityRail.querySelectorAll('.replay-activity-item').forEach((el) => {
+    el.addEventListener('click', () => {
+      const offset = Number(el.getAttribute('data-offset') || 0);
+      seekReplay(offset);
+    });
+  });
+}
+
+function openReplayModal(item: FeedbackItem) {
+  closeReplayModal();
+  activeReplayItem = item;
+
+  if (replayModalTitle) {
+    replayModalTitle.textContent = `Session Replay #${item.index ?? ''}`;
+  }
+
+  const rawEvents = item.sessionReplayEvents;
+  if (!rawEvents || rawEvents.length === 0) return;
+  const events = rawEvents as unknown as eventWithTime[];
+
+  const firstEvent = events[0];
+  const lastEvent = events.length > 1 ? events[events.length - 1] : firstEvent;
+  const firstTs = typeof firstEvent?.timestamp === 'number' ? firstEvent.timestamp : 0;
+  const lastTs = typeof lastEvent?.timestamp === 'number' ? lastEvent.timestamp : firstTs;
+  replayDurationMs = Math.max(0, lastTs - firstTs);
+
+  if (replayScrubber) {
+    replayScrubber.min = '0';
+    replayScrubber.max = String(replayDurationMs);
+    replayScrubber.value = '0';
+    replayScrubber.step = '10';
+  }
+  if (replayTimeLabel) {
+    replayTimeLabel.textContent = `00:00 / ${formatReplayTime(replayDurationMs)}`;
+  }
+  if (replayPlayPause) {
+    replayPlayPause.textContent = '▶';
+  }
+
+  replayCurrentSpeed = 1;
+  replaySpeedBtns.forEach((btn) => {
+    if (btn.getAttribute('data-speed') === '1') {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  setupActivityRail(item, firstTs);
+
+  if (replayModal) {
+    replayModal.style.display = 'flex';
+  }
+
+  if (replayViewport) {
+    replayViewport.innerHTML = '';
+  }
+
+  try {
+    activeReplayer = new rrweb.Replayer(events, {
+      root: replayViewport,
+      mouseTail: true,
+      speed: replayCurrentSpeed,
+      showWarning: false,
+      showDebug: false,
+    });
+  } catch (err) {
+    console.error('Failed to init rrweb replayer:', err);
+    if (replayViewport) {
+      replayViewport.innerHTML = `<div style="color:#ef4444;padding:20px;text-align:center;">Failed to initialize replay: ${escapeHTML(String(err))}</div>`;
+    }
+    return;
+  }
+
+  playReplay();
+}
+
+replayPlayPause?.addEventListener('click', () => {
+  if (replayIsPlaying) {
+    pauseReplay();
+  } else {
+    playReplay();
+  }
+});
+
+replayScrubber?.addEventListener('input', () => {
+  const target = Number(replayScrubber.value);
+  seekReplay(target);
+});
+
+replaySpeedBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    replaySpeedBtns.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    replayCurrentSpeed = Number(btn.getAttribute('data-speed') || 1);
+    if (activeReplayer && typeof activeReplayer.setConfig === 'function') {
+      activeReplayer.setConfig({ speed: replayCurrentSpeed });
+    }
+  });
+});
+
+replayModalClose?.addEventListener('click', closeReplayModal);
+replayModal?.addEventListener('click', (e) => {
+  if (e.target === replayModal) {
+    closeReplayModal();
+  }
+});
+
+replayModalExport?.addEventListener('click', () => {
+  if (activeReplayItem) {
+    exportReplayHtml(activeReplayItem);
+  }
+});
 
 async function renderReview() {
   if (!currentTabUrl) {
@@ -449,6 +815,24 @@ async function renderReview() {
       } catch (e) {
         btn.textContent = 'Copy failed'; btn.style.color = '#f87171';
       }
+    });
+  });
+  reviewList.querySelectorAll('.btn-watch-replay').forEach((el) => {
+    const btn = el as HTMLButtonElement;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const itemId = btn.getAttribute('data-item-id');
+      const item = items.find((x) => x.id === itemId);
+      if (item) openReplayModal(item);
+    });
+  });
+  reviewList.querySelectorAll('.btn-export-replay').forEach((el) => {
+    const btn = el as HTMLButtonElement;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const itemId = btn.getAttribute('data-item-id');
+      const item = items.find((x) => x.id === itemId);
+      if (item) exportReplayHtml(item);
     });
   });
 }
